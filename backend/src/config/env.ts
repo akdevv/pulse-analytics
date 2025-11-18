@@ -5,10 +5,15 @@ dotenv.config();
 
 const envSchema = z.object({
   // Server
-  PORT: z.number().default(8000),
-  NODE_ENV: z
-    .enum(["development", "production", "test"])
-    .default("development"),
+  PORT: z.coerce.number().default(8000),
+  NODE_ENV: z.string().default("development"),
+
+  // JWT
+  JWT_SECRET: z.string().min(1),
+  JWT_EXPIRES_IN: z.string().default("30d"),
+
+  // Database
+  DATABASE_URL: z.string().min(1),
 });
 
 const env = envSchema.safeParse(process.env);

@@ -98,4 +98,4 @@ temp/
 .dynamodb/
 .tern-port
 .yarn-integrity
-/generated/prisma
+src/generated/prisma

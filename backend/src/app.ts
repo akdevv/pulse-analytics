@@ -3,6 +3,9 @@ import helmet from "helmet";
 import express, { type Express } from "express";
 import { config } from "@/config/index.ts";
 
+// Routes
+import authRoutes from "@/modules/auth/auth.routes.ts";
+
 const app: Express = express();
 
 // Middleware
@@ -22,7 +25,7 @@ apiRoute.get("/health", (_, res) => {
 });
 
 // Routes
-// apiRoute.use("/auth", authRoutes);
+apiRoute.use("/auth", authRoutes);
 
 // Mount API routes
 app.use(`/api/${config.apiVersion}`, apiRoute);
