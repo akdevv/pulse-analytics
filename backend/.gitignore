@@ -24,6 +24,10 @@ coverage/
 *.lcov
 .nyc_output/
 
+# Environment variables
+.env
+.env.*
+
 # Build outputs
 dist/
 build/
@@ -94,3 +98,4 @@ temp/
 .dynamodb/
 .tern-port
 .yarn-integrity
+/generated/prisma
