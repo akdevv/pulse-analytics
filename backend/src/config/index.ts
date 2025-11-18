@@ -9,8 +9,10 @@ export const config = {
 
   // JWT
   jwt: {
-    secret: env.JWT_SECRET,
-    expiresIn: env.JWT_EXPIRES_IN,
+    accessTokenSecret: env.ACCESS_TOKEN_SECRET,
+    refreshTokenSecret: env.REFRESH_TOKEN_SECRET,
+    accessTokenExpiresIn: env.ACCESS_TOKEN_EXPIRY,
+    refreshTokenExpiresIn: env.REFRESH_TOKEN_EXPIRY,
     issuer: "pulse-analytics",
     algorithm: "HS256" as Algorithm,
   },
