@@ -11,15 +11,14 @@ import {
 interface RegisterUser {
   email: string;
   password: string;
-  firstName: string | null;
-  lastName: string | null;
+  name: string;
 }
 
 export const registerUser = async (
   user: RegisterUser
 ): Promise<{ accessToken: string; refreshToken: string }> => {
   try {
-    const { email, password, firstName, lastName } = user;
+    const { name, email, password } = user;
 
     if (!email || !password) {
       throw new Error("Email and password are required");
@@ -31,19 +30,14 @@ export const registerUser = async (
     }
 
     const hashedPassword = await bcrypt.hash(password, 10);
-    const newUser = await createUser(
-      email,
-      hashedPassword,
-      firstName,
-      lastName
-    );
+    const newUser = await createUser(name, email, hashedPassword);
 
     // Generate tokens
     const accessToken = jwt.sign(
       { userId: newUser.id, email: newUser.email },
       config.jwt.accessTokenSecret,
       {
-        expiresIn: Number(config.jwt.accessTokenExpiresIn),
+        expiresIn: config.jwt.accessTokenExpiresIn as string,
         issuer: config.jwt.issuer,
         algorithm: config.jwt.algorithm,
       } as SignOptions
@@ -53,7 +47,7 @@ export const registerUser = async (
       { userId: newUser.id, email: newUser.email },
       config.jwt.refreshTokenSecret,
       {
-        expiresIn: Number(config.jwt.refreshTokenExpiresIn),
+        expiresIn: config.jwt.refreshTokenExpiresIn as string,
         issuer: config.jwt.issuer,
         algorithm: config.jwt.algorithm,
       } as SignOptions
@@ -77,11 +71,10 @@ export const getUserById = async (id: string): Promise<IUserPublic | null> => {
 
     return {
       id: user.id,
+      name: user.name,
       email: user.email,
-      firstName: user.firstName,
-      lastName: user.lastName,
-      createdAt: user.createdAt,
-      updatedAt: user.updatedAt,
+      isVerified: user.isVerified,
+      lastLoginAt: user.lastLoginAt,
     };
   } catch (error) {
     throw new Error("Failed to get user by id: " + error);

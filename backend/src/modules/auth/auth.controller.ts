@@ -1,4 +1,4 @@
-import { userSchema } from "./auth.types.ts";
+import { registerUserSchema } from "./auth.types.ts";
 import type { Request, Response } from "express";
 import { registerUser, getUserById } from "./auth.service.ts";
 
@@ -6,8 +6,8 @@ import { registerUser, getUserById } from "./auth.service.ts";
 export const register = async (req: Request, res: Response) => {
   try {
     // Validate the request body
-    const { email, password, firstName, lastName } = req.body;
-    const { error } = userSchema.safeParse(req.body);
+    const { name, email, password } = req.body;
+    const { error } = registerUserSchema.safeParse(req.body);
     if (error) {
       res.status(400).json({
         status: "error",
@@ -16,7 +16,7 @@ export const register = async (req: Request, res: Response) => {
     }
 
     // Register user
-    const result = await registerUser({ email, password, firstName, lastName });
+    const result = await registerUser({ name, email, password });
 
     res.cookie("refreshToken", result.refreshToken, {
       httpOnly: true,
@@ -24,7 +24,7 @@ export const register = async (req: Request, res: Response) => {
       sameSite: "strict",
     });
 
-    return res.status(201).json({
+    return res.status(200).json({
       status: "success",
       message: "User registered successfully",
       data: {

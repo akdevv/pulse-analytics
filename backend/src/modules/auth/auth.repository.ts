@@ -6,17 +6,17 @@ export const findUserByEmail = (email: string): Promise<IUser | null> => {
 };
 
 export const createUser = (
+  name: string | null,
   email: string,
-  password: string,
-  firstName: string | null,
-  lastName: string | null
+  password: string
 ): Promise<IUser> => {
   return prisma.user.create({
     data: {
+      name,
       email,
       password,
-      firstName,
-      lastName,
+      lastLoginAt: new Date(),
+      isVerified: false,
     },
   });
 };
