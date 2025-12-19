@@ -23,6 +23,7 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { PasswordInput } from "@/components/common/password-input";
+import { login } from "@/lib/api/auth.api";
 
 const loginSchema = z.object({
   email: z.string().email({
@@ -44,8 +45,13 @@ export default function Login() {
     },
   });
 
-  function onSubmit(data: LoginFormValues) {
-    console.log("Login form data:", data);
+  async function onSubmit(data: LoginFormValues) {
+    const res = await login({
+      email: data.email,
+      password: data.password,
+    });
+
+    console.log(res);
   }
 
   return (
@@ -84,7 +90,10 @@ export default function Login() {
                   <FormItem>
                     <FormLabel>Password</FormLabel>
                     <FormControl>
-                      <PasswordInput placeholder="Enter your password" {...field} />
+                      <PasswordInput
+                        placeholder="Enter your password"
+                        {...field}
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -97,7 +106,10 @@ export default function Login() {
           </Form>
           <div className="mt-4 text-center text-sm">
             Don't have an account?{" "}
-            <Link href="/register" className="underline underline-offset-4 hover:text-primary">
+            <Link
+              href="/register"
+              className="underline underline-offset-4 hover:text-primary"
+            >
               Sign up
             </Link>
           </div>
