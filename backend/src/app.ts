@@ -2,6 +2,7 @@ import cors from "cors";
 import helmet from "helmet";
 import express, { type Express } from "express";
 import { config } from "@/config/index.ts";
+import { errorMiddleware } from "@/middleware/error.middleware.ts";
 
 // Routes
 import authRoutes from "@/modules/auth/auth.routes.ts";
@@ -38,5 +39,8 @@ app.use((req, res) => {
     path: req.path,
   });
 });
+
+// Error handler
+app.use(errorMiddleware);
 
 export default app;

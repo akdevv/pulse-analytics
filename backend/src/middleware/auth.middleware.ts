@@ -1,7 +1,12 @@
 import jwt from "jsonwebtoken";
 import env from "@/config/env.ts";
-import type { IUser } from "@/modules/auth/auth.types.ts";
 import type { NextFunction, Request, Response } from "express";
+import { AppError } from "@/utils/app-error.ts";
+
+interface TokenPayload {
+  userId: string;
+  email: string;
+}
 
 export async function authenticateToken(
   req: Request,
@@ -12,28 +17,19 @@ export async function authenticateToken(
     // Get the token
     const token = req.headers.authorization?.split(" ")[1];
     if (!token) {
-      return res.status(401).json({
-        status: "error",
-        message: "No token provided",
-      });
+      throw new AppError(401, "No token provided");
     }
 
     // Verify the token
-    const payload = jwt.verify(token!, env.ACCESS_TOKEN_SECRET) as IUser;
+    const payload = jwt.verify(token!, env.ACCESS_TOKEN_SECRET) as TokenPayload;
     if (!payload) {
-      return res.status(401).json({
-        status: "error",
-        message: "Invalid token",
-      });
+      throw new AppError(401, "Invalid token");
     }
 
     // Add the user to the request
     req.user = payload;
     next();
   } catch (error) {
-    res.status(500).json({
-      status: "error",
-      message: "Internal server error",
-    });
+    throw new AppError(401, "Unauthorized");
   }
 }

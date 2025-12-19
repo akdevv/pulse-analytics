@@ -24,3 +24,32 @@ export const createUser = (
 export const findUserById = (id: string): Promise<IUser | null> => {
   return prisma.user.findUnique({ where: { id } });
 };
+
+export const updateUserById = (
+  id: string,
+  user: Partial<IUser>
+): Promise<IUser> => {
+  let updateData: any = {};
+
+  if (typeof user.name === "string" && user.name.trim() !== "") {
+    updateData.name = user.name;
+  }
+  if (typeof user.email === "string" && user.email.trim() !== "") {
+    updateData.email = user.email;
+  }
+  if (typeof user.password === "string" && user.password.trim() !== "") {
+    updateData.password = user.password;
+  }
+
+  return prisma.user.update({
+    where: { id },
+    data: updateData,
+  });
+};
+
+export const updateLastLoginAt = (id: string): Promise<IUser> => {
+  return prisma.user.update({
+    where: { id },
+    data: { lastLoginAt: new Date() },
+  });
+};

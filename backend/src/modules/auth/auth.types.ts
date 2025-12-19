@@ -17,5 +17,16 @@ export const registerUserSchema = z.object({
   password: z.string().min(8),
 });
 
+export const loginUserSchema = z.object({
+  email: z.string().email(),
+  password: z.string().min(8),
+});
+
+export const updateUserSchema = z.object({
+  name: z.string().optional(),
+  email: z.string().email().optional(),
+  password: z.string().min(8).optional(),
+});
+
 export type IUser = z.infer<typeof userSchema>;
 export type IUserPublic = Omit<IUser, "password" | "createdAt" | "updatedAt">;
