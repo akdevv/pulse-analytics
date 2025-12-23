@@ -10,7 +10,15 @@ import authRoutes from "@/modules/auth/auth.routes.ts";
 const app: Express = express();
 
 // Middleware
-app.use(cors());
+app.use(
+  cors({
+    origin: "http://localhost:3000",
+    credentials: true,
+    methods: ["GET", "POST", "PUT", "PATCH", "DELETE"],
+    allowedHeaders: ["Content-Type", "Authorization"],
+  })
+);
+
 app.use(helmet());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));

@@ -24,6 +24,8 @@ import {
 import { Input } from "@/components/ui/input";
 import { PasswordInput } from "@/components/common/password-input";
 import { login } from "@/lib/api/auth.api";
+import { useRouter } from "next/navigation";
+import { useState } from "react";
 
 const loginSchema = z.object({
   email: z.string().email({
@@ -37,6 +39,10 @@ const loginSchema = z.object({
 type LoginFormValues = z.infer<typeof loginSchema>;
 
 export default function Login() {
+  const router = useRouter();
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+
   const form = useForm<LoginFormValues>({
     resolver: zodResolver(loginSchema),
     defaultValues: {
@@ -46,12 +52,25 @@ export default function Login() {
   });
 
   async function onSubmit(data: LoginFormValues) {
-    const res = await login({
-      email: data.email,
-      password: data.password,
-    });
+    try {
+      setLoading(true);
+      setError("");
 
-    console.log(res);
+      const response = await login({
+        email: data.email,
+        password: data.password,
+      });
+
+      console.log("Login response:", response);
+
+      router.push("/dashboard");
+    } catch (error) {
+      const errorMessage =
+        error instanceof Error ? error.message : "An unknown error occurred";
+      setError(errorMessage);
+    } finally {
+      setLoading(false);
+    }
   }
 
   return (
@@ -63,7 +82,13 @@ export default function Login() {
             Enter your credentials to sign in to your account
           </CardDescription>
         </CardHeader>
-        <CardContent>
+        <CardContent className="space-y-4">
+          {error && (
+            <div className="rounded-md bg-red-900/40 border border-red-800 p-3 text-sm text-red-300">
+              {error || "Something went wrong!"}
+            </div>
+          )}
+
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
               <FormField
@@ -76,6 +101,7 @@ export default function Login() {
                       <Input
                         type="email"
                         placeholder="john@example.com"
+                        disabled={loading}
                         {...field}
                       />
                     </FormControl>
@@ -92,6 +118,7 @@ export default function Login() {
                     <FormControl>
                       <PasswordInput
                         placeholder="Enter your password"
+                        disabled={loading}
                         {...field}
                       />
                     </FormControl>
@@ -99,8 +126,12 @@ export default function Login() {
                   </FormItem>
                 )}
               />
-              <Button type="submit" className="w-full cursor-pointer">
-                Sign in
+              <Button
+                type="submit"
+                className="w-full cursor-pointer"
+                disabled={loading}
+              >
+                {loading ? "Logging in..." : "Login"}
               </Button>
             </form>
           </Form>

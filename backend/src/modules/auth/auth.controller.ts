@@ -14,9 +14,10 @@ export const register = asyncHandler(async (req: Request, res: Response) => {
   const { name, email, password } = req.body;
   const result = await registerUser({ name, email, password });
 
-  res.cookie("refreshToken", result.refreshToken, {
+  res.cookie("refresh_token", result.refreshToken, {
     httpOnly: true,
     sameSite: "strict",
+    maxAge: 1000 * 60 * 60 * 24 * 7, // 7 days
     secure: process.env.NODE_ENV === "production",
   });
 
@@ -34,9 +35,10 @@ export const login = asyncHandler(async (req: Request, res: Response) => {
   const { email, password } = req.body;
   const result = await loginUser({ email, password });
 
-  res.cookie("refreshToken", result.refreshToken, {
+  res.cookie("refresh_token", result.refreshToken, {
     httpOnly: true,
-    sameSite: "strict",
+    sameSite: "lax",
+    maxAge: 1000 * 60 * 60 * 24 * 7, // 7 days
     secure: process.env.NODE_ENV === "production",
   });
 
@@ -52,7 +54,7 @@ export const login = asyncHandler(async (req: Request, res: Response) => {
 // POST /auth/refresh
 export const refreshToken = asyncHandler(
   async (req: Request, res: Response) => {
-    const token = req.cookies?.refreshToken;
+    const token = req.cookies?.refresh_token;
     if (!token) {
       throw new AppError(401, "Unauthorized");
     }
@@ -70,10 +72,10 @@ export const refreshToken = asyncHandler(
 
 // POST /auth/logout
 export const logout = asyncHandler(async (req: Request, res: Response) => {
-  res.clearCookie("refreshToken", {
+  res.clearCookie("refresh_token", {
     secure: process.env.NODE_ENV === "production",
     httpOnly: true,
-    sameSite: "strict",
+    sameSite: "lax",
   });
 
   return res.status(200).json({
