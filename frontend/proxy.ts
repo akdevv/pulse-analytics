@@ -10,15 +10,15 @@ export function proxy(req: NextRequest) {
   const publicPaths = ["/", "/login", "/register"];
   const isPublicPath = publicPaths.includes(pathname);
 
-  // unauthenticated user
-  if (!token && !isPublicPath) {
-    return NextResponse.redirect(new URL("/login", req.url));
-  }
+  // // unauthenticated user
+  // if (!token && !isPublicPath) {
+  //   return NextResponse.redirect(new URL("/login", req.url));
+  // }
 
-  // authenticated user
-  if (token && isPublicPath) {
-    return NextResponse.redirect(new URL("/dashboard", req.url));
-  }
+  // // authenticated user
+  // if (token && isPublicPath) {
+  //   return NextResponse.redirect(new URL("/dashboard", req.url));
+  // }
 
   return NextResponse.next();
 }

@@ -17,7 +17,6 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
-  SidebarSeparator,
 } from "@/components/ui/sidebar";
 import { Button } from "@/components/ui/button";
 import { logout } from "@/lib/api/auth.api";
@@ -31,7 +30,7 @@ const items = [
   },
   {
     title: "Sites",
-    url: "/sites",
+    url: "/dashboard/sites",
     icon: PiGlobeSimpleBold,
   },
   {
@@ -51,7 +50,7 @@ export function AppSidebar() {
   };
 
   return (
-    <Sidebar>
+    <Sidebar className="border-none">
       <SidebarContent className="flex flex-col gap-0">
         <SidebarHeader className="text-lg font-semibold p-4">
           <Link
@@ -62,7 +61,6 @@ export function AppSidebar() {
             <span>Pulse Analytics</span>
           </Link>
         </SidebarHeader>
-        <SidebarSeparator className="mx-0" />
         <SidebarGroup className="flex-1 py-4">
           <SidebarGroupContent>
             <SidebarMenu>
@@ -83,7 +81,6 @@ export function AppSidebar() {
           </SidebarGroupContent>
         </SidebarGroup>
 
-        <SidebarSeparator className="mx-0" />
         <SidebarFooter className="mt-auto p-4">
           <Button
             onClick={handleLogout}
