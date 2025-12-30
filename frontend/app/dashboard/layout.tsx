@@ -12,9 +12,11 @@ export default function DashboardLayout({
       <div className="flex w-screen h-screen bg-sidebar">
         <AppSidebar />
         <div className="flex-1 p-2">
-          <div className="bg-background rounded-xl h-full">
+          <div className="bg-background rounded-xl h-full flex flex-col">
             <SiteHeader />
-            <main className="p-3">{children}</main>
+            <main className="flex flex-1 p-0 md:p-3 overflow-y-auto hide-scrollbar">
+              {children}
+            </main>
           </div>
         </div>
       </div>
