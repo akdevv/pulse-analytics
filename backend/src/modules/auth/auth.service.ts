@@ -52,7 +52,7 @@ export const loginUser = async (user: {
 
   const userData = await findUserByEmail(email);
   if (!userData) {
-    throw new AppError(400, "Failed to login user");
+    throw new AppError(404, "Failed to find user");
   }
 
   const isPasswordValid = await bcrypt.compare(password, userData.password!);

@@ -2,10 +2,12 @@ import cors from "cors";
 import helmet from "helmet";
 import express, { type Express } from "express";
 import { config } from "@/config/index.ts";
+import cookieParser from "cookie-parser";
 import { errorMiddleware } from "@/middleware/error.middleware.ts";
 
 // Routes
 import authRoutes from "@/modules/auth/auth.routes.ts";
+import siteRoutes from "@/modules/site/site.routes.ts";
 
 const app: Express = express();
 
@@ -20,6 +22,7 @@ app.use(
 );
 
 app.use(helmet());
+app.use(cookieParser());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
@@ -35,6 +38,7 @@ apiRoute.get("/health", (_, res) => {
 
 // Routes
 apiRoute.use("/auth", authRoutes);
+apiRoute.use("/sites", siteRoutes);
 
 // Mount API routes
 app.use(`/api/${config.apiVersion}`, apiRoute);

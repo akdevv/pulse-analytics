@@ -29,7 +29,7 @@ export const updateUserById = (
   id: string,
   user: Partial<IUser>
 ): Promise<IUser> => {
-  let updateData: any = {};
+  const updateData: any = {};
 
   if (typeof user.name === "string" && user.name.trim() !== "") {
     updateData.name = user.name;

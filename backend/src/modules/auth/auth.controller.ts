@@ -1,13 +1,13 @@
-import type { Request, Response } from "express";
-import {
-  registerUser,
-  loginUser,
-  refreshTokenService,
-  getUserById,
-  updateUserService,
-} from "./auth.service.ts";
 import { AppError } from "@/utils/app-error.ts";
 import { asyncHandler } from "@/utils/async-handler.ts";
+import type { Request, Response } from "express";
+import {
+  getUserById,
+  loginUser,
+  refreshTokenService,
+  registerUser,
+  updateUserService,
+} from "./auth.service.ts";
 
 // POST /auth/register
 export const register = asyncHandler(async (req: Request, res: Response) => {
@@ -86,10 +86,10 @@ export const logout = asyncHandler(async (req: Request, res: Response) => {
 
 // GET /auth/me
 export const getUser = asyncHandler(async (req: Request, res: Response) => {
-  if (!req.user) {
+  if (!req.user.userId) {
     throw new AppError(401, "Unauthorized");
   }
-  const user = await getUserById(req.user.id);
+  const user = await getUserById(req.user.userId);
   if (!user) {
     throw new AppError(404, "User not found");
   }
@@ -103,8 +103,11 @@ export const getUser = asyncHandler(async (req: Request, res: Response) => {
 
 // PATCH /auth/me
 export const updateUser = asyncHandler(async (req: Request, res: Response) => {
+  if (!req.user.userId) {
+    throw new AppError(401, "Unauthorized");
+  }
   const { name, email, password } = req.body;
-  const result = await updateUserService(req.user.id, {
+  const result = await updateUserService(req.user.userId, {
     name,
     email,
     password,

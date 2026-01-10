@@ -7,6 +7,13 @@ export const errorMiddleware = (
   res: Response,
   next: NextFunction
 ) => {
+  if (err?.type === "entity.parse.failed") {
+    return res.status(400).json({
+      status: "error",
+      message: "Invalid JSON in request body",
+    });
+  }
+
   // known errors
   if (err instanceof AppError) {
     return res.status(err.statusCode).json({
