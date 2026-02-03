@@ -4,10 +4,12 @@ import express, { type Express } from "express";
 import { config } from "@/config/index.ts";
 import cookieParser from "cookie-parser";
 import { errorMiddleware } from "@/middleware/error.middleware.ts";
+import { requestIdMiddleware } from "@/middleware/requestId.ts";
 
 // Routes
 import authRoutes from "@/modules/auth/auth.routes.ts";
 import siteRoutes from "@/modules/site/site.routes.ts";
+import trackRoutes from "@/modules/ingestion/track.routes.ts";
 
 const app: Express = express();
 
@@ -25,6 +27,7 @@ app.use(helmet());
 app.use(cookieParser());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+app.use(requestIdMiddleware);
 
 const apiRoute = express.Router();
 
@@ -39,6 +42,7 @@ apiRoute.get("/health", (_, res) => {
 // Routes
 apiRoute.use("/auth", authRoutes);
 apiRoute.use("/sites", siteRoutes);
+apiRoute.use("/track", trackRoutes);
 
 // Mount API routes
 app.use(`/api/${config.apiVersion}`, apiRoute);

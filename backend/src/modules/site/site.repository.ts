@@ -17,14 +17,14 @@ export const createSite = async (
     data: {
       name,
       domain,
-      user_id: userId,
-      tracking_id: trackingId,
+      userId: userId,
+      trackingId: trackingId,
     },
   });
 };
 
 export const getSites = async (userId: string): Promise<ISite[]> => {
-  return prisma.site.findMany({ where: { user_id: userId } });
+  return prisma.site.findMany({ where: { userId: userId } });
 };
 
 export const getSiteById = async (
@@ -34,7 +34,7 @@ export const getSiteById = async (
   return prisma.site.findUnique({
     where: {
       id: siteId,
-      user_id: userId,
+      userId: userId,
     },
   });
 };
@@ -47,7 +47,7 @@ export const updateSite = async (
   return prisma.site.update({
     where: {
       id: siteId,
-      user_id: userId,
+      userId: userId,
     },
     data,
   });
@@ -60,7 +60,7 @@ export const deleteSite = async (
   await prisma.site.delete({
     where: {
       id: siteId,
-      user_id: userId,
+      userId: userId,
     },
   });
 };
@@ -73,10 +73,10 @@ export const updateTrackingId = async (
   return prisma.site.update({
     where: {
       id: siteId,
-      user_id: userId,
+      userId: userId,
     },
     data: {
-      tracking_id: trackingId,
+      trackingId: trackingId,
     },
   });
 };

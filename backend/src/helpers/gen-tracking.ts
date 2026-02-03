@@ -15,10 +15,10 @@ export function generateTrackingId(): string {
 export function generateEmbedCode(trackingId: string): string {
   const embedCode = `
 <!-- Pulse Analytics -->
-<script src="https://api.pulse.com/pulse-sdk.js?tracking_id=${trackingId}"></script>
+<script src="https://api.pulse.com/pulse-sdk.js?trackingId=${trackingId}"></script>
 <script>
   window.pulse = {
-    tracking_id: "${trackingId}"
+    trackingId: "${trackingId}"
   };
 </script>
     `;

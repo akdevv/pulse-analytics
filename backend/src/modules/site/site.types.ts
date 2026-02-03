@@ -4,8 +4,10 @@ export const siteSchema = z.object({
   id: z.string(),
   name: z.string().min(2).max(100),
   domain: z.string().min(2).max(100),
-  user_id: z.string(),
-  tracking_id: z.string(),
+  userId: z.string(),
+  trackingId: z.string(),
+  rateLimitTier: z.enum(["FREE", "PRO", "ENTERPRISE"]),
+  isActive: z.boolean().default(true),
   createdAt: z.date(),
   updatedAt: z.date(),
 });
