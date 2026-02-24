@@ -1,10 +1,10 @@
+import "@/config/redis.ts";
 import cors from "cors";
 import helmet from "helmet";
 import express, { type Express } from "express";
 import { config } from "@/config/index.ts";
 import cookieParser from "cookie-parser";
 import { errorMiddleware } from "@/middleware/error.middleware.ts";
-import { requestIdMiddleware } from "@/middleware/requestId.ts";
 
 // Routes
 import authRoutes from "@/modules/auth/auth.routes.ts";
@@ -28,7 +28,6 @@ app.use(helmet());
 app.use(cookieParser());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-app.use(requestIdMiddleware);
 
 const apiRoute = express.Router();
 
