@@ -28,38 +28,44 @@ export interface ParsedEvent {
   siteId: string;
   eventId: string;
   eventType: EventType;
-  eventName?: string;
+  eventName: string | null;
 
   // URL components
   url: string;
   urlHostname: string;
   urlPathname: string;
-  urlSearch?: string;
+  urlSearch: string | null;
 
   // Page info
-  pageTitle?: string;
-  referrer?: string;
+  pageTitle: string | null;
+  referrer: string | null;
 
   // Session & visitor
-  sessionId?: string;
-  visitorId?: string;
+  sessionId: string | null;
+  visitorId: string | null;
 
   // Request metadata
-  ipAddress?: string;
-  userAgent?: string;
+  ipAddress: string | null;
+  userAgent: string | null;
 
   // Parsed device info
-  deviceType?: string;
+  deviceType: string | null;
   browser: string;
   browserVersion: string;
   os: string;
   osVersion: string;
 
+  // display
+  screenResolution: string | null;
+  viewportSize: string | null;
+  userLanguage: string | null;
+
   // Custom data
   eventProperties?: any;
 
   // Timestamps
-  timestamp: Date;
+  timestamp: Date; // client-reported or server time
+  receivedAt: Date; // always server time — when we received it
 }
 
 export interface DeviceInfo {
