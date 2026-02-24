@@ -1,6 +1,21 @@
 import { prisma } from "@/config/prisma.ts";
 import type { ParsedEvent } from "@/types/event.ts";
 
+export async function getSiteByTrackingId(trackingId: string) {
+  return await prisma.site.findFirst({
+    where: {
+      trackingId: trackingId,
+      isActive: true,
+    },
+    select: {
+      id: true,
+      domain: true,
+      rateLimitTier: true,
+      isActive: true,
+    },
+  });
+}
+
 export async function insertEvent(event: ParsedEvent): Promise<void> {
   await prisma.event.create({
     data: {

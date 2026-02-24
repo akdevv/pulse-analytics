@@ -1,11 +1,12 @@
-import type { Request, Response } from "express";
-import { TrackQuerySchema } from "./track.types.ts";
-import logger from "@/utils/logger.ts";
 import { asyncHandler } from "@/utils/async-handler.ts";
+import logger from "@/utils/logger.ts";
+import type { Request, Response } from "express";
 import { performance } from "perf_hooks";
-import { prisma } from "@/config/prisma.ts";
-import { buildParsedEvent } from "./track.service.ts";
+import { getCachedSite } from "./track.cache.ts";
 import { insertEvent } from "./track.repository.ts";
+import { buildParsedEvent } from "./track.service.ts";
+import { TrackQuerySchema } from "./track.types.ts";
+import { checkIpRateLimit, checkSiteRateLimit } from "./track.ratelimit.ts";
 
 // POST /track
 export const track = asyncHandler(async (req: Request, res: Response) => {
@@ -30,15 +31,32 @@ export const track = asyncHandler(async (req: Request, res: Response) => {
   try {
     // Site Lookup
     const t2 = performance.now();
-    const site = await prisma.site.findFirst({
-      where: { trackingId: params.tid, isActive: true },
-      select: { id: true }, // Only fetch the id
-    });
+    const site = await getCachedSite(params.tid);
     timings.siteLookup = performance.now() - t2;
 
     if (!site) {
       logger.warn("[track] Unknown or inactive tracking ID", {
         tid: params.tid,
+        timings: formatTimings(timings),
+      });
+      return res.status(204).send();
+    }
+
+    // Rate Limiting
+    const t2b = performance.now();
+    const ip = req.ip ?? "unknown";
+    const [siteAllowed, ipAllowed] = await Promise.all([
+      checkSiteRateLimit(site.id, site.rateLimitTier),
+      checkIpRateLimit(ip),
+    ]);
+    timings.rateLimit = performance.now() - t2b;
+
+    if (!siteAllowed || !ipAllowed) {
+      logger.warn("[track] Rate limit exceeded", {
+        tid: params.tid,
+        ip,
+        siteAllowed,
+        ipAllowed,
         timings: formatTimings(timings),
       });
       return res.status(204).send();

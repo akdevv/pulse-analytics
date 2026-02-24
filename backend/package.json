@@ -16,7 +16,10 @@
     "docker:down": "docker compose down",
     "docker:logs": "docker compose logs -f",
     "docker:logs:backend": "docker compose logs -f backend",
-    "docker:restart": "docker compose restart backend"
+    "docker:restart": "docker compose restart backend",
+    "db:studio": "docker compose run --rm -p 5555:5555 backend pnpm exec prisma studio --port 5555 --browser none",
+    "seed": "docker compose run --rm backend pnpm run seed:run",
+    "seed:run": "tsx src/seed/index.ts"
   },
   "keywords": [],
   "author": "akdevv",

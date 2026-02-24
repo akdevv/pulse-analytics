@@ -13,6 +13,7 @@ import {
   updateTrackingId,
 } from "./site.repository.ts";
 import type { ISite } from "./site.types.ts";
+import { invalidateSiteCache } from "../ingestion/track.cache.ts";
 
 export const createSiteService = async ({
   userId,
@@ -90,6 +91,7 @@ export const deleteSiteService = async (
   }
 
   await deleteSite(userId, siteId);
+  await invalidateSiteCache(existingSite.trackingId);
 };
 
 export const regenerateTrackingIdService = async (
@@ -101,6 +103,8 @@ export const regenerateTrackingIdService = async (
   if (!existingSite) {
     throw new AppError(404, "Site not found");
   }
+
+  await invalidateSiteCache(existingSite.trackingId); // invalidate cache
 
   // Generate new tracking ID and embed code
   const newTrackingId = generateTrackingId();

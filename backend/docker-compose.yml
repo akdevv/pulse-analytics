@@ -37,10 +37,12 @@ services:
     ports:
       - "8000:8000"
     env_file: .env
+    environment:
+      REDIS_HOST: redis # use service name inside Docker network
     volumes:
       - .:/app
       - /app/node_modules # avoid overwriting container node_modules with host
-    command: pnpm run dev
+    command: sh -c "pnpm exec prisma migrate deploy && pnpm run dev"
     depends_on:
       postgres:
         condition: service_healthy
