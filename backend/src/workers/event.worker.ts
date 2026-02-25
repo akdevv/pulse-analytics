@@ -1,8 +1,8 @@
-import { Worker, Job, Queue } from "bullmq";
-import { type ParsedEvent } from "@/types/event.ts";
-import { insertEvent } from "@/modules/ingestion/track.repository.ts";
-import logger from "@/utils/logger.ts";
 import env from "@/config/env.ts";
+import { type ParsedEvent } from "@/types/event.ts";
+import logger from "@/utils/logger.ts";
+import { Job, Queue, Worker } from "bullmq";
+import { insertManyEvents } from "@/modules/ingestion/track.repository.ts";
 
 const connection = {
   host: env.REDIS_HOST || "localhost",
@@ -14,16 +14,61 @@ const dlq = new Queue("events-failed", {
   connection,
 });
 
+// Batch state
+let batch: ParsedEvent[] = [];
+let flushTimer: NodeJS.Timeout | null = null;
+
+const BATCH_SIZE = 100; // flush when we hit 100 events
+const FLUSH_INTERVAL_MS = 1000; // flush every 1 second regardless
+
+async function flushBatch(): Promise<void> {
+  if (batch.length === 0) return;
+
+  // Grab the current batch and immediately reset
+  // This is important: if the DB write takes 50ms, new events
+  // should go into the NEXT batch, not pile onto this one
+  const toFlush = batch;
+  batch = [];
+
+  if (flushTimer) {
+    clearTimeout(flushTimer);
+    flushTimer = null;
+  }
+
+  logger.info(`[batcher] flushing ${toFlush.length} events`);
+
+  try {
+    await insertManyEvents(toFlush);
+  } catch (err) {
+    logger.error(`[batcher] flush failed for ${toFlush.length} events`, {
+      err,
+    });
+    // In Phase 8, we just log. Phase 9+ can add retry/DLQ here.
+  }
+}
+
+function scheduleFlusher() {
+  if (flushTimer) return; // already scheduled
+  flushTimer = setTimeout(() => {
+    flushBatch();
+  }, FLUSH_INTERVAL_MS);
+}
+
 const worker = new Worker(
   "event",
   async (job: Job<ParsedEvent>) => {
-    logger.info(`[worker] picked up job ${job.id}`);
+    const event = job.data as ParsedEvent;
 
-    const start = performance.now();
-    await insertEvent(job.data);
-    const elapsed = (performance.now() - start).toFixed(2);
+    batch.push(event);
+    logger.debug(`[batcher] batch size now: ${batch.length}`);
 
-    logger.info(`[worker] job ${job.id} done. dbWrite: ${elapsed}ms`);
+    // Flush immediately if we've hit the batch size
+    if (batch.length >= BATCH_SIZE) {
+      await flushBatch();
+    } else {
+      //Otherwise, schedule a time-based flush
+      scheduleFlusher();
+    }
   },
   {
     connection,
@@ -62,4 +107,4 @@ worker.on("error", (err: Error) => {
 
 logger.info("[worker] Event worker started. Listening for jobs...");
 
-export { worker };
+export { worker, flushBatch };

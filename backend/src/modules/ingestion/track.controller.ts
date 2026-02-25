@@ -51,16 +51,16 @@ export const track = asyncHandler(async (req: Request, res: Response) => {
     ]);
     timings.rateLimit = performance.now() - t2b;
 
-    if (!siteAllowed || !ipAllowed) {
-      logger.warn("[track] Rate limit exceeded", {
-        tid: params.tid,
-        ip,
-        siteAllowed,
-        ipAllowed,
-        timings: formatTimings(timings),
-      });
-      return res.status(204).send();
-    }
+    // if (!siteAllowed || !ipAllowed) {
+    //   logger.warn("[track] Rate limit exceeded", {
+    //     tid: params.tid,
+    //     ip,
+    //     siteAllowed,
+    //     ipAllowed,
+    //     timings: formatTimings(timings),
+    //   });
+    //   return res.status(204).send();
+    // },
 
     // Build event
     const t3 = performance.now();
