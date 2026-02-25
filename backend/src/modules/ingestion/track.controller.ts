@@ -1,12 +1,12 @@
+import { enqueue } from "@/config/queue.ts";
 import { asyncHandler } from "@/utils/async-handler.ts";
 import logger from "@/utils/logger.ts";
 import type { Request, Response } from "express";
 import { performance } from "perf_hooks";
 import { getCachedSite } from "./track.cache.ts";
-import { insertEvent } from "./track.repository.ts";
+import { checkIpRateLimit, checkSiteRateLimit } from "./track.ratelimit.ts";
 import { buildParsedEvent } from "./track.service.ts";
 import { TrackQuerySchema } from "./track.types.ts";
-import { checkIpRateLimit, checkSiteRateLimit } from "./track.ratelimit.ts";
 
 // POST /track
 export const track = asyncHandler(async (req: Request, res: Response) => {
@@ -69,7 +69,12 @@ export const track = asyncHandler(async (req: Request, res: Response) => {
 
     // DB Write
     const t4 = performance.now();
-    await insertEvent(event);
+
+    // Enqueue the event
+    enqueue(event);
+    logger.info("[controller] Event queued, returning 204");
+
+    // await insertEvent(event);
     timings.eventWrite = performance.now() - t4;
 
     timings.total = performance.now() - totalStart;

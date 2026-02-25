@@ -5,6 +5,7 @@
   "main": "src/index.ts",
   "scripts": {
     "dev": "tsx watch src/index.ts",
+    "worker": "tsx src/worker.ts",
     "start": "node --import tsx src/index.ts",
     "build": "tsc --noEmit",
     "lint": "eslint .",
@@ -31,6 +32,7 @@
     "@prisma/adapter-pg": "^7.1.0",
     "@prisma/client": "^7.1.0",
     "bcrypt": "^6.0.0",
+    "bullmq": "^5.70.1",
     "cookie-parser": "^1.4.7",
     "cors": "^2.8.5",
     "dotenv": "^17.2.3",
