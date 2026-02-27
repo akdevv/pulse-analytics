@@ -8,6 +8,8 @@ import { checkIpRateLimit, checkSiteRateLimit } from "./track.ratelimit.ts";
 import { buildRawEvent } from "./track.service.ts";
 import { TrackQuerySchema } from "./track.types.ts";
 
+const SLOW_REQUEST_THRESHOLD_MS = 100;
+
 // POST /track
 export const track = asyncHandler(async (req: Request, res: Response) => {
   const totalStart = performance.now();
@@ -75,21 +77,29 @@ export const track = asyncHandler(async (req: Request, res: Response) => {
     logger.info("[controller] Event queued, returning 204");
 
     // await insertEvent(event);
-    timings.eventWrite = performance.now() - t4;
+    timings.enqueue = performance.now() - t4;
 
-    timings.total = performance.now() - totalStart;
+    const totalTime = performance.now() - totalStart;
 
-    // Always log if debug=true or if the request was unexpectedly slow
-    if (params.debug || timings.total > 100) {
-      logger.info("[track] Event recorded", {
-        tid: params.tid,
-        eventType: params.t,
-        timings: formatTimings(timings),
-      });
-    } else {
-      logger.debug("[track] Event recorded", {
-        tid: params.tid,
-        timings: formatTimings(timings),
+    // Normal log — always fires
+    logger.info(`[TRACK] total: ${totalTime.toFixed(2)}ms`);
+
+    // Slow request alert — fires only when something is unexpectedly slow
+    if (totalTime > SLOW_REQUEST_THRESHOLD_MS) {
+      logger.warn(`[TRACK] Slow request detected`, {
+        totalMs: totalTime.toFixed(2),
+        timings: {
+          validation: timings.validation,
+          siteLookup: timings.siteLookup,
+          rateLimit: timings.rateLimit,
+          buildEvent: timings.buildEvent,
+          enqueue: timings.enqueue,
+        },
+        request: {
+          tid: params.tid,
+          eventType: params.t,
+          ip: req.ip,
+        },
       });
     }
 

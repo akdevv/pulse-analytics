@@ -1,10 +1,13 @@
 import env from "@/config/env.ts";
+import { eventQueue } from "@/config/queue.ts";
 import { type ParsedEvent, type RawEvent } from "@/types/event.ts";
 import logger from "@/utils/logger.ts";
 import { Job, Queue, Worker } from "bullmq";
 import { insertManyEvents } from "@/modules/ingestion/track.repository.ts";
 import { lookupGeoIp } from "./geo.service.ts";
 import { UAParser } from "ua-parser-js";
+
+const QUEUE_DEPTH_WARN_THRESHOLD = 10_000;
 
 const connection = {
   host: env.REDIS_HOST || "localhost",
@@ -19,6 +22,7 @@ const dlq = new Queue("events-failed", {
 // Batch state
 let batch: ParsedEvent[] = [];
 let flushTimer: NodeJS.Timeout | null = null;
+let processedInLastMinute = 0;
 
 const BATCH_SIZE = 100; // flush when we hit 100 events
 const FLUSH_INTERVAL_MS = 1000; // flush every 1 second regardless
@@ -37,16 +41,40 @@ async function flushBatch(): Promise<void> {
     flushTimer = null;
   }
 
-  logger.info(`[batcher] flushing ${toFlush.length} events`);
+  const batchSize = toFlush.length;
+  const flushStart = performance.now();
 
   try {
     await insertManyEvents(toFlush);
+    processedInLastMinute += batchSize;
+    const flushTime = (performance.now() - flushStart).toFixed(2);
+    logger.info(
+      `[worker] Batch flushed. count: ${batchSize}, time: ${flushTime}ms`
+    );
+
+    // Check queue depth after every flush
+    const waiting = await eventQueue.getWaitingCount();
+    const active = await eventQueue.getActiveCount();
+
+    logger.info(
+      `[worker] Queue depth — waiting: ${waiting}, active: ${active}`
+    );
+
+    // Alert if queue is backing up
+    if (waiting > QUEUE_DEPTH_WARN_THRESHOLD) {
+      logger.warn(`[worker] Queue backlog is high`, {
+        waiting,
+        active,
+        hint: "Worker may not be keeping up with ingestion rate",
+      });
+    }
   } catch (err) {
     logger.error(
       `[batcher] flush failed for ${toFlush.length} events`,
       err instanceof Error ? err : new Error(String(err))
     );
-    // In Phase 8, we just log. Phase 9+ can add retry/DLQ here.
+    // Put events back — don't lose them
+    batch = [...toFlush, ...batch];
   }
 }
 
@@ -83,6 +111,15 @@ async function enrichEvent(raw: RawEvent) {
     city: geo.city,
     region: geo.region,
   };
+}
+
+export function startThroughputLogger(): void {
+  setInterval(() => {
+    logger.info(
+      `[worker] Throughput — events processed in last 60s: ${processedInLastMinute}`
+    );
+    processedInLastMinute = 0;
+  }, 60_000);
 }
 
 const worker = new Worker(
