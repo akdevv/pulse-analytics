@@ -24,7 +24,7 @@ export interface TrackEventPayload {
   timestamp?: Date;
 }
 
-export interface ParsedEvent {
+export interface BaseEvent {
   siteId: string;
   eventId: string;
   eventType: EventType;
@@ -48,13 +48,6 @@ export interface ParsedEvent {
   ipAddress: string | null;
   userAgent: string | null;
 
-  // Parsed device info
-  deviceType: string | null;
-  browser: string;
-  browserVersion: string;
-  os: string;
-  osVersion: string;
-
   // display
   screenResolution: string | null;
   viewportSize: string | null;
@@ -75,3 +68,13 @@ export interface DeviceInfo {
   os: string;
   osVersion: string;
 }
+
+export interface GeoInfo {
+  country: string | null;
+  countryCode: string | null;
+  city: string | null;
+  region: string | null;
+}
+
+export type RawEvent = BaseEvent;
+export type ParsedEvent = BaseEvent & DeviceInfo & GeoInfo;

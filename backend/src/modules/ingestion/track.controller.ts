@@ -5,7 +5,7 @@ import type { Request, Response } from "express";
 import { performance } from "perf_hooks";
 import { getCachedSite } from "./track.cache.ts";
 import { checkIpRateLimit, checkSiteRateLimit } from "./track.ratelimit.ts";
-import { buildParsedEvent } from "./track.service.ts";
+import { buildRawEvent } from "./track.service.ts";
 import { TrackQuerySchema } from "./track.types.ts";
 
 // POST /track
@@ -51,20 +51,20 @@ export const track = asyncHandler(async (req: Request, res: Response) => {
     ]);
     timings.rateLimit = performance.now() - t2b;
 
-    // if (!siteAllowed || !ipAllowed) {
-    //   logger.warn("[track] Rate limit exceeded", {
-    //     tid: params.tid,
-    //     ip,
-    //     siteAllowed,
-    //     ipAllowed,
-    //     timings: formatTimings(timings),
-    //   });
-    //   return res.status(204).send();
-    // },
+    if (!siteAllowed || !ipAllowed) {
+      logger.warn("[track] Rate limit exceeded", {
+        tid: params.tid,
+        ip,
+        siteAllowed,
+        ipAllowed,
+        timings: formatTimings(timings),
+      });
+      return res.status(204).send();
+    }
 
     // Build event
     const t3 = performance.now();
-    const event = buildParsedEvent(params, req, site.id);
+    const event = buildRawEvent(params, req, site.id);
     timings.buildEvent = performance.now() - t3;
 
     // DB Write

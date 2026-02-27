@@ -39,6 +39,10 @@ export async function insertEvent(event: ParsedEvent): Promise<void> {
       browserVersion: event.browserVersion,
       os: event.os,
       osVersion: event.osVersion,
+      country: event.country,
+      countryCode: event.countryCode,
+      city: event.city,
+      region: event.region,
       screenResolution: event.screenResolution,
       viewportSize: event.viewportSize,
       userLanguage: event.userLanguage,
@@ -55,7 +59,7 @@ export async function insertManyEvents(events: ParsedEvent[]): Promise<void> {
   const startTime = performance.now();
 
   await prisma.event.createMany({
-    data: events.map((event) => ({
+    data: events.map((event: ParsedEvent) => ({
       siteId: event.siteId,
       eventId: event.eventId,
       eventType: event.eventType,
@@ -75,6 +79,10 @@ export async function insertManyEvents(events: ParsedEvent[]): Promise<void> {
       browserVersion: event.browserVersion,
       os: event.os,
       osVersion: event.osVersion,
+      country: event.country,
+      countryCode: event.countryCode,
+      city: event.city,
+      region: event.region,
       screenResolution: event.screenResolution,
       viewportSize: event.viewportSize,
       userLanguage: event.userLanguage,

@@ -1,8 +1,7 @@
-import type { DeviceInfo, ParsedEvent } from "@/types/event.ts";
+import type { ParsedEvent, RawEvent } from "@/types/event.ts";
 import type { Request } from "express";
-import { UAParser } from "ua-parser-js";
-import type { TrackQueryParams } from "./track.types.ts";
 import { v4 as uuidv4 } from "uuid";
+import type { TrackQueryParams } from "./track.types.ts";
 
 // Extract IP from request.
 export function getClientIp(req: Request): string | undefined {
@@ -41,41 +40,15 @@ function parseUrl(rawUrl: string): {
   }
 }
 
-export function parseUserAgent(uaString: string | undefined): DeviceInfo {
-  if (!uaString) {
-    return {
-      deviceType: "unknown",
-      browser: "Unknown",
-      browserVersion: "Unknown",
-      os: "Unknown",
-      osVersion: "Unknown",
-    };
-  }
-
-  const parser = new UAParser(uaString);
-  const result = parser.getResult();
-
-  return {
-    deviceType: result.device.type ?? "desktop",
-    browser: result.browser.name ?? "Unknown",
-    browserVersion: result.browser.version ?? "Unknown",
-    os: result.os.name ?? "Unknown",
-    osVersion: result.os.version ?? "Unknown",
-  };
-}
-
-export function buildParsedEvent(
+export function buildRawEvent(
   params: TrackQueryParams,
   req: Request,
   siteId: string
-): ParsedEvent {
+): RawEvent {
   const now = new Date();
 
   // Parse URL components
   const { urlHostname, urlPathname, urlSearch } = parseUrl(params.dl);
-
-  // Parse User-Agent
-  const deviceInfo = parseUserAgent(req.headers["user-agent"]);
 
   // Resolve timestamp
   const timestamp = params.ts ? new Date(params.ts) : now;
@@ -104,9 +77,6 @@ export function buildParsedEvent(
     ipAddress: getClientIp(req),
     userAgent: req.headers["user-agent"],
 
-    // Device info (UA-parsed)
-    ...deviceInfo,
-
     // Display
     screenResolution: params.sr,
     viewportSize: params.vp,
@@ -118,5 +88,5 @@ export function buildParsedEvent(
     // Timestamps
     timestamp,
     receivedAt: now,
-  } as ParsedEvent;
+  } as RawEvent;
 }

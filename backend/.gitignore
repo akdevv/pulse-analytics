@@ -99,3 +99,6 @@ temp/
 .tern-port
 .yarn-integrity
 src/generated/prisma
+
+# mmdb files
+*.mmdb

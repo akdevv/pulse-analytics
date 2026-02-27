@@ -1,5 +1,6 @@
 import express, { type Router } from "express";
 import { track } from "./track.controller.ts";
+import { health } from "./health.controller.ts";
 
 const router: Router = express.Router();
 
@@ -15,11 +16,6 @@ router.use(express.json({ limit: "8kb" }));
 router.post("/", track);
 
 // Health
-router.get("/health", (_, res) => {
-  res.json({
-    status: "OK",
-    timestamp: new Date().toString(),
-  });
-});
+router.get("/health", health);
 
 export default router;

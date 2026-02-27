@@ -21,6 +21,8 @@ const envSchema = z.object({
   REDIS_HOST: z.string().default("localhost"),
   REDIS_PORT: z.coerce.number().default(6379),
   REDIS_PASSWORD: z.string().optional(),
+
+  GEOIP_DB_PATH: z.string().default("./data/GeoLite2-City.mmdb"),
 });
 
 const env = envSchema.safeParse(process.env);
