@@ -7,6 +7,7 @@ import cookieParser from "cookie-parser";
 import { errorMiddleware } from "@/middleware/error.middleware.ts";
 
 // Routes
+import analyticsRoutes from "@/modules/analytics/analytics.routes.ts";
 import authRoutes from "@/modules/auth/auth.routes.ts";
 import siteRoutes from "@/modules/site/site.routes.ts";
 import trackRoutes from "@/modules/ingestion/track.routes.ts";
@@ -41,6 +42,7 @@ apiRoute.get("/health", (_, res) => {
 });
 
 // Routes
+apiRoute.use("/analytics", analyticsRoutes);
 apiRoute.use("/auth", authRoutes);
 apiRoute.use("/sites", siteRoutes);
 apiRoute.use("/track", trackRoutes);
