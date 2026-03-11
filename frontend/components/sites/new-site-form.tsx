@@ -1,5 +1,6 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import {
   Form,
@@ -32,6 +33,7 @@ const formSchema = z.object({
 type FormData = z.infer<typeof formSchema>;
 
 export function NewSiteForm() {
+  const router = useRouter();
   const form = useForm<FormData>({
     resolver: zodResolver(formSchema),
     defaultValues: { name: "", domain: "" },
@@ -41,8 +43,7 @@ export function NewSiteForm() {
     try {
       const res = await createSite(data);
       toast.success(res.message ?? "Site created successfully!");
-      form.reset();
-      // TODO: redirect to site dashboard or tracking snippet step
+      router.push(`/dashboard/sites/${res.data.site.id}`);
     } catch (err: unknown) {
       const message =
         // eslint-disable-next-line @typescript-eslint/no-explicit-any

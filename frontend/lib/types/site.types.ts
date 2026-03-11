@@ -21,12 +21,3 @@ export type UpdateSiteInput = {
   name?: string;
   domain?: string;
 };
-
-export type CreateSiteResponse = {
-  status: string;
-  message: string;
-  data: {
-    site: Site;
-    embedCode: string;
-  };
-};
