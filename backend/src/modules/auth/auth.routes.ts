@@ -19,8 +19,8 @@ const router: Router = express.Router();
 
 router.post("/register", validate(registerUserSchema), register);
 router.post("/login", validate(loginUserSchema), login);
-router.post("/refresh", authenticateToken, refreshToken);
-router.post("/logout", authenticateToken, logout);
+router.post("/refresh", refreshToken);
+router.post("/logout", logout);
 
 router.get("/me", authenticateToken, getUser);
 router.patch("/me", authenticateToken, validate(updateUserSchema), updateUser);

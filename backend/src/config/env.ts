@@ -12,7 +12,7 @@ const envSchema = z.object({
   ACCESS_TOKEN_SECRET: z.string().min(1),
   REFRESH_TOKEN_SECRET: z.string().min(1),
   ACCESS_TOKEN_EXPIRY: z.string().default("15m"),
-  REFRESH_TOKEN_EXPIRY: z.string().default("7d"),
+  REFRESH_TOKEN_EXPIRY: z.string().default("30d"),
 
   // Database
   DATABASE_URL: z.string().min(1),

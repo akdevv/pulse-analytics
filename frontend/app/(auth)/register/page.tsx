@@ -1,10 +1,11 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
+import Link from "next/link";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
-import Link from "next/link";
 
+import { PasswordInput } from "@/components/common/password-input";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -22,8 +23,7 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { PasswordInput } from "@/components/common/password-input";
-import { register } from "@/lib/api/auth.api";
+import { useAuth } from "@/contexts/auth.context";
 
 const registerSchema = z
   .object({
@@ -46,6 +46,8 @@ const registerSchema = z
 type RegisterFormValues = z.infer<typeof registerSchema>;
 
 export default function Register() {
+  const { register } = useAuth();
+
   const form = useForm<RegisterFormValues>({
     resolver: zodResolver(registerSchema),
     defaultValues: {
@@ -57,13 +59,8 @@ export default function Register() {
   });
 
   async function onSubmit(data: RegisterFormValues) {
-    const res = await register({
-      name: data.name,
-      email: data.email,
-      password: data.password,
-    });
-
-    console.log(res);
+    const res = await register(data.name, data.email, data.password);
+    console.log("Register response => ", res);
   }
 
   return (

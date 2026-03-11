@@ -1,10 +1,11 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
+import Link from "next/link";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
-import Link from "next/link";
 
+import { PasswordInput } from "@/components/common/password-input";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -22,8 +23,7 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { PasswordInput } from "@/components/common/password-input";
-import { login } from "@/lib/api/auth.api";
+import { useAuth } from "@/contexts/auth.context";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
@@ -43,6 +43,8 @@ export default function Login() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
+  const { login } = useAuth();
+
   const form = useForm<LoginFormValues>({
     resolver: zodResolver(loginSchema),
     defaultValues: {
@@ -56,12 +58,8 @@ export default function Login() {
       setLoading(true);
       setError("");
 
-      const response = await login({
-        email: data.email,
-        password: data.password,
-      });
-
-      console.log("Login response:", response);
+      const res = await login(data.email, data.password);
+      console.log("Login response:", res);
 
       router.push("/dashboard");
     } catch (error) {

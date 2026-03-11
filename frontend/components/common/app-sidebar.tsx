@@ -1,12 +1,13 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter, usePathname } from "next/navigation";
-import { RiHome9Fill, RiUserSmileLine } from "react-icons/ri";
-import { PiGlobeSimpleBold } from "react-icons/pi";
-import { MdLocalActivity } from "react-icons/md";
+import { usePathname, useRouter } from "next/navigation";
 import { IoMdLogOut } from "react-icons/io";
+import { MdLocalActivity } from "react-icons/md";
+import { PiGlobeSimpleBold } from "react-icons/pi";
+import { RiHome9Fill, RiUserSmileLine } from "react-icons/ri";
 
+import { Button } from "@/components/ui/button";
 import {
   Sidebar,
   SidebarContent,
@@ -18,8 +19,7 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
-import { Button } from "@/components/ui/button";
-import { logout } from "@/lib/api/auth.api";
+import { useAuth } from "@/contexts/auth.context";
 
 // Menu items.
 const items = [
@@ -43,6 +43,7 @@ const items = [
 export function AppSidebar() {
   const router = useRouter();
   const pathname = usePathname();
+  const { logout } = useAuth();
 
   const handleLogout = async () => {
     await logout();
