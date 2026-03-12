@@ -2,8 +2,10 @@
 
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
+import Link from "next/link";
 import { toast } from "sonner";
 import { GoCheck, GoCopy } from "react-icons/go";
+import { IoSettingsOutline } from "react-icons/io5";
 import {
   Card,
   CardContent,
@@ -11,6 +13,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import { getSiteById } from "@/lib/api/sites.api";
 import type { Site } from "@/lib/types/site.types";
 
@@ -37,14 +40,14 @@ function CopyButton({ text }: { text: string }) {
   return (
     <button
       onClick={handleCopy}
-      className="text-muted-foreground hover:text-foreground flex items-center gap-1.5 text-xs transition-colors"
+      className="flex items-center gap-1.5 rounded-md border px-2.5 py-1.5 text-xs font-medium transition-all hover:bg-accent text-muted-foreground hover:text-foreground"
     >
       {copied ? (
-        <GoCheck className="size-3.5" />
+        <GoCheck className="size-3.5 text-green-500" />
       ) : (
         <GoCopy className="size-3.5" />
       )}
-      {copied ? "Copied" : "Copy"}
+      {copied ? "Copied!" : "Copy"}
     </button>
   );
 }
@@ -61,112 +64,126 @@ export default function SitePage() {
   }, [id]);
 
   if (loading) {
-    return <div className="text-muted-foreground text-sm">Loading...</div>;
+    return <div className="text-muted-foreground text-sm p-1">Loading...</div>;
   }
 
   if (!site) {
-    return <div className="text-muted-foreground text-sm">Site not found.</div>;
+    return <div className="text-muted-foreground text-sm p-1">Site not found.</div>;
   }
 
   const snippet = getSnippet(site.trackingId);
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-xl font-semibold">{site.name}</h1>
-        <p className="text-muted-foreground mt-1 text-sm">{site.domain}</p>
+    <div className="space-y-6 p-1">
+      {/* Header */}
+      <div className="flex items-start justify-between">
+        <div className="space-y-1">
+          <div className="flex items-center gap-2.5">
+            <h1 className="text-xl font-semibold tracking-tight">{site.name}</h1>
+            <span
+              className={`inline-flex items-center gap-1.5 rounded-full px-2 py-0.5 text-xs font-medium ${
+                site.isActive
+                  ? "bg-green-500/10 text-green-600 dark:text-green-400"
+                  : "bg-muted text-muted-foreground"
+              }`}
+            >
+              <span
+                className={`size-1.5 rounded-full ${
+                  site.isActive ? "bg-green-500" : "bg-muted-foreground"
+                }`}
+              />
+              {site.isActive ? "Active" : "Inactive"}
+            </span>
+          </div>
+          <p className="text-muted-foreground text-sm">{site.domain}</p>
+        </div>
+        <Button variant="outline" size="sm" asChild className="gap-1.5">
+          <Link href={`/dashboard/sites/${id}/settings`}>
+            <IoSettingsOutline className="size-3.5" />
+            Settings
+          </Link>
+        </Button>
       </div>
 
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <Card className="gap-2 py-4">
-          <CardContent className="px-4">
-            <p className="text-muted-foreground text-xs uppercase tracking-wide">
-              Status
-            </p>
-            <p className="mt-1 font-medium">
-              <span
-                className={`inline-flex items-center gap-1.5 text-sm ${
-                  site.isActive
-                    ? "text-green-600 dark:text-green-400"
-                    : "text-muted-foreground"
-                }`}
-              >
-                <span
-                  className={`size-1.5 rounded-full ${
-                    site.isActive ? "bg-green-500" : "bg-muted-foreground"
-                  }`}
-                />
-                {site.isActive ? "Active" : "Inactive"}
-              </span>
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card className="gap-2 py-4">
-          <CardContent className="px-4">
-            <p className="text-muted-foreground text-xs uppercase tracking-wide">
+      {/* Stat Cards */}
+      <div className="grid gap-3 sm:grid-cols-3">
+        <Card className="py-0 overflow-hidden">
+          <CardContent className="p-4">
+            <p className="text-muted-foreground text-[11px] font-medium uppercase tracking-widest">
               Tier
             </p>
-            <p className="mt-1 text-sm font-medium capitalize">
+            <p className="mt-2 text-sm font-semibold capitalize">
               {site.rateLimitTier.toLowerCase()}
             </p>
           </CardContent>
         </Card>
 
-        <Card className="gap-2 py-4">
-          <CardContent className="px-4">
-            <p className="text-muted-foreground text-xs uppercase tracking-wide">
+        <Card className="py-0 overflow-hidden">
+          <CardContent className="p-4">
+            <p className="text-muted-foreground text-[11px] font-medium uppercase tracking-widest">
               Created
             </p>
-            <p className="mt-1 text-sm font-medium">
-              {new Date(site.createdAt).toLocaleDateString()}
+            <p className="mt-2 text-sm font-semibold">
+              {new Date(site.createdAt).toLocaleDateString("en-US", {
+                month: "short",
+                day: "numeric",
+                year: "numeric",
+              })}
             </p>
           </CardContent>
         </Card>
 
-        <Card className="gap-2 py-4">
-          <CardContent className="px-4">
-            <p className="text-muted-foreground text-xs uppercase tracking-wide">
-              Updated
+        <Card className="py-0 overflow-hidden">
+          <CardContent className="p-4">
+            <p className="text-muted-foreground text-[11px] font-medium uppercase tracking-widest">
+              Last Updated
             </p>
-            <p className="mt-1 text-sm font-medium">
-              {new Date(site.updatedAt).toLocaleDateString()}
+            <p className="mt-2 text-sm font-semibold">
+              {new Date(site.updatedAt).toLocaleDateString("en-US", {
+                month: "short",
+                day: "numeric",
+                year: "numeric",
+              })}
             </p>
           </CardContent>
         </Card>
       </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Tracking Details</CardTitle>
+      {/* Tracking Details */}
+      <Card className="py-0">
+        <CardHeader className="px-5 pt-5 pb-0">
+          <CardTitle className="text-sm font-semibold">Tracking Details</CardTitle>
         </CardHeader>
-        <CardContent>
-          <dl className="divide-y">
+        <CardContent className="px-5 pb-2 pt-3">
+          <dl>
             {[
               { label: "Site ID", value: site.id },
               { label: "Tracking ID", value: site.trackingId },
               { label: "Domain", value: site.domain },
-            ].map(({ label, value }) => (
+            ].map(({ label, value }, i, arr) => (
               <div
                 key={label}
-                className="flex items-center justify-between py-3 text-sm"
+                className={`flex items-center justify-between py-3 text-sm ${
+                  i < arr.length - 1 ? "border-b" : ""
+                }`}
               >
-                <dt className="text-muted-foreground">{label}</dt>
-                <dd className="font-mono text-xs">{value}</dd>
+                <dt className="text-muted-foreground text-xs font-medium">{label}</dt>
+                <dd className="font-mono text-xs bg-muted px-2 py-0.5 rounded">{value}</dd>
               </div>
             ))}
           </dl>
         </CardContent>
       </Card>
 
-      <Card>
-        <CardHeader>
-          <div className="flex items-center justify-between">
-            <div>
-              <CardTitle>Tracking Snippet</CardTitle>
-              <CardDescription className="mt-1">
+      {/* Tracking Snippet */}
+      <Card className="py-0">
+        <CardHeader className="px-5 pt-5 pb-4">
+          <div className="flex items-start justify-between gap-4">
+            <div className="space-y-1">
+              <CardTitle className="text-sm font-semibold">Tracking Snippet</CardTitle>
+              <CardDescription className="text-xs">
                 Paste this inside the{" "}
-                <code className="bg-muted rounded px-1 py-0.5 text-xs">
+                <code className="bg-muted rounded px-1 py-0.5 font-mono text-[11px]">
                   &lt;head&gt;
                 </code>{" "}
                 tag of your site.
@@ -175,8 +192,8 @@ export default function SitePage() {
             <CopyButton text={snippet} />
           </div>
         </CardHeader>
-        <CardContent>
-          <pre className="bg-muted overflow-x-auto rounded-lg p-4 text-xs leading-relaxed">
+        <CardContent className="px-5 pb-5">
+          <pre className="bg-zinc-950 dark:bg-zinc-900 text-zinc-300 overflow-x-auto rounded-lg p-4 text-[11px] leading-relaxed border border-zinc-800">
             <code>{snippet}</code>
           </pre>
         </CardContent>

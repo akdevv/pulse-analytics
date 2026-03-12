@@ -11,9 +11,16 @@ export function SitesList() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    getSites()
-      .then(setSites)
-      .finally(() => setLoading(false));
+    (async () => {
+      try {
+        const data = await getSites();
+        setSites(data);
+      } catch (err) {
+        console.error("Failed to fetch sites:", err);
+      } finally {
+        setLoading(false);
+      }
+    })();
   }, []);
 
   if (loading) {

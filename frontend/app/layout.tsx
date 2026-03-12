@@ -1,7 +1,8 @@
-import "./globals.css";
-import type { Metadata } from "next";
 import { Toaster } from "@/components/ui/sonner";
 import { AuthProvider } from "@/contexts/auth.context";
+import type { Metadata } from "next";
+import "./globals.css";
+import { Providers } from "./providers";
 
 export const metadata: Metadata = {
   title: "Pulse Analytics",
@@ -17,10 +18,12 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className="dark antialiased">
-        <AuthProvider>
-          {children}
-          <Toaster richColors />
-        </AuthProvider>
+        <Providers>
+          <AuthProvider>
+            {children}
+            <Toaster richColors />
+          </AuthProvider>
+        </Providers>
       </body>
     </html>
   );

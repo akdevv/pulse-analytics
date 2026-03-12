@@ -1,5 +1,5 @@
 import api from "@/lib/api/client";
-import type { CreateSiteInput, Site } from "@/lib/types/site.types";
+import type { CreateSiteInput, Site, UpdateSiteInput } from "@/lib/types/site.types";
 
 type CreateSiteResponse = {
   status: string;
@@ -36,4 +36,21 @@ export const getSites = async (): Promise<Site[]> => {
 export const getSiteById = async (id: string): Promise<Site> => {
   const res: GetSiteResponse = await api.get(`/sites/${id}`);
   return res.data;
+};
+
+export const updateSite = async (
+  id: string,
+  data: UpdateSiteInput,
+): Promise<Site> => {
+  const res: GetSiteResponse = await api.put(`/sites/${id}`, data);
+  return res.data;
+};
+
+export const deleteSite = async (id: string): Promise<void> => {
+  await api.delete(`/sites/${id}`);
+};
+
+export const regenTrackingKey = async (id: string): Promise<Site> => {
+  const res: CreateSiteResponse = await api.post(`/sites/${id}/regen-key`);
+  return res.data.site;
 };

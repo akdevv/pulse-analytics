@@ -26,7 +26,7 @@ export const getOverview = asyncHandler(async (req: Request, res: Response) => {
     return res.status(400).json({ error });
   }
 
-  const result = AnalyticsService.getOverview(
+  const result = await AnalyticsService.getOverview(
     siteId,
     userId,
     data!.from,
@@ -34,6 +34,8 @@ export const getOverview = asyncHandler(async (req: Request, res: Response) => {
   );
 
   return res.status(200).json({
+    status: "success",
+    message: "Fetched analytics events",
     data: result,
   });
 });
@@ -53,7 +55,7 @@ export const getTimeseries = asyncHandler(
       return res.status(400).json({ error });
     }
 
-    const result = AnalyticsService.getTimeseries(
+    const result = await AnalyticsService.getTimeseries(
       siteId,
       userId,
       data!.from,
@@ -62,6 +64,8 @@ export const getTimeseries = asyncHandler(
     );
 
     return res.status(200).json({
+      status: "success",
+      message: "Fetched analytics events",
       data: result,
     });
   }

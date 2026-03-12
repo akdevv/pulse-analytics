@@ -19,6 +19,7 @@ export default function DashboardLayout({
     if (!isLoading && !user) {
       router.replace("/login");
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user, isLoading]);
 
   if (isLoading) {
