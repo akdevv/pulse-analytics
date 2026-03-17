@@ -31,6 +31,7 @@ export const verifySiteOwnership = async (siteId: string, userId: string) => {
 };
 
 // ---------- Service Functions ---------
+
 export const getOverview = async (
   siteId: string,
   userId: string,
@@ -53,3 +54,54 @@ export const getTimeseries = async (
   const { fromDate, toDate } = resolveDateRange(from, to);
   return analyticsRepository.getTimeseries(siteId, fromDate, toDate, interval);
 };
+
+export async function getTopPages(
+  siteId: string,
+  userId: string,
+  from?: string,
+  to?: string,
+  limit: number = 10
+) {
+  await verifySiteOwnership(siteId, userId);
+  const { fromDate, toDate } = resolveDateRange(from, to);
+  return analyticsRepository.getTopPages(siteId, fromDate, toDate, limit);
+}
+
+export async function getReferrers(
+  siteId: string,
+  userId: string,
+  from?: string,
+  to?: string,
+  limit: number = 10
+) {
+  await verifySiteOwnership(siteId, userId);
+  const { fromDate, toDate } = resolveDateRange(from, to);
+  return analyticsRepository.getReferrers(siteId, fromDate, toDate, limit);
+}
+
+export async function getDevices(
+  siteId: string,
+  userId: string,
+  from?: string,
+  to?: string
+) {
+  await verifySiteOwnership(siteId, userId);
+  const { fromDate, toDate } = resolveDateRange(from, to);
+  return analyticsRepository.getDevices(siteId, fromDate, toDate);
+}
+
+export async function getGeo(
+  siteId: string,
+  userId: string,
+  from?: string,
+  to?: string
+) {
+  await verifySiteOwnership(siteId, userId);
+  const { fromDate, toDate } = resolveDateRange(from, to);
+  return analyticsRepository.getGeo(siteId, fromDate, toDate);
+}
+
+export async function getRealtime(siteId: string, userId: string) {
+  await verifySiteOwnership(siteId, userId);
+  return analyticsRepository.getRealtime(siteId);
+}

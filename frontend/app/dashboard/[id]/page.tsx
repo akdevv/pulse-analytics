@@ -2,7 +2,24 @@
 
 import { useParams } from "next/navigation";
 import { Card, CardContent } from "@/components/ui/card";
-import { useOverview } from "@/hooks/useAnalytics";
+import {
+  useOverview,
+  useTimeseries,
+  useTopPages,
+  useReferrers,
+  useDevices,
+  useGeo,
+  useRealtime,
+} from "@/hooks/useAnalytics";
+import type {
+  DeviceStats,
+  GeoStat,
+  OverviewStats,
+  PageStat,
+  RealtimeStats,
+  ReferrerStat,
+  TimeseriesPoint,
+} from "@/lib/types/analytics.types";
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -10,67 +27,19 @@ function getDefaultDateRange() {
   return {
     from: "2026-02-01",
     to: "2026-02-26",
+    interval: "day" as const,
+    limit: 10,
   };
 }
 
-// ─── Mock data (non-overview endpoints not yet implemented) ───────────────────
-
-const MOCK_TIMESERIES = [
-  { time: "2026-03-05", pageviews: 1820, sessions: 540 },
-  { time: "2026-03-06", pageviews: 2100, sessions: 620 },
-  { time: "2026-03-07", pageviews: 1950, sessions: 580 },
-  { time: "2026-03-08", pageviews: 2400, sessions: 710 },
-  { time: "2026-03-09", pageviews: 2200, sessions: 680 },
-  { time: "2026-03-10", pageviews: 2350, sessions: 701 },
-  { time: "2026-03-11", pageviews: 2000, sessions: 470 },
-];
-
-const MOCK_PAGES = [
-  { path: "/", pageviews: 5200 },
-  { path: "/pricing", pageviews: 2100 },
-  { path: "/docs", pageviews: 1800 },
-  { path: "/blog/intro", pageviews: 1400 },
-  { path: "/login", pageviews: 980 },
-];
-
-const MOCK_REFERRERS = [
-  { referrer: "google.com", visitors: 2100 },
-  { referrer: "twitter.com", visitors: 830 },
-  { referrer: "github.com", visitors: 540 },
-  { referrer: "(direct)", visitors: 400 },
-  { referrer: "hackernews.com", visitors: 210 },
-];
-
-const MOCK_DEVICES = [
-  { device: "Desktop", visitors: 2400 },
-  { device: "Mobile", visitors: 1200 },
-  { device: "Tablet", visitors: 272 },
-];
-
-const MOCK_GEO = [
-  { country: "United States", visitors: 1800 },
-  { country: "Germany", visitors: 540 },
-  { country: "India", visitors: 420 },
-  { country: "United Kingdom", visitors: 380 },
-  { country: "Canada", visitors: 310 },
-];
-
-const MOCK_REALTIME = { activeVisitors: 7 };
-
 // ─── Sub-sections ─────────────────────────────────────────────────────────────
-
-type OverviewData = {
-  totalPageviews: number;
-  totalSessions: number;
-  totalVisitors: number;
-};
 
 function OverviewSection({
   data,
   isLoading,
   error,
 }: {
-  data?: OverviewData;
+  data?: OverviewStats;
   isLoading: boolean;
   error: Error | null;
 }) {
@@ -107,12 +76,32 @@ function OverviewSection({
   );
 }
 
-function TimeseriesSection() {
+function TimeseriesSection({
+  data,
+  isLoading,
+  error,
+}: {
+  data?: TimeseriesPoint[];
+  isLoading: boolean;
+  error: Error | null;
+}) {
+  const rows =
+    data?.map((row) => ({
+      time: new Date(row.time).toLocaleDateString(),
+      pageviews: row.pageviews,
+      sessions: row.sessions,
+    })) ?? [];
+
   return (
     <section>
       <h2 className="mb-3 text-sm font-semibold text-muted-foreground uppercase tracking-wider">
         Timeseries
       </h2>
+      {error ? (
+        <p className="text-sm text-destructive">
+          Failed to load timeseries: {error.message}
+        </p>
+      ) : null}
       <Card className="py-0">
         <CardContent className="p-0">
           <table className="w-full text-sm">
@@ -126,17 +115,39 @@ function TimeseriesSection() {
               </tr>
             </thead>
             <tbody>
-              {MOCK_TIMESERIES.map((row) => (
-                <tr key={row.time} className="border-b last:border-0">
-                  <td className="px-4 py-2.5 font-mono text-xs">{row.time}</td>
-                  <td className="px-4 py-2.5 text-right">
-                    {row.pageviews.toLocaleString()}
-                  </td>
-                  <td className="px-4 py-2.5 text-right">
-                    {row.sessions.toLocaleString()}
+              {isLoading ? (
+                <tr>
+                  <td
+                    className="px-4 py-3 text-xs text-muted-foreground"
+                    colSpan={3}
+                  >
+                    Loading…
                   </td>
                 </tr>
-              ))}
+              ) : rows.length === 0 ? (
+                <tr>
+                  <td
+                    className="px-4 py-3 text-xs text-muted-foreground"
+                    colSpan={3}
+                  >
+                    No data for this range.
+                  </td>
+                </tr>
+              ) : (
+                rows.map((row) => (
+                  <tr key={row.time} className="border-b last:border-0">
+                    <td className="px-4 py-2.5 font-mono text-xs">
+                      {row.time}
+                    </td>
+                    <td className="px-4 py-2.5 text-right">
+                      {row.pageviews.toLocaleString()}
+                    </td>
+                    <td className="px-4 py-2.5 text-right">
+                      {row.sessions.toLocaleString()}
+                    </td>
+                  </tr>
+                ))
+              )}
             </tbody>
           </table>
         </CardContent>
@@ -145,12 +156,25 @@ function TimeseriesSection() {
   );
 }
 
-function PagesSection() {
+function PagesSection({
+  data,
+  isLoading,
+  error,
+}: {
+  data?: PageStat[];
+  isLoading: boolean;
+  error: Error | null;
+}) {
   return (
     <section>
       <h2 className="mb-3 text-sm font-semibold text-muted-foreground uppercase tracking-wider">
         Pages
       </h2>
+      {error ? (
+        <p className="text-sm text-destructive">
+          Failed to load pages: {error.message}
+        </p>
+      ) : null}
       <Card className="py-0">
         <CardContent className="p-0">
           <table className="w-full text-sm">
@@ -163,14 +187,36 @@ function PagesSection() {
               </tr>
             </thead>
             <tbody>
-              {MOCK_PAGES.map((row) => (
-                <tr key={row.path} className="border-b last:border-0">
-                  <td className="px-4 py-2.5 font-mono text-xs">{row.path}</td>
-                  <td className="px-4 py-2.5 text-right">
-                    {row.pageviews.toLocaleString()}
+              {isLoading ? (
+                <tr>
+                  <td
+                    className="px-4 py-3 text-xs text-muted-foreground"
+                    colSpan={2}
+                  >
+                    Loading…
                   </td>
                 </tr>
-              ))}
+              ) : (data?.length ?? 0) === 0 ? (
+                <tr>
+                  <td
+                    className="px-4 py-3 text-xs text-muted-foreground"
+                    colSpan={2}
+                  >
+                    No data for this range.
+                  </td>
+                </tr>
+              ) : (
+                data!.map((row) => (
+                  <tr key={row.page} className="border-b last:border-0">
+                    <td className="px-4 py-2.5 font-mono text-xs">
+                      {row.page}
+                    </td>
+                    <td className="px-4 py-2.5 text-right">
+                      {row.pageviews.toLocaleString()}
+                    </td>
+                  </tr>
+                ))
+              )}
             </tbody>
           </table>
         </CardContent>
@@ -179,12 +225,25 @@ function PagesSection() {
   );
 }
 
-function ReferrersSection() {
+function ReferrersSection({
+  data,
+  isLoading,
+  error,
+}: {
+  data?: ReferrerStat[];
+  isLoading: boolean;
+  error: Error | null;
+}) {
   return (
     <section>
       <h2 className="mb-3 text-sm font-semibold text-muted-foreground uppercase tracking-wider">
         Referrers
       </h2>
+      {error ? (
+        <p className="text-sm text-destructive">
+          Failed to load referrers: {error.message}
+        </p>
+      ) : null}
       <Card className="py-0">
         <CardContent className="p-0">
           <table className="w-full text-sm">
@@ -195,14 +254,34 @@ function ReferrersSection() {
               </tr>
             </thead>
             <tbody>
-              {MOCK_REFERRERS.map((row) => (
-                <tr key={row.referrer} className="border-b last:border-0">
-                  <td className="px-4 py-2.5 text-xs">{row.referrer}</td>
-                  <td className="px-4 py-2.5 text-right">
-                    {row.visitors.toLocaleString()}
+              {isLoading ? (
+                <tr>
+                  <td
+                    className="px-4 py-3 text-xs text-muted-foreground"
+                    colSpan={2}
+                  >
+                    Loading…
                   </td>
                 </tr>
-              ))}
+              ) : (data?.length ?? 0) === 0 ? (
+                <tr>
+                  <td
+                    className="px-4 py-3 text-xs text-muted-foreground"
+                    colSpan={2}
+                  >
+                    No data for this range.
+                  </td>
+                </tr>
+              ) : (
+                data!.map((row) => (
+                  <tr key={row.source} className="border-b last:border-0">
+                    <td className="px-4 py-2.5 text-xs">{row.source}</td>
+                    <td className="px-4 py-2.5 text-right">
+                      {row.pageviews.toLocaleString()}
+                    </td>
+                  </tr>
+                ))
+              )}
             </tbody>
           </table>
         </CardContent>
@@ -211,12 +290,27 @@ function ReferrersSection() {
   );
 }
 
-function DevicesSection() {
+function DevicesSection({
+  data,
+  isLoading,
+  error,
+}: {
+  data?: DeviceStats;
+  isLoading: boolean;
+  error: Error | null;
+}) {
+  const rows = data?.devices ?? [];
+
   return (
     <section>
       <h2 className="mb-3 text-sm font-semibold text-muted-foreground uppercase tracking-wider">
         Devices
       </h2>
+      {error ? (
+        <p className="text-sm text-destructive">
+          Failed to load devices: {error.message}
+        </p>
+      ) : null}
       <Card className="py-0">
         <CardContent className="p-0">
           <table className="w-full text-sm">
@@ -227,14 +321,34 @@ function DevicesSection() {
               </tr>
             </thead>
             <tbody>
-              {MOCK_DEVICES.map((row) => (
-                <tr key={row.device} className="border-b last:border-0">
-                  <td className="px-4 py-2.5 text-xs">{row.device}</td>
-                  <td className="px-4 py-2.5 text-right">
-                    {row.visitors.toLocaleString()}
+              {isLoading ? (
+                <tr>
+                  <td
+                    className="px-4 py-3 text-xs text-muted-foreground"
+                    colSpan={2}
+                  >
+                    Loading…
                   </td>
                 </tr>
-              ))}
+              ) : rows.length === 0 ? (
+                <tr>
+                  <td
+                    className="px-4 py-3 text-xs text-muted-foreground"
+                    colSpan={2}
+                  >
+                    No data for this range.
+                  </td>
+                </tr>
+              ) : (
+                rows.map((row) => (
+                  <tr key={row.device} className="border-b last:border-0">
+                    <td className="px-4 py-2.5 text-xs">{row.device}</td>
+                    <td className="px-4 py-2.5 text-right">
+                      {row.pageviews.toLocaleString()}
+                    </td>
+                  </tr>
+                ))
+              )}
             </tbody>
           </table>
         </CardContent>
@@ -243,12 +357,25 @@ function DevicesSection() {
   );
 }
 
-function GeoSection() {
+function GeoSection({
+  data,
+  isLoading,
+  error,
+}: {
+  data?: GeoStat[];
+  isLoading: boolean;
+  error: Error | null;
+}) {
   return (
     <section>
       <h2 className="mb-3 text-sm font-semibold text-muted-foreground uppercase tracking-wider">
         Geo
       </h2>
+      {error ? (
+        <p className="text-sm text-destructive">
+          Failed to load geo: {error.message}
+        </p>
+      ) : null}
       <Card className="py-0">
         <CardContent className="p-0">
           <table className="w-full text-sm">
@@ -259,14 +386,34 @@ function GeoSection() {
               </tr>
             </thead>
             <tbody>
-              {MOCK_GEO.map((row) => (
-                <tr key={row.country} className="border-b last:border-0">
-                  <td className="px-4 py-2.5 text-xs">{row.country}</td>
-                  <td className="px-4 py-2.5 text-right">
-                    {row.visitors.toLocaleString()}
+              {isLoading ? (
+                <tr>
+                  <td
+                    className="px-4 py-3 text-xs text-muted-foreground"
+                    colSpan={2}
+                  >
+                    Loading…
                   </td>
                 </tr>
-              ))}
+              ) : (data?.length ?? 0) === 0 ? (
+                <tr>
+                  <td
+                    className="px-4 py-3 text-xs text-muted-foreground"
+                    colSpan={2}
+                  >
+                    No data for this range.
+                  </td>
+                </tr>
+              ) : (
+                data!.map((row) => (
+                  <tr key={row.country} className="border-b last:border-0">
+                    <td className="px-4 py-2.5 text-xs">{row.country}</td>
+                    <td className="px-4 py-2.5 text-right">
+                      {row.pageviews.toLocaleString()}
+                    </td>
+                  </tr>
+                ))
+              )}
             </tbody>
           </table>
         </CardContent>
@@ -275,21 +422,80 @@ function GeoSection() {
   );
 }
 
-function RealtimeSection() {
+function RealtimeSection({
+  data,
+  isLoading,
+  error,
+}: {
+  data?: RealtimeStats;
+  isLoading: boolean;
+  error: Error | null;
+}) {
   return (
     <section>
       <h2 className="mb-3 text-sm font-semibold text-muted-foreground uppercase tracking-wider">
         Realtime
       </h2>
+      {error ? (
+        <p className="text-sm text-destructive">
+          Failed to load realtime: {error.message}
+        </p>
+      ) : null}
       <Card className="py-0">
         <CardContent className="p-4 flex items-center gap-3">
           <span className="size-2 rounded-full bg-green-500 animate-pulse" />
           <span className="text-sm">
             <span className="text-2xl font-bold">
-              {MOCK_REALTIME.activeVisitors}
+              {isLoading ? "—" : (data?.activeSessions ?? 0).toLocaleString()}
             </span>{" "}
-            active visitors right now
+            active sessions right now
           </span>
+        </CardContent>
+      </Card>
+      <Card className="mt-3 py-0">
+        <CardContent className="p-0">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="border-b text-xs text-muted-foreground">
+                <th className="px-4 py-2.5 text-left font-medium">Page</th>
+                <th className="px-4 py-2.5 text-right font-medium">
+                  Active sessions
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              {isLoading ? (
+                <tr>
+                  <td
+                    className="px-4 py-3 text-xs text-muted-foreground"
+                    colSpan={2}
+                  >
+                    Loading…
+                  </td>
+                </tr>
+              ) : (data?.activePages?.length ?? 0) === 0 ? (
+                <tr>
+                  <td
+                    className="px-4 py-3 text-xs text-muted-foreground"
+                    colSpan={2}
+                  >
+                    No active pages right now.
+                  </td>
+                </tr>
+              ) : (
+                data!.activePages.map((row) => (
+                  <tr key={row.path} className="border-b last:border-0">
+                    <td className="px-4 py-2.5 font-mono text-xs">
+                      {row.path}
+                    </td>
+                    <td className="px-4 py-2.5 text-right">
+                      {row.activeSessions.toLocaleString()}
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
         </CardContent>
       </Card>
     </section>
@@ -322,11 +528,47 @@ function DateRangeBar() {
 export default function SiteAnalyticsPage() {
   const { id } = useParams<{ id: string }>();
   const dateRange = getDefaultDateRange();
+  // const {
+  //   data: overviewResponse,
+  //   isLoading: overviewLoading,
+  //   error: overviewError,
+  // } = useOverview(id, dateRange);
+
+  // const {
+  //   data: timeseriesResponse,
+  //   isLoading: timeseriesLoading,
+  //   error: timeseriesError,
+  // } = useTimeseries(id, dateRange);
+
   const {
-    data: overviewResponse,
-    isLoading: overviewLoading,
-    error: overviewError,
-  } = useOverview(id, dateRange);
+    data: pagesResponse,
+    isLoading: pagesLoading,
+    error: pagesError,
+  } = useTopPages(id, dateRange);
+
+  // const {
+  //   data: referrersResponse,
+  //   isLoading: referrersLoading,
+  //   error: referrersError,
+  // } = useReferrers(id, dateRange);
+
+  // const {
+  //   data: devicesResponse,
+  //   isLoading: devicesLoading,
+  //   error: devicesError,
+  // } = useDevices(id, dateRange);
+
+  // const {
+  //   data: geoResponse,
+  //   isLoading: geoLoading,
+  //   error: geoError,
+  // } = useGeo(id, dateRange);
+
+  // const {
+  //   data: realtimeResponse,
+  //   isLoading: realtimeLoading,
+  //   error: realtimeError,
+  // } = useRealtime(id);
 
   return (
     <div className="space-y-8 p-1">
@@ -335,24 +577,48 @@ export default function SiteAnalyticsPage() {
         <DateRangeBar />
       </div>
 
-      <OverviewSection
+      {/* <OverviewSection
         data={overviewResponse?.data}
         isLoading={overviewLoading}
         error={overviewError}
       />
-      <TimeseriesSection />
+      <TimeseriesSection
+        data={timeseriesResponse?.data}
+        isLoading={timeseriesLoading}
+        error={timeseriesError}
+      /> */}
 
       <div className="grid grid-cols-2 gap-8">
-        <PagesSection />
-        <ReferrersSection />
+        <PagesSection
+          data={pagesResponse?.data}
+          isLoading={pagesLoading}
+          error={pagesError}
+        />
+        {/* <ReferrersSection
+          data={referrersResponse?.data}
+          isLoading={referrersLoading}
+          error={referrersError}
+        /> */}
       </div>
 
-      <div className="grid grid-cols-2 gap-8">
-        <DevicesSection />
-        <GeoSection />
+      {/* <div className="grid grid-cols-2 gap-8">
+        <DevicesSection
+          data={devicesResponse?.data}
+          isLoading={devicesLoading}
+          error={devicesError}
+        />
+        <GeoSection
+          data={geoResponse?.data}
+          isLoading={geoLoading}
+          error={geoError}
+        />
       </div>
 
-      <RealtimeSection />
+      <RealtimeSection
+        data={realtimeResponse?.data}
+        isLoading={realtimeLoading}
+        error={realtimeError}
+      /> */}
     </div>
   );
 }

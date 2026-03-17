@@ -1,5 +1,5 @@
 import { asyncHandler } from "@/utils/async-handler.ts";
-import type { Request, Response } from "express";
+import type { NextFunction, Request, Response } from "express";
 import { AnalyticsQuerySchema } from "./analytics.types.ts";
 import * as AnalyticsService from "./analytics.service.ts";
 import { AppError } from "@/utils/app-error.ts";
@@ -72,38 +72,117 @@ export const getTimeseries = asyncHandler(
 );
 
 // GET /:siteId/pages
-export const getPages = asyncHandler(async (req: Request, res: Response) => {
-  return res.status(200).json({
-    message: "empty response",
+export const getTopPages = asyncHandler(async (req: Request, res: Response) => {
+  const { siteId } = req.params;
+  if (!siteId) {
+    throw new AppError(404, "Site ID is required.");
+  }
+
+  const userId = (req as any).user.id;
+
+  const { error, data } = parseQuery(req);
+  if (error) return res.status(400).json({ error });
+
+  const result = await AnalyticsService.getTopPages(
+    siteId,
+    userId,
+    data!.from,
+    data!.to,
+    data!.limit
+  );
+  res.status(200).json({
+    status: "success",
+    message: "Fetched top pages",
+    data: result,
   });
 });
 
-// GET /:siteId/referrers
 export const getReferrers = asyncHandler(
   async (req: Request, res: Response) => {
-    return res.status(200).json({
-      message: "empty response",
+    const { siteId } = req.params;
+    if (!siteId) {
+      throw new AppError(404, "Site ID is required.");
+    }
+
+    const userId = (req as any).user.id;
+
+    const { error, data } = parseQuery(req);
+    if (error) return res.status(400).json({ error });
+
+    const result = await AnalyticsService.getReferrers(
+      siteId,
+      userId,
+      data!.from,
+      data!.to,
+      data!.limit
+    );
+    res.status(200).json({
+      status: "success",
+      message: "Fetched referrers",
+      data: result,
     });
   }
 );
 
-// GET /:siteId/devices
 export const getDevices = asyncHandler(async (req: Request, res: Response) => {
-  return res.status(200).json({
-    message: "empty response",
+  const { siteId } = req.params;
+  if (!siteId) {
+    throw new AppError(404, "Site ID is required.");
+  }
+
+  const userId = (req as any).user.id;
+
+  const { error, data } = parseQuery(req);
+  if (error) return res.status(400).json({ error });
+
+  const result = await AnalyticsService.getDevices(
+    siteId,
+    userId,
+    data!.from,
+    data!.to
+  );
+  res.status(200).json({
+    status: "success",
+    message: "Fetched devices",
+    data: result,
   });
 });
 
-// GET /:siteId/geo
 export const getGeo = asyncHandler(async (req: Request, res: Response) => {
-  return res.status(200).json({
-    message: "empty response",
+  const { siteId } = req.params;
+  if (!siteId) {
+    throw new AppError(404, "Site ID is required.");
+  }
+
+  const userId = (req as any).user.id;
+
+  const { error, data } = parseQuery(req);
+  if (error) return res.status(400).json({ error });
+
+  const result = await AnalyticsService.getGeo(
+    siteId,
+    userId,
+    data!.from,
+    data!.to
+  );
+  res.status(200).json({
+    status: "success",
+    message: "Fetched geo",
+    data: result,
   });
 });
 
-// GET /:siteId/realtime
 export const getRealtime = asyncHandler(async (req: Request, res: Response) => {
-  return res.status(200).json({
-    message: "empty response",
+  const { siteId } = req.params;
+  if (!siteId) {
+    throw new AppError(404, "Site ID is required.");
+  }
+  const userId = (req as any).user.id;
+
+  const result = await AnalyticsService.getRealtime(siteId, userId);
+  res.status(200).json({
+    status: "success",
+    message: "Fetched realtime",
+    data: result,
   });
 });
