@@ -78,13 +78,13 @@ export async function getTopPages(
 ): Promise<PageStat[]> {
   return prisma.$queryRaw<PageStat[]>`
     SELECT
-      page,
+      "urlPathname"       AS page,
       SUM(pageviews)::int AS pageviews
     FROM daily_pageviews
     WHERE "siteId" = ${siteId}
       AND day >= ${from}
       AND day <  ${to}
-    GROUP BY page
+    GROUP BY "urlPathname"
     ORDER BY pageviews DESC
     LIMIT ${limit}
   `;
@@ -102,8 +102,8 @@ export async function getReferrers(
       COUNT(*)::int                            AS pageviews
     FROM events
     WHERE "siteId"    = ${siteId}
-      AND "createdAt" >= ${from}
-      AND "createdAt" <  ${to}
+      AND "receivedAt" >= ${from}
+      AND "receivedAt" <  ${to}
       AND "eventType" = 'PAGEVIEW'
     GROUP BY referrer
     ORDER BY pageviews DESC
@@ -141,13 +141,13 @@ export async function getDevices(
     `,
     prisma.$queryRaw<{ device: string; pageviews: number }[]>`
       SELECT
-        COALESCE(device, 'Unknown') AS device,
-        SUM(pageviews)::int         AS pageviews
+        COALESCE("deviceType", 'Unknown') AS device,
+        SUM(pageviews)::int               AS pageviews
       FROM daily_pageviews
       WHERE "siteId" = ${siteId}
         AND day >= ${from}
         AND day <  ${to}
-      GROUP BY device
+      GROUP BY "deviceType"
       ORDER BY pageviews DESC
     `,
   ]);
@@ -182,7 +182,7 @@ export async function getRealtime(siteId: string): Promise<RealtimeStats> {
       SELECT COUNT(DISTINCT "sessionId")::int AS "activeSessions"
       FROM events
       WHERE "siteId"    = ${siteId}
-        AND "createdAt" >= NOW() - INTERVAL '5 minutes'
+        AND "receivedAt" >= NOW() - INTERVAL '5 minutes'
         AND "eventType" = 'PAGEVIEW'
     `,
     prisma.$queryRaw<{ path: string; activeSessions: number }[]>`
@@ -191,7 +191,7 @@ export async function getRealtime(siteId: string): Promise<RealtimeStats> {
         COUNT(DISTINCT "sessionId")::int       AS "activeSessions"
       FROM events
       WHERE "siteId"    = ${siteId}
-        AND "createdAt" >= NOW() - INTERVAL '5 minutes'
+        AND "receivedAt" >= NOW() - INTERVAL '5 minutes'
         AND "eventType" = 'PAGEVIEW'
       GROUP BY "urlPathname"
       ORDER BY "activeSessions" DESC

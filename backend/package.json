@@ -13,11 +13,10 @@
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "docker:up": "docker compose up",
-    "docker:up:build": "docker compose up --build",
     "docker:down": "docker compose down",
-    "db:studio": "docker compose run --rm -p 5555:5555 backend pnpm exec prisma studio --port 5555 --browser none",
-    "seed": "docker compose run --rm backend pnpm run seed:run",
-    "seed:run": "tsx src/seed/index.ts"
+    "db:migrate": "tsx db/migrate.ts",
+    "seed": "tsx src/seed/index.ts",
+    "predev": "pnpm run db:migrate"
   },
   "keywords": [],
   "author": "akdevv",
@@ -54,6 +53,7 @@
     "@types/ioredis": "^5.0.0",
     "@types/jsonwebtoken": "^9.0.10",
     "@types/node": "^24.10.1",
+    "@types/pg": "^8.20.0",
     "@types/ua-parser-js": "^0.7.39",
     "@typescript-eslint/eslint-plugin": "^8.47.0",
     "@typescript-eslint/parser": "^8.47.0",

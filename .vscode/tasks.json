@@ -4,7 +4,7 @@
     {
       "label": "Backend Dev",
       "type": "shell",
-      "command": "pnpm dev",
+      "command": "pnpm docker:up:build",
       "options": {
         "cwd": "${workspaceFolder}/backend"
       },
@@ -12,7 +12,8 @@
         "panel": "new",
         "group": "dev",
         "clear": true
-      }
+      },
+      "problemMatcher": []
     },
     {
       "label": "Frontend Dev",
@@ -25,7 +26,8 @@
         "panel": "new",
         "group": "dev",
         "clear": true
-      }
+      },
+      "problemMatcher": []
     },
     {
       "label": "Run Pulse Analytics",
