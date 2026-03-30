@@ -38,5 +38,5 @@ coverage/
 .vercel
 .turbo
 
-# test site
 test-site/
+todos.md
