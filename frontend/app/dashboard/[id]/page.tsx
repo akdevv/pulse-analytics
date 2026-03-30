@@ -1,5 +1,6 @@
 "use client";
 
+import { useState, useMemo } from "react";
 import { useParams } from "next/navigation";
 import { Card, CardContent } from "@/components/ui/card";
 import {
@@ -23,13 +24,18 @@ import type {
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
-function getDefaultDateRange() {
-  return {
-    from: "2026-02-01",
-    to: "2026-02-26",
-    interval: "day" as const,
-    limit: 10,
-  };
+type Preset = "7d" | "30d" | "90d";
+type Interval = "day" | "hour";
+
+function toDateString(d: Date) {
+  return d.toISOString().slice(0, 10);
+}
+
+function computeDateRange(preset: Preset, interval: Interval) {
+  const to = new Date();
+  const from = new Date();
+  from.setDate(from.getDate() - (preset === "7d" ? 7 : preset === "30d" ? 30 : 90));
+  return { from: toDateString(from), to: toDateString(to), interval, limit: 10 };
 }
 
 // ─── Sub-sections ─────────────────────────────────────────────────────────────
@@ -87,6 +93,7 @@ function TimeseriesSection({
 }) {
   const rows =
     data?.map((row) => ({
+      key: row.time,
       time: new Date(row.time).toLocaleDateString(),
       pageviews: row.pageviews,
       sessions: row.sessions,
@@ -135,7 +142,7 @@ function TimeseriesSection({
                 </tr>
               ) : (
                 rows.map((row) => (
-                  <tr key={row.time} className="border-b last:border-0">
+                  <tr key={row.key} className="border-b last:border-0">
                     <td className="px-4 py-2.5 font-mono text-xs">
                       {row.time}
                     </td>
@@ -504,20 +511,37 @@ function RealtimeSection({
 
 // ─── Date range bar ───────────────────────────────────────────────────────────
 
-function DateRangeBar() {
+function DateRangeBar({
+  preset,
+  interval,
+  onPresetChange,
+  onIntervalChange,
+}: {
+  preset: Preset;
+  interval: Interval;
+  onPresetChange: (p: Preset) => void;
+  onIntervalChange: (i: Interval) => void;
+}) {
   return (
     <div className="flex items-center gap-2">
       <label className="text-xs text-muted-foreground">Range:</label>
-      <select className="rounded-md border bg-background px-2.5 py-1.5 text-xs focus:outline-none focus:ring-1 focus:ring-ring">
-        <option>Last 7 days</option>
-        <option>Last 30 days</option>
-        <option>Last 90 days</option>
-        <option>Custom</option>
+      <select
+        value={preset}
+        onChange={(e) => onPresetChange(e.target.value as Preset)}
+        className="rounded-md border bg-background px-2.5 py-1.5 text-xs focus:outline-none focus:ring-1 focus:ring-ring"
+      >
+        <option value="7d">Last 7 days</option>
+        <option value="30d">Last 30 days</option>
+        <option value="90d">Last 90 days</option>
       </select>
       <label className="text-xs text-muted-foreground ml-2">Interval:</label>
-      <select className="rounded-md border bg-background px-2.5 py-1.5 text-xs focus:outline-none focus:ring-1 focus:ring-ring">
-        <option>Day</option>
-        <option>Hour</option>
+      <select
+        value={interval}
+        onChange={(e) => onIntervalChange(e.target.value as Interval)}
+        className="rounded-md border bg-background px-2.5 py-1.5 text-xs focus:outline-none focus:ring-1 focus:ring-ring"
+      >
+        <option value="day">Day</option>
+        <option value="hour">Hour</option>
       </select>
     </div>
   );
@@ -527,18 +551,20 @@ function DateRangeBar() {
 
 export default function SiteAnalyticsPage() {
   const { id } = useParams<{ id: string }>();
-  const dateRange = getDefaultDateRange();
-  // const {
-  //   data: overviewResponse,
-  //   isLoading: overviewLoading,
-  //   error: overviewError,
-  // } = useOverview(id, dateRange);
+  const [preset, setPreset] = useState<Preset>("30d");
+  const [interval, setInterval] = useState<Interval>("day");
+  const dateRange = useMemo(() => computeDateRange(preset, interval), [preset, interval]);
+  const {
+    data: overviewResponse,
+    isLoading: overviewLoading,
+    error: overviewError,
+  } = useOverview(id, dateRange);
 
-  // const {
-  //   data: timeseriesResponse,
-  //   isLoading: timeseriesLoading,
-  //   error: timeseriesError,
-  // } = useTimeseries(id, dateRange);
+  const {
+    data: timeseriesResponse,
+    isLoading: timeseriesLoading,
+    error: timeseriesError,
+  } = useTimeseries(id, dateRange);
 
   const {
     data: pagesResponse,
@@ -546,38 +572,43 @@ export default function SiteAnalyticsPage() {
     error: pagesError,
   } = useTopPages(id, dateRange);
 
-  // const {
-  //   data: referrersResponse,
-  //   isLoading: referrersLoading,
-  //   error: referrersError,
-  // } = useReferrers(id, dateRange);
+  const {
+    data: referrersResponse,
+    isLoading: referrersLoading,
+    error: referrersError,
+  } = useReferrers(id, dateRange);
 
-  // const {
-  //   data: devicesResponse,
-  //   isLoading: devicesLoading,
-  //   error: devicesError,
-  // } = useDevices(id, dateRange);
+  const {
+    data: devicesResponse,
+    isLoading: devicesLoading,
+    error: devicesError,
+  } = useDevices(id, dateRange);
 
-  // const {
-  //   data: geoResponse,
-  //   isLoading: geoLoading,
-  //   error: geoError,
-  // } = useGeo(id, dateRange);
+  const {
+    data: geoResponse,
+    isLoading: geoLoading,
+    error: geoError,
+  } = useGeo(id, dateRange);
 
-  // const {
-  //   data: realtimeResponse,
-  //   isLoading: realtimeLoading,
-  //   error: realtimeError,
-  // } = useRealtime(id);
+  const {
+    data: realtimeResponse,
+    isLoading: realtimeLoading,
+    error: realtimeError,
+  } = useRealtime(id);
 
   return (
     <div className="space-y-8 p-1">
       <div className="flex items-center justify-between">
         <h1 className="text-xl font-semibold tracking-tight">Analytics</h1>
-        <DateRangeBar />
+        <DateRangeBar
+          preset={preset}
+          interval={interval}
+          onPresetChange={setPreset}
+          onIntervalChange={setInterval}
+        />
       </div>
 
-      {/* <OverviewSection
+      <OverviewSection
         data={overviewResponse?.data}
         isLoading={overviewLoading}
         error={overviewError}
@@ -586,7 +617,7 @@ export default function SiteAnalyticsPage() {
         data={timeseriesResponse?.data}
         isLoading={timeseriesLoading}
         error={timeseriesError}
-      /> */}
+      />
 
       <div className="grid grid-cols-2 gap-8">
         <PagesSection
@@ -594,14 +625,14 @@ export default function SiteAnalyticsPage() {
           isLoading={pagesLoading}
           error={pagesError}
         />
-        {/* <ReferrersSection
+        <ReferrersSection
           data={referrersResponse?.data}
           isLoading={referrersLoading}
           error={referrersError}
-        /> */}
+        />
       </div>
 
-      {/* <div className="grid grid-cols-2 gap-8">
+      <div className="grid grid-cols-2 gap-8">
         <DevicesSection
           data={devicesResponse?.data}
           isLoading={devicesLoading}
@@ -618,7 +649,7 @@ export default function SiteAnalyticsPage() {
         data={realtimeResponse?.data}
         isLoading={realtimeLoading}
         error={realtimeError}
-      /> */}
+      />
     </div>
   );
 }
