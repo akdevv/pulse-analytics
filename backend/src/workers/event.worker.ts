@@ -92,9 +92,6 @@ async function enrichEvent(raw: RawEvent) {
 
   const geo = await lookupGeoIp(raw.ipAddress);
 
-  console.log("uaInfo => ", uaInfo);
-  console.log("geo =>", geo);
-
   return {
     ...raw,
 

@@ -55,11 +55,18 @@ CREATE TABLE "events" (
     "browserVersion" VARCHAR(20) NOT NULL,
     "os" VARCHAR(50) NOT NULL,
     "osVersion" VARCHAR(20) NOT NULL,
+    "country" TEXT,
+    "countryCode" TEXT,
+    "city" TEXT,
+    "region" TEXT,
     "eventProperties" JSONB,
     "timestamp" TIMESTAMP(3) NOT NULL,
     "receivedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "screenResolution" VARCHAR(15),
+    "userLanguage" VARCHAR(10),
+    "viewportSize" VARCHAR(15),
 
-    CONSTRAINT "events_pkey" PRIMARY KEY ("id")
+    CONSTRAINT "events_pkey" PRIMARY KEY ("id","receivedAt")
 );
 
 -- CreateIndex
@@ -88,9 +95,6 @@ CREATE INDEX "events_urlPathname_siteId_idx" ON "events"("urlPathname", "siteId"
 
 -- CreateIndex
 CREATE INDEX "events_eventType_siteId_idx" ON "events"("eventType", "siteId");
-
--- CreateIndex
-CREATE INDEX "events_receivedAt_idx" ON "events"("receivedAt");
 
 -- AddForeignKey
 ALTER TABLE "sites" ADD CONSTRAINT "sites_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;

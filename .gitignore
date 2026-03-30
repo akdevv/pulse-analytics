@@ -37,3 +37,6 @@ coverage/
 # Misc
 .vercel
 .turbo
+
+# test site
+test-site/

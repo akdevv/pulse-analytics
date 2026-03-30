@@ -13,11 +13,14 @@ import siteRoutes from "@/modules/site/site.routes.ts";
 import trackRoutes from "@/modules/ingestion/track.routes.ts";
 
 const app: Express = express();
+const jsonReplacer = (_key: string, value: unknown) =>
+  typeof value === "bigint" ? value.toString() : value;
 
 // Middleware
 app.use(
   cors({
-    origin: ["http://localhost:3000", "http://localhost:3456"],
+    // origin: ["http://localhost:3000", "http://localhost:3456"],
+    origin: true,
     credentials: true,
     methods: ["GET", "POST", "PUT", "PATCH", "DELETE"],
     allowedHeaders: ["Content-Type", "Authorization"],
@@ -29,6 +32,7 @@ app.use(cookieParser());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.set("trust proxy", true);
+app.set("json replacer", jsonReplacer);
 
 const apiRoute = express.Router();
 

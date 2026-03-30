@@ -1,5 +1,5 @@
 import { asyncHandler } from "@/utils/async-handler.ts";
-import type { NextFunction, Request, Response } from "express";
+import type { Request, Response } from "express";
 import { AnalyticsQuerySchema } from "./analytics.types.ts";
 import * as AnalyticsService from "./analytics.service.ts";
 import { AppError } from "@/utils/app-error.ts";
@@ -186,3 +186,51 @@ export const getRealtime = asyncHandler(async (req: Request, res: Response) => {
     data: result,
   });
 });
+
+export const getRawEvents = asyncHandler(
+  async (req: Request, res: Response) => {
+    console.log("req =>", req.params, (req as any).user);
+    const { siteId } = req.params;
+    if (!siteId) {
+      throw new AppError(404, "Site ID is required.");
+    }
+    const userId = (req as any).user.id;
+
+    const result = await AnalyticsService.getRawEvents(siteId, userId);
+
+    res.status(200).json({
+      status: "success",
+      message: "Fetched raw events",
+      data: {
+        siteId,
+        result,
+      },
+    });
+  }
+);
+
+export const performRawQuery = asyncHandler(
+  async (req: Request, res: Response) => {
+    const { query } = req.body;
+    const { siteId } = req.params;
+    if (!siteId) {
+      throw new AppError(404, "Site ID is required.");
+    }
+    const userId = (req as any).user.id;
+
+    const result = await AnalyticsService.performRawQuery(
+      query,
+      siteId,
+      userId
+    );
+
+    res.status(200).json({
+      status: "success",
+      message: "Fetched raw events",
+      data: {
+        siteId,
+        result,
+      },
+    });
+  }
+);

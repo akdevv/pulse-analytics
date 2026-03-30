@@ -40,5 +40,8 @@ export interface GeoStat {
 
 export interface RealtimeStats {
   activeSessions: number;
-  activePages: { path: string; activeSessions: number }[];
+  pageviews: number;
+  visitors: number;
+  activePages: { path: string; activeSessions: number; pageviews: number }[];
+  topReferrers: { referrer: string | null; activeSessions: number }[];
 }

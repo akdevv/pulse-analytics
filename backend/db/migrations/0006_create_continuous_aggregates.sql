@@ -15,11 +15,12 @@
 
 -- Hourly rollup from raw events
 CREATE MATERIALIZED VIEW IF NOT EXISTS hourly_pageviews
-WITH (timescaledb.continuous) AS
+WITH (timescaledb.continuous, timescaledb.materialized_only = true) AS
 SELECT
   time_bucket('1 hour', "receivedAt")  AS bucket,
   "siteId",
   "urlPathname",
+  "referrer",
   "browser",
   "os",
   "deviceType",
@@ -29,13 +30,13 @@ SELECT
   COUNT(DISTINCT "visitorId")          AS visitors
 FROM events
 WHERE "eventType" = 'PAGEVIEW'
-GROUP BY bucket, "siteId", "urlPathname", "browser", "os", "deviceType", "country"
+GROUP BY bucket, "siteId", "urlPathname", "referrer", "browser", "os", "deviceType", "country"
 WITH NO DATA;
 
 SELECT add_continuous_aggregate_policy(
   'hourly_pageviews',
   start_offset      => INTERVAL '3 hours',
-  end_offset        => INTERVAL '1 hour',
+  end_offset        => INTERVAL '5 minutes',
   schedule_interval => INTERVAL '1 hour',
   if_not_exists     => TRUE
 );
@@ -61,7 +62,7 @@ WITH NO DATA;
 SELECT add_continuous_aggregate_policy(
   'daily_pageviews',
   start_offset      => INTERVAL '3 days',
-  end_offset        => INTERVAL '1 day',
+  end_offset        => INTERVAL '1 hour',
   schedule_interval => INTERVAL '1 day',
   if_not_exists     => TRUE
 );

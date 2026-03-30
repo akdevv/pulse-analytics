@@ -1,7 +1,7 @@
 {
   "name": "pulse-analytics-backend",
   "version": "1.0.0",
-  "description": "",
+  "description": "Backend API and worker pipeline for Pulse Analytics event tracking and reporting.",
   "main": "src/index.ts",
   "scripts": {
     "dev": "tsx watch src/index.ts",
@@ -13,12 +13,23 @@
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "docker:up": "docker compose up",
+    "docker:up:build": "docker compose up --build",
     "docker:down": "docker compose down",
     "db:migrate": "tsx db/migrate.ts",
-    "seed": "tsx src/seed/index.ts",
-    "predev": "pnpm run db:migrate"
+    "seed": "tsx src/seed/index.ts"
   },
-  "keywords": [],
+  "keywords": [
+    "pulse-analytics",
+    "analytics",
+    "event-tracking",
+    "web-analytics",
+    "backend",
+    "api",
+    "express",
+    "typescript",
+    "prisma",
+    "bullmq"
+  ],
   "author": "akdevv",
   "license": "MIT",
   "type": "module",

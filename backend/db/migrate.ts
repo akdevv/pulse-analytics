@@ -58,8 +58,8 @@ async function runMigration(client: any, filename: string): Promise<void> {
     // create_hypertable cannot run inside a multi-statement implicit transaction.
     const statements = sql
       .split(/;[ \t]*\n/)
-      .map((s) => s.trim())
-      .filter((s) => s.length > 0 && !s.startsWith("--"));
+      .map((s) => s.replace(/^(--[^\n]*\n\s*)*/m, "").trim())
+      .filter((s) => s.length > 0);
 
     for (const stmt of statements) {
       await client.query(stmt);

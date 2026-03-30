@@ -31,3 +31,11 @@ export const getGeo = async (siteId: string, params: DateRangeParams) => {
 export const getRealtime = async (siteId: string) => {
   return api.get(`analytics/${siteId}/realtime`);
 };
+
+export const getRawEvents = async (siteId: string) => {
+  return api.get(`analytics/${siteId}/raw`);
+};
+
+export const runRawQuery = async (siteId: string, query: string) => {
+  return api.post(`analytics/${siteId}/raw-query`, { query });
+};

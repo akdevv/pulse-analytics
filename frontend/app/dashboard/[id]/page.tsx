@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useParams } from "next/navigation";
 import { Card, CardContent } from "@/components/ui/card";
 import {
@@ -11,6 +11,8 @@ import {
   useDevices,
   useGeo,
   useRealtime,
+  useRawEvents,
+  useRawQuery,
 } from "@/hooks/useAnalytics";
 import type {
   DeviceStats,
@@ -21,21 +23,25 @@ import type {
   ReferrerStat,
   TimeseriesPoint,
 } from "@/lib/types/analytics.types";
+import { json } from "zod";
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
 type Preset = "7d" | "30d" | "90d";
 type Interval = "day" | "hour";
 
-function toDateString(d: Date) {
-  return d.toISOString().slice(0, 10);
-}
-
 function computeDateRange(preset: Preset, interval: Interval) {
   const to = new Date();
-  const from = new Date();
-  from.setDate(from.getDate() - (preset === "7d" ? 7 : preset === "30d" ? 30 : 90));
-  return { from: toDateString(from), to: toDateString(to), interval, limit: 10 };
+  const from = new Date(to);
+  from.setDate(
+    from.getDate() - (preset === "7d" ? 7 : preset === "30d" ? 30 : 90),
+  );
+  return {
+    from: from.toISOString(),
+    to: to.toISOString(),
+    interval,
+    limit: 10,
+  };
 }
 
 // ─── Sub-sections ─────────────────────────────────────────────────────────────
@@ -448,63 +454,109 @@ function RealtimeSection({
           Failed to load realtime: {error.message}
         </p>
       ) : null}
-      <Card className="py-0">
-        <CardContent className="p-4 flex items-center gap-3">
-          <span className="size-2 rounded-full bg-green-500 animate-pulse" />
-          <span className="text-sm">
-            <span className="text-2xl font-bold">
-              {isLoading ? "—" : (data?.activeSessions ?? 0).toLocaleString()}
-            </span>{" "}
-            active sessions right now
-          </span>
-        </CardContent>
-      </Card>
-      <Card className="mt-3 py-0">
-        <CardContent className="p-0">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="border-b text-xs text-muted-foreground">
-                <th className="px-4 py-2.5 text-left font-medium">Page</th>
-                <th className="px-4 py-2.5 text-right font-medium">
-                  Active sessions
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              {isLoading ? (
-                <tr>
-                  <td
-                    className="px-4 py-3 text-xs text-muted-foreground"
-                    colSpan={2}
-                  >
-                    Loading…
-                  </td>
+      <div className="grid grid-cols-3 gap-3">
+        <Card className="py-0">
+          <CardContent className="p-4 flex items-center gap-3">
+            <span className="size-2 rounded-full bg-green-500 animate-pulse" />
+            <span className="text-sm">
+              <span className="text-2xl font-bold">
+                {isLoading ? "—" : (data?.activeSessions ?? 0).toLocaleString()}
+              </span>{" "}
+              active sessions
+            </span>
+          </CardContent>
+        </Card>
+        <Card className="py-0">
+          <CardContent className="p-4">
+            <p className="text-xs text-muted-foreground mb-1">Pageviews</p>
+            <p className="text-2xl font-bold">
+              {isLoading ? "—" : (data?.pageviews ?? 0).toLocaleString()}
+            </p>
+          </CardContent>
+        </Card>
+        <Card className="py-0">
+          <CardContent className="p-4">
+            <p className="text-xs text-muted-foreground mb-1">Visitors</p>
+            <p className="text-2xl font-bold">
+              {isLoading ? "—" : (data?.visitors ?? 0).toLocaleString()}
+            </p>
+          </CardContent>
+        </Card>
+      </div>
+      <div className="mt-3 grid grid-cols-2 gap-3">
+        <Card className="py-0">
+          <CardContent className="p-0">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b text-xs text-muted-foreground">
+                  <th className="px-4 py-2.5 text-left font-medium">Page</th>
+                  <th className="px-4 py-2.5 text-right font-medium">Sessions</th>
+                  <th className="px-4 py-2.5 text-right font-medium">Views</th>
                 </tr>
-              ) : (data?.activePages?.length ?? 0) === 0 ? (
-                <tr>
-                  <td
-                    className="px-4 py-3 text-xs text-muted-foreground"
-                    colSpan={2}
-                  >
-                    No active pages right now.
-                  </td>
-                </tr>
-              ) : (
-                data!.activePages.map((row) => (
-                  <tr key={row.path} className="border-b last:border-0">
-                    <td className="px-4 py-2.5 font-mono text-xs">
-                      {row.path}
-                    </td>
-                    <td className="px-4 py-2.5 text-right">
-                      {row.activeSessions.toLocaleString()}
+              </thead>
+              <tbody>
+                {isLoading ? (
+                  <tr>
+                    <td className="px-4 py-3 text-xs text-muted-foreground" colSpan={3}>
+                      Loading…
                     </td>
                   </tr>
-                ))
-              )}
-            </tbody>
-          </table>
-        </CardContent>
-      </Card>
+                ) : (data?.activePages?.length ?? 0) === 0 ? (
+                  <tr>
+                    <td className="px-4 py-3 text-xs text-muted-foreground" colSpan={3}>
+                      No active pages right now.
+                    </td>
+                  </tr>
+                ) : (
+                  data!.activePages.map((row) => (
+                    <tr key={row.path} className="border-b last:border-0">
+                      <td className="px-4 py-2.5 font-mono text-xs">{row.path}</td>
+                      <td className="px-4 py-2.5 text-right">{row.activeSessions.toLocaleString()}</td>
+                      <td className="px-4 py-2.5 text-right">{row.pageviews.toLocaleString()}</td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </CardContent>
+        </Card>
+        <Card className="py-0">
+          <CardContent className="p-0">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b text-xs text-muted-foreground">
+                  <th className="px-4 py-2.5 text-left font-medium">Referrer</th>
+                  <th className="px-4 py-2.5 text-right font-medium">Sessions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {isLoading ? (
+                  <tr>
+                    <td className="px-4 py-3 text-xs text-muted-foreground" colSpan={2}>
+                      Loading…
+                    </td>
+                  </tr>
+                ) : (data?.topReferrers?.length ?? 0) === 0 ? (
+                  <tr>
+                    <td className="px-4 py-3 text-xs text-muted-foreground" colSpan={2}>
+                      No referrers right now.
+                    </td>
+                  </tr>
+                ) : (
+                  data!.topReferrers.map((row, i) => (
+                    <tr key={i} className="border-b last:border-0">
+                      <td className="px-4 py-2.5 font-mono text-xs">
+                        {row.referrer ?? "Direct / None"}
+                      </td>
+                      <td className="px-4 py-2.5 text-right">{row.activeSessions.toLocaleString()}</td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </CardContent>
+        </Card>
+      </div>
     </section>
   );
 }
@@ -551,9 +603,12 @@ function DateRangeBar({
 
 export default function SiteAnalyticsPage() {
   const { id } = useParams<{ id: string }>();
-  const [preset, setPreset] = useState<Preset>("30d");
-  const [interval, setInterval] = useState<Interval>("day");
-  const dateRange = useMemo(() => computeDateRange(preset, interval), [preset, interval]);
+  const [preset, setPreset] = useState<Preset>("7d");
+  const [interval, setInterval] = useState<Interval>("hour");
+  const dateRange = useMemo(
+    () => computeDateRange(preset, interval),
+    [preset, interval],
+  );
   const {
     data: overviewResponse,
     isLoading: overviewLoading,
@@ -595,6 +650,25 @@ export default function SiteAnalyticsPage() {
     isLoading: realtimeLoading,
     error: realtimeError,
   } = useRealtime(id);
+
+  const {
+    data: rawEventsResponse,
+    isLoading: rawEventsLoading,
+    error: rawEventsError,
+  } = useRawEvents(id);
+
+  const [queryInput, setQueryInput] = useState("");
+  const [submittedQuery, setSubmittedQuery] = useState("");
+  const {
+    data: rawQueryResponse,
+    isLoading: rawQueryLoading,
+    error: rawQueryError,
+    refetch: runQuery,
+  } = useRawQuery(id, submittedQuery);
+
+  useEffect(() => {
+    if (submittedQuery) runQuery();
+  }, [submittedQuery]);
 
   return (
     <div className="space-y-8 p-1">
@@ -650,6 +724,68 @@ export default function SiteAnalyticsPage() {
         isLoading={realtimeLoading}
         error={realtimeError}
       />
+
+      <section>
+        <h2 className="mb-3 text-sm font-semibold text-muted-foreground uppercase tracking-wider">
+          Raw Query
+        </h2>
+        <Card className="py-0">
+          <CardContent className="p-0">
+            <textarea
+              value={queryInput}
+              onChange={(e) => setQueryInput(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) {
+                  setSubmittedQuery(queryInput);
+                }
+              }}
+              placeholder="SELECT * FROM events LIMIT 10"
+              rows={4}
+              className="w-full rounded-t-md bg-background px-4 py-3 text-xs font-mono focus:outline-none resize-none"
+            />
+            <div className="flex items-center justify-between border-t px-4 py-2">
+              <span className="text-xs text-muted-foreground">⌘↵ to run</span>
+              <button
+                onClick={() => setSubmittedQuery(queryInput)}
+                disabled={!queryInput.trim() || rawQueryLoading}
+                className="rounded-md bg-primary text-primary-foreground px-3 py-1.5 text-xs font-medium hover:bg-primary/90 disabled:opacity-50"
+              >
+                {rawQueryLoading ? "Running…" : "Run"}
+              </button>
+            </div>
+          </CardContent>
+        </Card>
+        {rawQueryError && (
+          <p className="mt-2 text-sm text-destructive">
+            {rawQueryError.message}
+          </p>
+        )}
+        {rawQueryResponse && (
+          <pre className="mt-3 whitespace-pre-wrap overflow-x-auto p-4 rounded-md bg-[#111] text-[#eee] text-xs leading-relaxed">
+            {JSON.stringify(rawQueryResponse.data, null, 2)}
+          </pre>
+        )}
+      </section>
+
+      <div>
+        <h2>Raw Events</h2>
+
+        <pre
+          style={{
+            whiteSpace: "pre-wrap",
+            wordBreak: "break-word",
+            overflowX: "auto",
+            padding: "12px",
+            borderRadius: "8px",
+            background: "#111",
+            color: "#eee",
+            fontSize: "12px",
+            lineHeight: 1.5,
+          }}
+        >
+          {JSON.stringify(rawEventsResponse?.data, null, 2)}
+        </pre>
+      </div>
     </div>
   );
 }

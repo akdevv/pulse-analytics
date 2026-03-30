@@ -4,12 +4,12 @@ import { generateTrackingId } from "@/helpers/gen-tracking.ts";
 import { RateLimitTier } from "@/generated/prisma/enums.ts";
 import { EventType } from "@/types/event.ts";
 
-const FAKE_EVENTS_COUNT = 500_000;
+const FAKE_EVENTS_COUNT = 50_000;
 const EVENT_BATCH_SIZE = 5_000;
 const TRACKING_SITE_COUNT = 5;
 
-const START_DATE = new Date("2026-02-01T00:00:00.000Z");
-const END_DATE = new Date("2026-02-26T23:59:59.999Z");
+const END_DATE = new Date();
+const START_DATE = new Date(END_DATE.getTime() - 30 * 24 * 60 * 60 * 1000);
 
 function randomDate(start: Date, end: Date): Date {
   const startMs = start.getTime();
@@ -179,11 +179,7 @@ async function main() {
         visitorId: faker.string.uuid(),
         ipAddress: faker.internet.ipv4(),
         userAgent,
-        deviceType: faker.helpers.arrayElement([
-          "desktop",
-          "mobile",
-          "tablet",
-        ]),
+        deviceType: faker.helpers.arrayElement(["desktop", "mobile", "tablet"]),
         browser: faker.helpers.arrayElement([
           "Chrome",
           "Safari",
@@ -191,7 +187,13 @@ async function main() {
           "Edge",
         ]),
         browserVersion: faker.system.semver(),
-        os: faker.helpers.arrayElement(["macOS", "Windows", "Linux", "iOS", "Android"]),
+        os: faker.helpers.arrayElement([
+          "macOS",
+          "Windows",
+          "Linux",
+          "iOS",
+          "Android",
+        ]),
         osVersion: faker.system.semver(),
         country,
         countryCode,
@@ -206,7 +208,12 @@ async function main() {
           "1280x720",
           "2560x1440",
         ]),
-        userLanguage: faker.helpers.arrayElement(["en-US", "en-GB", "fr-FR", "de-DE"]),
+        userLanguage: faker.helpers.arrayElement([
+          "en-US",
+          "en-GB",
+          "fr-FR",
+          "de-DE",
+        ]),
         viewportSize: faker.helpers.arrayElement([
           "1920x900",
           "1366x768",

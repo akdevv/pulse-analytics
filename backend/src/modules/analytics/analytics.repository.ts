@@ -27,10 +27,10 @@ export const getOverview = async (
       COALESCE(SUM(pageviews), 0)::int AS "totalPageviews",
       COALESCE(SUM(sessions),  0)::int AS "totalSessions",
       COALESCE(SUM(visitors),  0)::int AS "totalVisitors"
-      FROM daily_pageviews
+      FROM hourly_pageviews
           WHERE "siteId" = ${siteId}
-            AND day >= ${from}
-            AND day <  ${to}
+            AND bucket >= ${from}
+            AND bucket <  ${to}
     `;
   return rows[0];
 };
@@ -80,10 +80,10 @@ export async function getTopPages(
     SELECT
       "urlPathname"       AS page,
       SUM(pageviews)::int AS pageviews
-    FROM daily_pageviews
+    FROM hourly_pageviews
     WHERE "siteId" = ${siteId}
-      AND day >= ${from}
-      AND day <  ${to}
+      AND bucket >= ${from}
+      AND bucket <  ${to}
     GROUP BY "urlPathname"
     ORDER BY pageviews DESC
     LIMIT ${limit}
@@ -99,12 +99,11 @@ export async function getReferrers(
   return prisma.$queryRaw<ReferrerStat[]>`
     SELECT
       COALESCE(NULLIF(referrer, ''), 'Direct') AS source,
-      COUNT(*)::int                            AS pageviews
-    FROM events
-    WHERE "siteId"    = ${siteId}
-      AND "receivedAt" >= ${from}
-      AND "receivedAt" <  ${to}
-      AND "eventType" = 'PAGEVIEW'
+      SUM(pageviews)::int                      AS pageviews
+    FROM hourly_pageviews
+    WHERE "siteId" = ${siteId}
+      AND bucket >= ${from}
+      AND bucket <  ${to}
     GROUP BY referrer
     ORDER BY pageviews DESC
     LIMIT ${limit}
@@ -121,10 +120,10 @@ export async function getDevices(
       SELECT
         COALESCE(browser, 'Unknown') AS browser,
         SUM(pageviews)::int          AS pageviews
-      FROM daily_pageviews
+      FROM hourly_pageviews
       WHERE "siteId" = ${siteId}
-        AND day >= ${from}
-        AND day <  ${to}
+        AND bucket >= ${from}
+        AND bucket <  ${to}
       GROUP BY browser
       ORDER BY pageviews DESC
     `,
@@ -132,10 +131,10 @@ export async function getDevices(
       SELECT
         COALESCE(os, 'Unknown') AS os,
         SUM(pageviews)::int     AS pageviews
-      FROM daily_pageviews
+      FROM hourly_pageviews
       WHERE "siteId" = ${siteId}
-        AND day >= ${from}
-        AND day <  ${to}
+        AND bucket >= ${from}
+        AND bucket <  ${to}
       GROUP BY os
       ORDER BY pageviews DESC
     `,
@@ -143,10 +142,10 @@ export async function getDevices(
       SELECT
         COALESCE("deviceType", 'Unknown') AS device,
         SUM(pageviews)::int               AS pageviews
-      FROM daily_pageviews
+      FROM hourly_pageviews
       WHERE "siteId" = ${siteId}
-        AND day >= ${from}
-        AND day <  ${to}
+        AND bucket >= ${from}
+        AND bucket <  ${to}
       GROUP BY "deviceType"
       ORDER BY pageviews DESC
     `,
@@ -164,10 +163,10 @@ export async function getGeo(
     SELECT
       country,
       SUM(pageviews)::int AS pageviews
-    FROM daily_pageviews
+    FROM hourly_pageviews
     WHERE "siteId"  = ${siteId}
-      AND day >= ${from}
-      AND day <  ${to}
+      AND bucket >= ${from}
+      AND bucket <  ${to}
       AND country IS NOT NULL
     GROUP BY country
     ORDER BY pageviews DESC
@@ -177,18 +176,22 @@ export async function getGeo(
 
 // Intentionally hits raw events — aggregates are too stale for "right now".
 export async function getRealtime(siteId: string): Promise<RealtimeStats> {
-  const [sessionRows, pageRows] = await Promise.all([
-    prisma.$queryRaw<{ activeSessions: number }[]>`
-      SELECT COUNT(DISTINCT "sessionId")::int AS "activeSessions"
+  const [summaryRows, pageRows, referrerRows] = await Promise.all([
+    prisma.$queryRaw<{ activeSessions: number; pageviews: number; visitors: number }[]>`
+      SELECT
+        COUNT(DISTINCT "sessionId")::int  AS "activeSessions",
+        COUNT(*)::int                     AS pageviews,
+        COUNT(DISTINCT "visitorId")::int  AS visitors
       FROM events
       WHERE "siteId"    = ${siteId}
         AND "receivedAt" >= NOW() - INTERVAL '5 minutes'
         AND "eventType" = 'PAGEVIEW'
     `,
-    prisma.$queryRaw<{ path: string; activeSessions: number }[]>`
+    prisma.$queryRaw<{ path: string; activeSessions: number; pageviews: number }[]>`
       SELECT
         "urlPathname"                          AS path,
-        COUNT(DISTINCT "sessionId")::int       AS "activeSessions"
+        COUNT(DISTINCT "sessionId")::int       AS "activeSessions",
+        COUNT(*)::int                          AS pageviews
       FROM events
       WHERE "siteId"    = ${siteId}
         AND "receivedAt" >= NOW() - INTERVAL '5 minutes'
@@ -197,10 +200,39 @@ export async function getRealtime(siteId: string): Promise<RealtimeStats> {
       ORDER BY "activeSessions" DESC
       LIMIT 5
     `,
+    prisma.$queryRaw<{ referrer: string | null; activeSessions: number }[]>`
+      SELECT
+        NULLIF("referrer", '')                 AS referrer,
+        COUNT(DISTINCT "sessionId")::int       AS "activeSessions"
+      FROM events
+      WHERE "siteId"    = ${siteId}
+        AND "receivedAt" >= NOW() - INTERVAL '5 minutes'
+        AND "eventType" = 'PAGEVIEW'
+      GROUP BY NULLIF("referrer", '')
+      ORDER BY "activeSessions" DESC
+      LIMIT 5
+    `,
   ]);
 
   return {
-    activeSessions: sessionRows[0]?.activeSessions ?? 0,
+    activeSessions: summaryRows[0]?.activeSessions ?? 0,
+    pageviews: summaryRows[0]?.pageviews ?? 0,
+    visitors: summaryRows[0]?.visitors ?? 0,
     activePages: pageRows,
+    topReferrers: referrerRows,
   };
+}
+
+export async function getRawEvents(siteId: string) {
+  return prisma.$queryRaw<any[]>`
+    SELECT *
+    FROM events
+    WHERE "siteId" = ${siteId}
+    ORDER BY "receivedAt" DESC
+    LIMIT 10
+  `;
+}
+
+export async function performRawQuery(query: string) {
+  return prisma.$queryRawUnsafe<any[]>(query);
 }

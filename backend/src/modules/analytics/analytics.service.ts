@@ -105,3 +105,18 @@ export async function getRealtime(siteId: string, userId: string) {
   await verifySiteOwnership(siteId, userId);
   return analyticsRepository.getRealtime(siteId);
 }
+
+export async function getRawEvents(siteId: string, userId: string) {
+  await verifySiteOwnership(siteId, userId);
+  return analyticsRepository.getRawEvents(siteId);
+}
+
+export async function performRawQuery(
+  query: string,
+  siteId: string,
+  userId: string
+) {
+  await verifySiteOwnership(siteId, userId);
+  // For testing and debugging purposes - to view raw events
+  return analyticsRepository.performRawQuery(query);
+}

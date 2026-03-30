@@ -7,6 +7,8 @@ import {
   getDevices,
   getGeo,
   getRealtime,
+  getRawEvents,
+  runRawQuery,
 } from "@/lib/api/analytics.api";
 import type { DateRangeParams } from "@/lib/types/analytics.types";
 
@@ -71,5 +73,24 @@ export function useRealtime(siteId: string) {
     refetchInterval: 30_000,
     staleTime: 0,
     enabled: !!siteId,
+  });
+}
+
+export function useRawEvents(siteId: string) {
+  return useQuery({
+    queryKey: ["raw-events", siteId],
+    queryFn: () => getRawEvents(siteId),
+    refetchInterval: 30_000,
+    staleTime: 0,
+    enabled: !!siteId,
+  });
+}
+
+export function useRawQuery(siteId: string, query: string) {
+  return useQuery({
+    queryKey: ["raw-query", siteId, query],
+    queryFn: () => runRawQuery(siteId, query),
+    enabled: false,
+    staleTime: 0,
   });
 }
