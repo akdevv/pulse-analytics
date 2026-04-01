@@ -1,0 +1,19 @@
+# Source
+src/
+
+# Config files
+tsup.config.ts
+tsconfig.json
+
+# Dev files
+node_modules/
+*.log
+*.tgz
+
+# Test files
+test/
+*.test.ts
+*.spec.ts
+
+# Misc
+.DS_Store

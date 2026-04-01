@@ -19,7 +19,6 @@ const jsonReplacer = (_key: string, value: unknown) =>
 // Middleware
 app.use(
   cors({
-    // origin: ["http://localhost:3000", "http://localhost:3456"],
     origin: true,
     credentials: true,
     methods: ["GET", "POST", "PUT", "PATCH", "DELETE"],

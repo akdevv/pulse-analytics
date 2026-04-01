@@ -1,0 +1,65 @@
+{
+  "name": "pulse-analytics",
+  "version": "0.1.0",
+  "description": "SDK for Pulse Analytics",
+  "main": "dist/index.js",
+  "module": "dist/index.mjs",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.mjs",
+      "require": "./dist/index.js"
+    },
+    "./react": {
+      "types": "./dist/react.d.ts",
+      "import": "./dist/react.js",
+      "require": "./dist/react.cjs"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsup",
+    "dev": "tsup --watch",
+    "typecheck": "tsc --noEmit",
+    "prepublishOnly": "npm run build"
+  },
+  "keywords": [
+    "analytics",
+    "sdk",
+    "javascript",
+    "typescript",
+    "web"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/akdevv/pulse-analytics.git",
+    "directory": "sdk"
+  },
+  "homepage": "https://github.com/akdevv/pulse-analytics/tree/main/sdk#readme",
+  "bugs": {
+    "url": "https://github.com/akdevv/pulse-analytics/issues"
+  },
+  "author": "akdevv",
+  "license": "MIT",
+  "type": "module",
+  "publishConfig": {
+    "access": "public"
+  },
+  "peerDependencies": {
+    "react": ">=16"
+  },
+  "peerDependenciesMeta": {
+    "react": {
+      "optional": true
+    }
+  },
+  "devDependencies": {
+    "@types/node": "^24.10.0",
+    "@types/react": "^19.2.14",
+    "tsup": "^8.5.1",
+    "typescript": "^5.9.3"
+  }
+}

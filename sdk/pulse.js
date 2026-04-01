@@ -6,7 +6,9 @@
   var host = currentScript.getAttribute("data-host") || "http://localhost:8000";
 
   if (!tid) {
-    console.warn("Pulse: missing data-tid attribute on script tag.");
+    console.warn(
+      '@pulse: data-tid is required. Add data-tid="your-site-id" to the script tag.',
+    );
     return; // exit early, nothing works without tid
   }
 
@@ -77,9 +79,9 @@
     // fire & forget - we don't await or handle the response
     fetch(url, { method: "POST" }).catch(function (err) {
       // silent error handle - never break host page
-      console.warn("Pulse: failed to send event", err);
+      console.warn("@pulse: failed to send pageview.", err);
     });
-    console.log("Pulse: event sent", pageData.dl);
+    console.log("@pulse: pageview tracked —", pageData.dl);
   }
 
   // SPA navigation detection
