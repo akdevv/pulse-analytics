@@ -5,7 +5,7 @@ JavaScript/TypeScript SDK for [Pulse Analytics](https://github.com/akdevv/pulse-
 ## Installation
 
 ```bash
-npm install @pulse/sdk
+npm install pulse-analytics
 ```
 
 ## Usage
@@ -13,7 +13,7 @@ npm install @pulse/sdk
 ### Vanilla JS / TypeScript
 
 ```ts
-import { Pulse } from "@pulse/sdk";
+import { Pulse } from "pulse-analytics";
 
 Pulse.init({
   siteId: "your-site-id",
@@ -24,7 +24,7 @@ Pulse.init({
 ### React
 
 ```tsx
-import { usePulse } from "@pulse/sdk/react";
+import { usePulse } from "pulse-analytics/react";
 
 function App() {
   usePulse({
