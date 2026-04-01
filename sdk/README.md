@@ -1,4 +1,4 @@
-# @pulse/sdk
+# pulse-analytics
 
 JavaScript/TypeScript SDK for [Pulse Analytics](https://github.com/akdevv/pulse-analytics).
 
@@ -42,11 +42,11 @@ function App() {
 
 Initializes the SDK, sends an initial pageview, and enables automatic SPA route tracking.
 
-| Option | Type | Required | Description |
-|--------|------|----------|-------------|
-| `siteId` | `string` | Yes | Your site tracking ID |
-| `apiHost` | `string` | No | Your Pulse backend URL |
-| `debug` | `boolean` | No | Enable debug logging (default: `false`) |
+| Option    | Type      | Required | Description                             |
+| --------- | --------- | -------- | --------------------------------------- |
+| `siteId`  | `string`  | Yes      | Your site tracking ID                   |
+| `apiHost` | `string`  | No       | Your Pulse backend URL                  |
+| `debug`   | `boolean` | No       | Enable debug logging (default: `false`) |
 
 ### `Pulse.trackPageview(options?)`
 
