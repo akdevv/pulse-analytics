@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { Fragment } from "react";
 import { ACCENT, DISPLAY } from "./shared";
 
 export function CTA() {
@@ -112,17 +113,14 @@ export function CTA() {
             <div className="flex items-center justify-center gap-2 text-white/20">
               {["MIT licensed", "Built in 2 weekends", "0 investors"].map(
                 (t, i, arr) => (
-                  <>
-                    <span
-                      key={t}
-                      className="text-[11px] font-mono uppercase tracking-[0.18em]"
-                    >
+                  <Fragment key={t}>
+                    <span className="text-[11px] font-mono uppercase tracking-[0.18em]">
                       {t}
                     </span>
                     {i < arr.length - 1 && (
-                      <span key={t + "dot"} className="w-0.5 h-0.5 rounded-full bg-white/20" />
+                      <span className="w-0.5 h-0.5 rounded-full bg-white/20" />
                     )}
-                  </>
+                  </Fragment>
                 )
               )}
             </div>

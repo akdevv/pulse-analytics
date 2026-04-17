@@ -1,38 +1,14 @@
+import { Zap, BarChart2, Globe, Code2, Bell, Lock } from "lucide-react";
 import { ACCENT, DISPLAY, SectionEyebrow, SectionHeading } from "./shared";
 
-const ICON: Record<string, React.ReactNode> = {
-  bolt: (
-    <svg className="w-[18px] h-[18px]" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.5}>
-      <path strokeLinecap="round" strokeLinejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" />
-    </svg>
-  ),
-  bars: (
-    <svg className="w-[18px] h-[18px]" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.5}>
-      <path strokeLinecap="round" strokeLinejoin="round" d="M3 20h18M7 20V10M12 20V4M17 20v-7" />
-    </svg>
-  ),
-  globe: (
-    <svg className="w-[18px] h-[18px]" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.5}>
-      <circle cx="12" cy="12" r="9" />
-      <path strokeLinecap="round" d="M3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18" />
-    </svg>
-  ),
-  code: (
-    <svg className="w-[18px] h-[18px]" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.5}>
-      <path strokeLinecap="round" strokeLinejoin="round" d="M10 20l4-16m4 4 4 4-4 4M6 16l-4-4 4-4" />
-    </svg>
-  ),
-  bell: (
-    <svg className="w-[18px] h-[18px]" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.5}>
-      <path strokeLinecap="round" strokeLinejoin="round" d="M15 17h5l-1.4-1.4A2 2 0 0 1 18 14.16V11a6 6 0 0 0-4-5.66V5a2 2 0 1 0-4 0v.34C7.67 6.17 6 8.39 6 11v3.16c0 .54-.21 1.06-.6 1.44L4 17h5m6 0v1a3 3 0 1 1-6 0v-1m6 0H9" />
-    </svg>
-  ),
-  lock: (
-    <svg className="w-[18px] h-[18px]" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.5}>
-      <path strokeLinecap="round" strokeLinejoin="round" d="M8 11V7a4 4 0 1 1 8 0v4M6 11h12v10H6z" />
-    </svg>
-  ),
-};
+const ICON = {
+  bolt: <Zap size={18} />,
+  bars: <BarChart2 size={18} />,
+  globe: <Globe size={18} />,
+  code: <Code2 size={18} />,
+  bell: <Bell size={18} />,
+  lock: <Lock size={18} />,
+} as const;
 
 const HIGHLIGHT_EVENTS = [
   { event: "page_view", path: "/stack", ms: 3 },
@@ -64,7 +40,7 @@ function FeatureCell({
       style={BG}
     >
       <div
-        className="inline-flex items-center justify-center w-9 h-9 rounded-lg mb-6 text-white/70 transition-colors duration-300 group-hover:text-white"
+        className="inline-flex items-center justify-center w-9 h-9 mb-6 text-white/70 transition-colors duration-300 group-hover:text-white"
         style={{ background: "rgba(255,255,255,0.04)" }}
       >
         {ICON[iconKey]}
@@ -95,7 +71,9 @@ export function Features() {
           />
         </div>
 
-        <div className="grid grid-cols-6 grid-rows-[auto_auto_auto] gap-px rounded-2xl overflow-hidden border border-white/6 bg-white/6">
+        <div
+          className="grid grid-cols-6 grid-rows-[auto_auto_auto] gap-px overflow-hidden rounded-2xl border border-white/10 bg-white/10"
+        >
           {/* Row 1 — hero feature (4 cols) + stat cell (2 cols) */}
           <div
             className="col-span-6 lg:col-span-4 row-span-1 relative p-10 lg:p-12 overflow-hidden"
@@ -109,7 +87,7 @@ export function Features() {
             <div className="relative grid grid-cols-1 lg:grid-cols-[1fr_auto] gap-10 items-center">
               <div>
                 <div
-                  className="inline-flex w-9 h-9 items-center justify-center rounded-lg mb-6"
+                  className="inline-flex w-9 h-9 items-center justify-center mb-6"
                   style={{
                     background:
                       "color-mix(in oklab, " + ACCENT + " 14%, transparent)",
@@ -127,16 +105,16 @@ export function Features() {
                   <span className="text-white/45">zero drops.</span>
                 </h3>
                 <p className="text-[14.5px] text-white/55 leading-relaxed max-w-md">
-                  Load-tested on a single box. Ingest stays under 5ms p90
-                  while the queue drains in the background.
+                  Load-tested on a single box. Ingest stays under 5ms p90 while
+                  the queue drains in the background.
                 </p>
               </div>
 
               <div
-                className="rounded-xl border border-white/6 p-4 min-w-[280px]"
-                style={INNER}
+                className="border border-white/10 p-4 min-w-[280px]"
+                style={{ ...INNER, borderRadius: 0 }}
               >
-                <div className="flex items-center gap-2 mb-3 pb-3 border-b border-white/6">
+                <div className="flex items-center gap-2 mb-3 pb-3 border-b border-white/10">
                   <span className="relative flex h-1.5 w-1.5">
                     <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-60" />
                     <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-emerald-400" />
@@ -231,7 +209,7 @@ export function Features() {
               ].map((t) => (
                 <span
                   key={t}
-                  className="text-[10.5px] font-mono text-white/65 px-2 py-1 rounded border border-white/10"
+                  className="text-[10.5px] font-mono text-white/65 px-2 py-1 border border-white/10 rounded-md"
                   style={INNER}
                 >
                   {t}
