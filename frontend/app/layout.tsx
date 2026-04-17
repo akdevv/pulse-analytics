@@ -1,7 +1,9 @@
+import type { Metadata } from "next";
+import type { ReactNode } from "react";
+
+import "./globals.css";
 import { Toaster } from "@/components/ui/sonner";
 import { AuthProvider } from "@/contexts/auth.context";
-import type { Metadata } from "next";
-import "./globals.css";
 import { Providers } from "./providers";
 
 export const metadata: Metadata = {
@@ -12,12 +14,10 @@ export const metadata: Metadata = {
 
 export default function RootLayout({
   children,
-}: Readonly<{
-  children: React.ReactNode;
-}>) {
+}: Readonly<{ children: ReactNode }>) {
   return (
-    <html lang="en">
-      <body className="dark antialiased">
+    <html lang="en" suppressHydrationWarning>
+      <body className="dark font-sans antialiased">
         <Providers>
           <AuthProvider>
             {children}
