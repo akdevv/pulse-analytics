@@ -209,6 +209,29 @@ input:-webkit-autofill {
   transition: background-color 5000s ease-in-out 0s !important;
 }
 
+/* Shiki code panel line numbers */
+.code-panel-body pre code {
+  counter-reset: line;
+}
+.code-panel-body pre code .line {
+  display: inline-block;
+  width: 100%;
+  padding-left: 2.5rem;
+  position: relative;
+}
+.code-panel-body pre code .line::before {
+  counter-increment: line;
+  content: counter(line);
+  position: absolute;
+  left: 0;
+  width: 1.75rem;
+  text-align: right;
+  color: rgba(255, 255, 255, 0.18);
+  font-size: 11px;
+  line-height: inherit;
+  user-select: none;
+}
+
 /* Landing animations */
 @keyframes marquee {
   from { transform: translateX(0); }
