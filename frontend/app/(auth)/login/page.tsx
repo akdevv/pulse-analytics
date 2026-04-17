@@ -5,15 +5,8 @@ import Link from "next/link";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
 
+import { ACCENT, BG, LOGO_FONT, PulseLogo, SURFACE } from "@/components/landing/shared";
 import { PasswordInput } from "@/components/common/password-input";
-import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
 import {
   Form,
   FormControl,
@@ -28,12 +21,8 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 
 const loginSchema = z.object({
-  email: z.string().email({
-    message: "Please enter a valid email address.",
-  }),
-  password: z.string().min(1, {
-    message: "Password is required.",
-  }),
+  email: z.email("Please enter a valid email address."),
+  password: z.string().min(1, "Password is required."),
 });
 
 type LoginFormValues = z.infer<typeof loginSchema>;
@@ -42,108 +31,205 @@ export default function Login() {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-
   const { login } = useAuth();
 
   const form = useForm<LoginFormValues>({
     resolver: zodResolver(loginSchema),
-    defaultValues: {
-      email: "",
-      password: "",
-    },
+    defaultValues: { email: "", password: "" },
   });
 
   async function onSubmit(data: LoginFormValues) {
     try {
       setLoading(true);
       setError("");
-
-      const res = await login(data.email, data.password);
-      console.log("Login response:", res);
-
+      await login(data.email, data.password);
       router.push("/dashboard");
-    } catch (error) {
-      const errorMessage =
-        error instanceof Error ? error.message : "An unknown error occurred";
-      setError(errorMessage);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "An unknown error occurred");
     } finally {
       setLoading(false);
     }
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center p-4">
-      <Card className="w-full max-w-md">
-        <CardHeader className="space-y-1">
-          <CardTitle className="text-2xl font-bold">Welcome back</CardTitle>
-          <CardDescription>
-            Enter your credentials to sign in to your account
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          {error && (
-            <div className="rounded-md bg-red-900/40 border border-red-800 p-3 text-sm text-red-300">
-              {error || "Something went wrong!"}
-            </div>
-          )}
+    <div
+      className="dark min-h-screen flex flex-col relative overflow-hidden"
+      style={{ background: BG }}
+    >
+      {/* Grid texture */}
+      <div
+        className="pointer-events-none absolute inset-0"
+        style={{
+          backgroundImage:
+            "linear-gradient(oklch(1 0 0 / 0.03) 1px, transparent 1px), linear-gradient(90deg, oklch(1 0 0 / 0.03) 1px, transparent 1px)",
+          backgroundSize: "36px 36px",
+        }}
+      />
 
-          <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-              <FormField
-                control={form.control}
-                name="email"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Email</FormLabel>
-                    <FormControl>
-                      <Input
-                        type="email"
-                        placeholder="john@example.com"
-                        disabled={loading}
-                        {...field}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="password"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Password</FormLabel>
-                    <FormControl>
-                      <PasswordInput
-                        placeholder="Enter your password"
-                        disabled={loading}
-                        {...field}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <Button
-                type="submit"
-                className="w-full cursor-pointer"
-                disabled={loading}
+      {/* Ambient orange glow */}
+      <div
+        className="pointer-events-none absolute inset-0"
+        style={{
+          background: `radial-gradient(ellipse 70% 55% at 50% 48%, ${ACCENT}14 0%, transparent 68%)`,
+        }}
+      />
+
+      {/* Logo — top left */}
+      <div className="relative z-10 p-6">
+        <Link href="/" className="inline-flex items-center gap-2 group">
+          <PulseLogo size={26} />
+          <span
+            className="text-white/80 group-hover:text-white transition-colors text-[15px]"
+            style={LOGO_FONT}
+          >
+            Pulse
+          </span>
+        </Link>
+      </div>
+
+      {/* Centered card */}
+      <div className="relative z-10 flex-1 flex items-center justify-center px-4 pb-16">
+        <div className="w-full max-w-[380px]">
+          <div
+            className="rounded-2xl overflow-hidden animate-fade-in"
+            style={{
+              background: SURFACE,
+              border: "1px solid oklch(0.3 0.005 285)",
+              boxShadow: [
+                `0 0 0 1px ${ACCENT}10`,
+                "0 2px 4px rgba(0,0,0,0.3)",
+                "0 12px 32px -4px rgba(0,0,0,0.5)",
+                "0 32px 64px -8px rgba(0,0,0,0.4)",
+                `0 0 80px -16px ${ACCENT}22`,
+              ].join(", "),
+            }}
+          >
+            {/* Top accent line */}
+            <div
+              style={{
+                height: "1px",
+                background: `linear-gradient(90deg, transparent 8%, ${ACCENT}80 50%, transparent 92%)`,
+              }}
+            />
+
+            <div className="px-8 py-8">
+              {/* Heading */}
+              <div className="mb-8">
+                <h1
+                  className="text-white text-[24px] mb-1.5"
+                  style={{ ...LOGO_FONT, fontWeight: 700 }}
+                >
+                  Welcome back
+                </h1>
+                <p className="text-[14px] text-white/40 leading-snug">
+                  Sign in to continue to Pulse Analytics
+                </p>
+              </div>
+
+              {/* Error */}
+              {error && (
+                <div
+                  className="mb-5 rounded-xl px-4 py-3 text-[13px] text-red-300"
+                  style={{
+                    background: "oklch(0.35 0.1 25 / 0.2)",
+                    border: "1px solid oklch(0.5 0.15 25 / 0.3)",
+                  }}
+                >
+                  {error}
+                </div>
+              )}
+
+              {/* Form */}
+              <Form {...form}>
+                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5">
+                  <FormField
+                    control={form.control}
+                    name="email"
+                    render={({ field }) => (
+                      <FormItem className="space-y-1.5">
+                        <FormLabel className="text-[13px] font-medium text-white/55">
+                          Email
+                        </FormLabel>
+                        <FormControl>
+                          <Input
+                            type="email"
+                            placeholder="you@example.com"
+                            disabled={loading}
+                            className="h-10 text-[14px] text-white placeholder:text-white/20 bg-white/5 border-white/10"
+                            {...field}
+                          />
+                        </FormControl>
+                        <FormMessage className="text-red-400 text-[12px]" />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="password"
+                    render={({ field }) => (
+                      <FormItem className="space-y-1.5">
+                        <div className="flex items-center justify-between">
+                          <FormLabel className="text-[13px] font-medium text-white/55">
+                            Password
+                          </FormLabel>
+                          <Link
+                            href="/forgot-password"
+                            className="text-[12px] text-white/30 hover:text-white/65 transition-colors"
+                          >
+                            Forgot password?
+                          </Link>
+                        </div>
+                        <FormControl>
+                          <PasswordInput
+                            placeholder="••••••••"
+                            disabled={loading}
+                            className="h-10 text-[14px] text-white placeholder:text-white/20 bg-white/5 border-white/10"
+                            {...field}
+                          />
+                        </FormControl>
+                        <FormMessage className="text-red-400 text-[12px]" />
+                      </FormItem>
+                    )}
+                  />
+
+                  <div className="pt-1">
+                    <button
+                      type="submit"
+                      disabled={loading}
+                      className="w-full h-10 rounded-xl text-[14px] font-semibold transition-opacity hover:opacity-85 active:opacity-75 disabled:opacity-50 cursor-pointer flex items-center justify-center gap-2"
+                      style={{ background: ACCENT, color: BG }}
+                    >
+                      {loading ? (
+                        <>
+                          <span className="w-3.5 h-3.5 border-2 border-current border-t-transparent rounded-full animate-spin" />
+                          Signing in…
+                        </>
+                      ) : (
+                        "Sign in"
+                      )}
+                    </button>
+                  </div>
+                </form>
+              </Form>
+
+              {/* Footer */}
+              <div
+                className="mt-7 pt-6 text-center text-[13px] text-white/30"
+                style={{ borderTop: "1px solid oklch(1 0 0 / 0.07)" }}
               >
-                {loading ? "Logging in..." : "Login"}
-              </Button>
-            </form>
-          </Form>
-          <div className="mt-4 text-center text-sm">
-            Don&apos;t have an account?{" "}
-            <Link
-              href="/register"
-              className="underline underline-offset-4 hover:text-primary"
-            >
-              Sign up
-            </Link>
+                No account?{" "}
+                <Link
+                  href="/register"
+                  className="text-white/60 font-medium hover:text-white transition-colors"
+                >
+                  Create one
+                </Link>
+              </div>
+            </div>
           </div>
-        </CardContent>
-      </Card>
+        </div>
+      </div>
     </div>
   );
 }
