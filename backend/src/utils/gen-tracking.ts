@@ -1,4 +1,5 @@
 import { randomBytes } from "crypto";
+import env from "@/config/env.ts";
 
 export function generateTrackingId(): string {
   const PREFIX = "pk-";
@@ -15,7 +16,7 @@ export function generateTrackingId(): string {
 export function generateEmbedCode(trackingId: string): string {
   const embedCode = `
 <!-- Pulse Analytics -->
-<script src="https://api.pulse.com/pulse-sdk.js?trackingId=${trackingId}"></script>
+<script src="${env.TRACKING_SCRIPT_URL}/pulse-sdk.js?trackingId=${trackingId}"></script>
 <script>
   window.pulse = {
     trackingId: "${trackingId}"

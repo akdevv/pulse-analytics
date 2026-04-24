@@ -2,7 +2,7 @@ import bcrypt from "bcrypt";
 import { prisma } from "@/config/prisma.ts";
 import { faker } from "@faker-js/faker";
 import { RateLimitTier } from "@/generated/prisma/enums.ts";
-import { generateTrackingId } from "@/helpers/gen-tracking.ts";
+import { generateTrackingId } from "@/utils/gen-tracking.ts";
 
 async function main() {
   console.log("[seed] Starting seeding...");

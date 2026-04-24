@@ -1,6 +1,6 @@
 import { prisma } from "@/config/prisma.ts";
 import { faker } from "@faker-js/faker";
-import { generateTrackingId } from "@/helpers/gen-tracking.ts";
+import { generateTrackingId } from "@/utils/gen-tracking.ts";
 import { RateLimitTier } from "@/generated/prisma/enums.ts";
 import { EventType } from "@/types/event.ts";
 

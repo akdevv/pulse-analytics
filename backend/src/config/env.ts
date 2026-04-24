@@ -26,11 +26,13 @@ const envSchema = z.object({
 
   // CORS
   FRONTEND_URL: z.string().default("http://localhost:3000"),
+
+  TRACKING_SCRIPT_URL: z.url().default("http://localhost:8000"),
 });
 
 const env = envSchema.safeParse(process.env);
 if (!env.success) {
-  console.error("Invalid environment variables:", env.error.format());
+  console.error("Invalid environment variables:", z.prettifyError(env.error));
   throw new Error("Invalid environment variables");
 }
 

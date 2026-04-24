@@ -1,7 +1,7 @@
 import {
   generateEmbedCode,
   generateTrackingId,
-} from "@/helpers/gen-tracking.ts";
+} from "@/utils/gen-tracking.ts";
 import { AppError } from "@/utils/app-error.ts";
 import {
   createSite,

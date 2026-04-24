@@ -47,18 +47,17 @@ export const track = asyncHandler(async (req: Request, res: Response) => {
     // Rate Limiting
     const t2b = performance.now();
     const ip = req.ip ?? "unknown";
-    const [siteAllowed, ipAllowed] = await Promise.all([
+    const [siteResult, ipResult] = await Promise.all([
       checkSiteRateLimit(site.id, site.rateLimitTier),
       checkIpRateLimit(ip),
     ]);
     timings.rateLimit = performance.now() - t2b;
 
-    if (!siteAllowed || !ipAllowed) {
+    if (!siteResult.allowed || !ipResult.allowed) {
       logger.warn("[track] Rate limit exceeded", {
         tid: params.tid,
         ip,
-        siteAllowed,
-        ipAllowed,
+        reason: siteResult.reason ?? ipResult.reason,
         timings: formatTimings(timings),
       });
       return res.status(204).send();

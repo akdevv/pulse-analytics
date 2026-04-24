@@ -1,14 +1,6 @@
 import { redis } from "@/config/redis.ts";
+import rateLimitConfig, { type Tier } from "@/config/ratelimit.ts";
 import logger from "@/utils/logger.ts";
-
-const RATE_LIMITS = {
-  FREE: 1000,
-  PRO: 10_000,
-  ENTERPRISE: 100_000,
-};
-const IP_RATE_LIMIT = 500;
-
-type Tier = keyof typeof RATE_LIMITS;
 
 function siteRateLimitKey(siteId: string): string {
   const currentMinute = Math.floor(Date.now() / 60000);
@@ -23,16 +15,16 @@ function ipRateLimitKey(ip: string): string {
 export async function checkSiteRateLimit(
   siteId: string,
   tier: Tier = "FREE"
-): Promise<boolean> {
+): Promise<{ allowed: boolean; reason?: string }> {
+  if (!rateLimitConfig.enabled) return { allowed: true };
+
   const key = siteRateLimitKey(siteId);
-  const limit = RATE_LIMITS[tier];
+  const limit = rateLimitConfig.siteLimits[tier];
 
   try {
     const count = await redis.incr(key);
-
-    // first increment - set TTL so key cleans itself
     if (count === 1) {
-      await redis.expire(key, 120); // 2 mins
+      await redis.expire(key, rateLimitConfig.keyTtlSeconds);
     }
 
     if (count > limit) {
@@ -42,43 +34,44 @@ export async function checkSiteRateLimit(
         limit,
         tier,
       });
-      return false;
+      return { allowed: false, reason: "site_rate_limit_exceeded" };
     }
 
-    return true;
+    return { allowed: true };
   } catch (err) {
-    // Redis down — fail open (allow the request)
-    // Better to let traffic through than to block everything
-    logger.warn("[ratelimit] Redis error, allowing all requests.", {
-      err,
-      siteId,
-    });
-    return true;
+    logger.error(
+      "[ratelimit] Redis error — rejecting request (fail-closed)",
+      err instanceof Error ? err : new Error(String(err))
+    );
+    return { allowed: false, reason: "rate_limit_unavailable" };
   }
 }
 
-export async function checkIpRateLimit(ip: string): Promise<boolean> {
+export async function checkIpRateLimit(
+  ip: string
+): Promise<{ allowed: boolean; reason?: string }> {
+  if (!rateLimitConfig.enabled) return { allowed: true };
+
   const key = ipRateLimitKey(ip);
+  const limit = rateLimitConfig.ipLimit;
 
   try {
     const count = await redis.incr(key);
-
     if (count === 1) {
-      await redis.expire(key, 120); // 2 mins
+      await redis.expire(key, rateLimitConfig.keyTtlSeconds);
     }
 
-    if (count > IP_RATE_LIMIT) {
-      logger.warn("[ratelimit] IP limit exceeded", {
-        ip,
-        count,
-        limit: IP_RATE_LIMIT,
-      });
-      return false;
+    if (count > limit) {
+      logger.warn("[ratelimit] IP limit exceeded", { ip, count, limit });
+      return { allowed: false, reason: "ip_rate_limit_exceeded" };
     }
 
-    return true;
+    return { allowed: true };
   } catch (err) {
-    logger.warn("[ratelimit] Redis error, allowing request", { err, ip });
-    return true;
+    logger.error(
+      "[ratelimit] Redis error — rejecting request (fail-closed)",
+      err instanceof Error ? err : new Error(String(err))
+    );
+    return { allowed: false, reason: "rate_limit_unavailable" };
   }
 }
