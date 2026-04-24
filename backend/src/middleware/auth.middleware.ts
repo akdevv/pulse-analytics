@@ -29,7 +29,7 @@ export async function authenticateToken(
     // Add the user to the request
     req.user = payload;
     next();
-  } catch (error) {
+  } catch {
     throw new AppError(401, "Unauthorized");
   }
 }

@@ -86,7 +86,7 @@ export const logout = asyncHandler(async (req: Request, res: Response) => {
 
 // GET /auth/me
 export const getUser = asyncHandler(async (req: Request, res: Response) => {
-  if (!req.user.userId) {
+  if (!req.user?.userId) {
     throw new AppError(401, "Unauthorized");
   }
   const user = await getUserById(req.user.userId);
@@ -103,7 +103,7 @@ export const getUser = asyncHandler(async (req: Request, res: Response) => {
 
 // PATCH /auth/me
 export const updateUser = asyncHandler(async (req: Request, res: Response) => {
-  if (!req.user.userId) {
+  if (!req.user?.userId) {
     throw new AppError(401, "Unauthorized");
   }
   const { name, email, password } = req.body;

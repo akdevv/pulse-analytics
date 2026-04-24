@@ -23,6 +23,9 @@ const envSchema = z.object({
   REDIS_PASSWORD: z.string().optional(),
 
   GEOIP_DB_PATH: z.string().default("./data/GeoLite2-City.mmdb"),
+
+  // CORS
+  FRONTEND_URL: z.string().default("http://localhost:3000"),
 });
 
 const env = envSchema.safeParse(process.env);

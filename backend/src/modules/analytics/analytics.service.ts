@@ -22,7 +22,7 @@ export function resolveDateRange(from?: string, to?: string): DateRange {
  * Throws 403 if not.
  */
 export const verifySiteOwnership = async (siteId: string, userId: string) => {
-  const site = getSiteForUser(siteId, userId);
+  const site = await getSiteForUser(siteId, userId);
   if (!site) {
     throw new AppError(403, "Site not found or access denied");
   }
@@ -109,14 +109,4 @@ export async function getRealtime(siteId: string, userId: string) {
 export async function getRawEvents(siteId: string, userId: string) {
   await verifySiteOwnership(siteId, userId);
   return analyticsRepository.getRawEvents(siteId);
-}
-
-export async function performRawQuery(
-  query: string,
-  siteId: string,
-  userId: string
-) {
-  await verifySiteOwnership(siteId, userId);
-  // For testing and debugging purposes - to view raw events
-  return analyticsRepository.performRawQuery(query);
 }

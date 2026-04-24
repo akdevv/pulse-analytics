@@ -15,16 +15,12 @@ const parseQuery = (req: Request) => {
 // GET /:siteId/overview
 export const getOverview = asyncHandler(async (req: Request, res: Response) => {
   const { siteId } = req.params;
-  if (!siteId) {
-    throw new AppError(404, "Site ID is required.");
-  }
+  if (!siteId) throw new AppError(404, "Site ID is required.");
 
-  const userId = req.user.id;
+  const userId = req.user!.userId;
 
   const { error, data } = parseQuery(req);
-  if (error) {
-    return res.status(400).json({ error });
-  }
+  if (error) return res.status(400).json({ error });
 
   const result = await AnalyticsService.getOverview(
     siteId,
@@ -44,16 +40,12 @@ export const getOverview = asyncHandler(async (req: Request, res: Response) => {
 export const getTimeseries = asyncHandler(
   async (req: Request, res: Response) => {
     const { siteId } = req.params;
-    if (!siteId) {
-      throw new AppError(404, "Site ID is required.");
-    }
+    if (!siteId) throw new AppError(404, "Site ID is required.");
 
-    const userId = req.user.id;
+    const userId = req.user!.userId;
 
     const { error, data } = parseQuery(req);
-    if (error) {
-      return res.status(400).json({ error });
-    }
+    if (error) return res.status(400).json({ error });
 
     const result = await AnalyticsService.getTimeseries(
       siteId,
@@ -74,11 +66,9 @@ export const getTimeseries = asyncHandler(
 // GET /:siteId/pages
 export const getTopPages = asyncHandler(async (req: Request, res: Response) => {
   const { siteId } = req.params;
-  if (!siteId) {
-    throw new AppError(404, "Site ID is required.");
-  }
+  if (!siteId) throw new AppError(404, "Site ID is required.");
 
-  const userId = (req as any).user.id;
+  const userId = req.user!.userId;
 
   const { error, data } = parseQuery(req);
   if (error) return res.status(400).json({ error });
@@ -90,21 +80,21 @@ export const getTopPages = asyncHandler(async (req: Request, res: Response) => {
     data!.to,
     data!.limit
   );
-  res.status(200).json({
+
+  return res.status(200).json({
     status: "success",
     message: "Fetched top pages",
     data: result,
   });
 });
 
+// GET /:siteId/referrers
 export const getReferrers = asyncHandler(
   async (req: Request, res: Response) => {
     const { siteId } = req.params;
-    if (!siteId) {
-      throw new AppError(404, "Site ID is required.");
-    }
+    if (!siteId) throw new AppError(404, "Site ID is required.");
 
-    const userId = (req as any).user.id;
+    const userId = req.user!.userId;
 
     const { error, data } = parseQuery(req);
     if (error) return res.status(400).json({ error });
@@ -116,7 +106,8 @@ export const getReferrers = asyncHandler(
       data!.to,
       data!.limit
     );
-    res.status(200).json({
+
+    return res.status(200).json({
       status: "success",
       message: "Fetched referrers",
       data: result,
@@ -124,13 +115,12 @@ export const getReferrers = asyncHandler(
   }
 );
 
+// GET /:siteId/devices
 export const getDevices = asyncHandler(async (req: Request, res: Response) => {
   const { siteId } = req.params;
-  if (!siteId) {
-    throw new AppError(404, "Site ID is required.");
-  }
+  if (!siteId) throw new AppError(404, "Site ID is required.");
 
-  const userId = (req as any).user.id;
+  const userId = req.user!.userId;
 
   const { error, data } = parseQuery(req);
   if (error) return res.status(400).json({ error });
@@ -141,20 +131,20 @@ export const getDevices = asyncHandler(async (req: Request, res: Response) => {
     data!.from,
     data!.to
   );
-  res.status(200).json({
+
+  return res.status(200).json({
     status: "success",
     message: "Fetched devices",
     data: result,
   });
 });
 
+// GET /:siteId/geo
 export const getGeo = asyncHandler(async (req: Request, res: Response) => {
   const { siteId } = req.params;
-  if (!siteId) {
-    throw new AppError(404, "Site ID is required.");
-  }
+  if (!siteId) throw new AppError(404, "Site ID is required.");
 
-  const userId = (req as any).user.id;
+  const userId = req.user!.userId;
 
   const { error, data } = parseQuery(req);
   if (error) return res.status(400).json({ error });
@@ -165,72 +155,44 @@ export const getGeo = asyncHandler(async (req: Request, res: Response) => {
     data!.from,
     data!.to
   );
-  res.status(200).json({
+
+  return res.status(200).json({
     status: "success",
     message: "Fetched geo",
     data: result,
   });
 });
 
+// GET /:siteId/realtime
 export const getRealtime = asyncHandler(async (req: Request, res: Response) => {
   const { siteId } = req.params;
-  if (!siteId) {
-    throw new AppError(404, "Site ID is required.");
-  }
-  const userId = (req as any).user.id;
+  if (!siteId) throw new AppError(404, "Site ID is required.");
+
+  const userId = req.user!.userId;
 
   const result = await AnalyticsService.getRealtime(siteId, userId);
-  res.status(200).json({
+
+  return res.status(200).json({
     status: "success",
     message: "Fetched realtime",
     data: result,
   });
 });
 
+// GET /:siteId/raw
 export const getRawEvents = asyncHandler(
   async (req: Request, res: Response) => {
-    console.log("req =>", req.params, (req as any).user);
     const { siteId } = req.params;
-    if (!siteId) {
-      throw new AppError(404, "Site ID is required.");
-    }
-    const userId = (req as any).user.id;
+    if (!siteId) throw new AppError(404, "Site ID is required.");
+
+    const userId = req.user!.userId;
 
     const result = await AnalyticsService.getRawEvents(siteId, userId);
 
-    res.status(200).json({
+    return res.status(200).json({
       status: "success",
       message: "Fetched raw events",
-      data: {
-        siteId,
-        result,
-      },
-    });
-  }
-);
-
-export const performRawQuery = asyncHandler(
-  async (req: Request, res: Response) => {
-    const { query } = req.body;
-    const { siteId } = req.params;
-    if (!siteId) {
-      throw new AppError(404, "Site ID is required.");
-    }
-    const userId = (req as any).user.id;
-
-    const result = await AnalyticsService.performRawQuery(
-      query,
-      siteId,
-      userId
-    );
-
-    res.status(200).json({
-      status: "success",
-      message: "Fetched raw events",
-      data: {
-        siteId,
-        result,
-      },
+      data: { siteId, result },
     });
   }
 );

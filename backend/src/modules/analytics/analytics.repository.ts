@@ -177,7 +177,9 @@ export async function getGeo(
 // Intentionally hits raw events — aggregates are too stale for "right now".
 export async function getRealtime(siteId: string): Promise<RealtimeStats> {
   const [summaryRows, pageRows, referrerRows] = await Promise.all([
-    prisma.$queryRaw<{ activeSessions: number; pageviews: number; visitors: number }[]>`
+    prisma.$queryRaw<
+      { activeSessions: number; pageviews: number; visitors: number }[]
+    >`
       SELECT
         COUNT(DISTINCT "sessionId")::int  AS "activeSessions",
         COUNT(*)::int                     AS pageviews,
@@ -187,7 +189,9 @@ export async function getRealtime(siteId: string): Promise<RealtimeStats> {
         AND "receivedAt" >= NOW() - INTERVAL '5 minutes'
         AND "eventType" = 'PAGEVIEW'
     `,
-    prisma.$queryRaw<{ path: string; activeSessions: number; pageviews: number }[]>`
+    prisma.$queryRaw<
+      { path: string; activeSessions: number; pageviews: number }[]
+    >`
       SELECT
         "urlPathname"                          AS path,
         COUNT(DISTINCT "sessionId")::int       AS "activeSessions",
@@ -231,8 +235,4 @@ export async function getRawEvents(siteId: string) {
     ORDER BY "receivedAt" DESC
     LIMIT 10
   `;
-}
-
-export async function performRawQuery(query: string) {
-  return prisma.$queryRawUnsafe<any[]>(query);
 }

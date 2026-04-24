@@ -9,7 +9,6 @@ import {
   getGeo,
   getRealtime,
   getRawEvents,
-  performRawQuery,
 } from "./analytics.controller.ts";
 
 const router: Router = express.Router();
@@ -22,8 +21,5 @@ router.get("/:siteId/devices", authenticateToken, getDevices);
 router.get("/:siteId/geo", authenticateToken, getGeo);
 router.get("/:siteId/realtime", authenticateToken, getRealtime);
 router.get("/:siteId/raw", authenticateToken, getRawEvents);
-
-// For testing and debugging purposes - to view raw events
-router.post("/:siteId/raw-query", authenticateToken, performRawQuery);
 
 export default router;

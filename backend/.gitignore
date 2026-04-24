@@ -27,6 +27,7 @@ coverage/
 # Environment variables
 .env
 .env.*
+!.env.example
 
 # Build outputs
 dist/

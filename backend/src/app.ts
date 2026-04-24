@@ -5,6 +5,7 @@ import express, { type Express } from "express";
 import { config } from "@/config/index.ts";
 import cookieParser from "cookie-parser";
 import { errorMiddleware } from "@/middleware/error.middleware.ts";
+import env from "@/config/env.ts";
 
 // Routes
 import analyticsRoutes from "@/modules/analytics/analytics.routes.ts";
@@ -16,15 +17,20 @@ const app: Express = express();
 const jsonReplacer = (_key: string, value: unknown) =>
   typeof value === "bigint" ? value.toString() : value;
 
-// Middleware
-app.use(
-  cors({
-    origin: true,
-    credentials: true,
-    methods: ["GET", "POST", "PUT", "PATCH", "DELETE"],
-    allowedHeaders: ["Content-Type", "Authorization"],
-  })
-);
+// Open CORS for /track — must accept requests from any website
+const openCors = cors({
+  origin: "*",
+  methods: ["POST"],
+  allowedHeaders: ["Content-Type"],
+});
+
+// Restrictive CORS for all other routes — only our frontend
+const restrictedCors = cors({
+  origin: env.FRONTEND_URL,
+  credentials: true,
+  methods: ["GET", "POST", "PUT", "PATCH", "DELETE"],
+  allowedHeaders: ["Content-Type", "Authorization"],
+});
 
 app.use(helmet());
 app.use(cookieParser());
@@ -44,10 +50,10 @@ apiRoute.get("/health", (_, res) => {
 });
 
 // Routes
-apiRoute.use("/analytics", analyticsRoutes);
-apiRoute.use("/auth", authRoutes);
-apiRoute.use("/sites", siteRoutes);
-apiRoute.use("/track", trackRoutes);
+apiRoute.use("/analytics", restrictedCors, analyticsRoutes);
+apiRoute.use("/auth", restrictedCors, authRoutes);
+apiRoute.use("/sites", restrictedCors, siteRoutes);
+apiRoute.use("/track", openCors, trackRoutes);
 
 // Mount API routes
 app.use(`/api/${config.apiVersion}`, apiRoute);
