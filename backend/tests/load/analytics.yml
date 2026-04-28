@@ -1,0 +1,63 @@
+# Artillery load test: analytics endpoints
+# Run: npx artillery run backend/tests/load/analytics.yml
+#
+# Prerequisites:
+#   - Server running at localhost:8000
+#   - A pre-created test user: loadtest@example.com / LoadTest1!
+#   - Replace SITE_ID below with a real site ID owned by that user
+#
+# Thresholds: p99 < 500ms, 0% auth errors
+
+config:
+  target: "http://localhost:8000"
+  phases:
+    - name: "warmup"
+      duration: 15
+      arrivalRate: 5
+    - name: "sustained"
+      duration: 60
+      arrivalRate: 20
+  ensure:
+    thresholds:
+      - http.response_time.p99: 500
+    conditions:
+      - expression: "http.codes.401 == 0"
+        strict: false
+
+  variables:
+    siteId: "REPLACE_WITH_REAL_SITE_ID"
+
+scenarios:
+  - name: "Auth → overview → timeseries → top-pages"
+    flow:
+      - post:
+          url: "/api/v1/auth/login"
+          json:
+            email: "loadtest@example.com"
+            password: "LoadTest1!"
+          capture:
+            - json: "$.data.accessToken"
+              as: "accessToken"
+          expect:
+            - statusCode: 200
+
+      - get:
+          url: "/api/v1/analytics/{{ siteId }}/overview"
+          headers:
+            Authorization: "Bearer {{ accessToken }}"
+          expect:
+            - statusCode: 200
+
+      - get:
+          url: "/api/v1/analytics/{{ siteId }}/timeseries"
+          headers:
+            Authorization: "Bearer {{ accessToken }}"
+          expect:
+            - statusCode: 200
+
+      - get:
+          url: "/api/v1/analytics/{{ siteId }}/top-pages"
+          headers:
+            Authorization: "Bearer {{ accessToken }}"
+          expect:
+            - statusCode: 200

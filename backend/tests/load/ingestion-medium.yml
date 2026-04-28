@@ -1,0 +1,42 @@
+# Artillery load test: ingestion /track — Medium
+# Run: npx artillery run backend/tests/load/ingestion-medium.yml
+# Target: 400 RPS for 60s → p99 < 500ms, error rate < 0.1%
+
+config:
+  target: "http://localhost:8000"
+  phases:
+    - name: "warmup"
+      duration: 30
+      arrivalRate: 100
+    - name: "ramp"
+      duration: 30
+      arrivalRate: 100
+      rampTo: 400
+    - name: "medium"
+      duration: 60
+      arrivalRate: 400
+  ensure:
+    thresholds:
+      - http.response_time.p99: 500
+    conditions:
+      - expression: "(http.codes.5xx / http.requests) < 0.001"
+        strict: false
+
+scenarios:
+  - name: "Track PAGEVIEW"
+    weight: 7
+    flow:
+      - get:
+          url: "/api/v1/track?v=1&tid=pk-Xkv3t0YD5qr5YQbmDHLvBphErLe&t=PAGEVIEW&cid=3fa85f64-5717-4562-b3fc-2c963f66afa6&sid=7c9e6679-7425-40de-944b-e07fc1f90ae7&dl=https%3A%2F%2Fexample.com%2Fproducts%2F123&dt=Product%20Details&dr=https%3A%2F%2Fwww.google.com&sr=1920x1080&vp=1024x768&ul=en-US&debug=false"
+
+  - name: "Track CLICK"
+    weight: 2
+    flow:
+      - get:
+          url: "/api/v1/track?v=1&tid=pk-Xkv3t0YD5qr5YQbmDHLvBphErLe&t=CLICK&cid=3fa85f64-5717-4562-b3fc-2c963f66afa6&sid=7c9e6679-7425-40de-944b-e07fc1f90ae7&dl=https%3A%2F%2Fexample.com%2F&en=button_click&ep=%7B%22label%22%3A%22signup%22%7D&debug=false"
+
+  - name: "Track CUSTOM"
+    weight: 1
+    flow:
+      - get:
+          url: "/api/v1/track?v=1&tid=pk-Xkv3t0YD5qr5YQbmDHLvBphErLe&t=CUSTOM&cid=3fa85f64-5717-4562-b3fc-2c963f66afa6&sid=7c9e6679-7425-40de-944b-e07fc1f90ae7&dl=https%3A%2F%2Fexample.com%2Fcheckout&en=purchase&ep=%7B%22value%22%3A49.99%7D&debug=false"

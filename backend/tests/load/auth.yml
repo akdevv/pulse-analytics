@@ -1,0 +1,55 @@
+# Artillery load test: auth endpoints
+# Run: npx artillery run backend/tests/load/auth.yml
+#
+# Prerequisites:
+#   - Server running at localhost:8000
+#   - A pre-created test user: loadtest@example.com / LoadTest1!
+#
+# Thresholds: p99 < 300ms, error rate < 0.5%
+
+config:
+  target: "http://localhost:8000"
+  phases:
+    - name: "warm"
+      duration: 30
+      arrivalRate: 10
+    - name: "ramp"
+      duration: 60
+      arrivalRate: 10
+      rampTo: 50
+    - name: "sustained"
+      duration: 60
+      arrivalRate: 50
+  ensure:
+    thresholds:
+      - http.response_time.p99: 300
+    conditions:
+      - expression: "(http.codes.5xx / http.requests) < 0.005"
+        strict: false
+
+scenarios:
+  - name: "Register new user"
+    weight: 1
+    flow:
+      - post:
+          url: "/api/v1/auth/register"
+          json:
+            name: "Load Test User"
+            email: "loadtest-{{ $uuid() }}@example.com"
+            password: "LoadTest1!"
+          expect:
+            - statusCode: 201
+
+  - name: "Login existing user"
+    weight: 4
+    flow:
+      - post:
+          url: "/api/v1/auth/login"
+          json:
+            email: "loadtest@example.com"
+            password: "LoadTest1!"
+          expect:
+            - statusCode: 200
+          capture:
+            - json: "$.data.accessToken"
+              as: "accessToken"

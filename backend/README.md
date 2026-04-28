@@ -70,6 +70,18 @@ pnpm dev:api     # API server with hot reload
 pnpm dev:worker  # event worker
 ```
 
+## Testing
+
+152 unit tests (Vitest) + Artillery load tests for ingestion, auth, and analytics.
+
+```bash
+pnpm test          # run unit tests once
+pnpm test:watch    # watch mode
+pnpm test:coverage # with coverage report
+```
+
+See [`tests/README.md`](tests/README.md) for load test setup and full test strategy.
+
 ## Scripts
 
 | Command           | Description                             |

@@ -1,37 +1,29 @@
 export const ErrorCode = {
-  // auth
   UNAUTHORIZED: "UNAUTHORIZED",
   FORBIDDEN: "FORBIDDEN",
-  TOKEN_REVOKED: "TOKEN_REVOKED",
   TOKEN_MISSING: "TOKEN_MISSING",
-
-  // resources
+  TOKEN_REVOKED: "TOKEN_REVOKED",
   NOT_FOUND: "NOT_FOUND",
   ALREADY_EXISTS: "ALREADY_EXISTS",
-
-  // input
   VALIDATION_ERROR: "VALIDATION_ERROR",
   INVALID_JSON: "INVALID_JSON",
-
-  // server
   INTERNAL_ERROR: "INTERNAL_ERROR",
 } as const;
 
 export type ErrorCode = (typeof ErrorCode)[keyof typeof ErrorCode];
 
+// Represents a known, user-facing error. Anything that isn't an AppError
+// is treated as an unexpected failure by the error middleware.
 export class AppError extends Error {
-  public type: string;
-  public statusCode: number;
-  public isOperational: boolean;
-  public code?: string | undefined;
+  public readonly type = "app";
+  public readonly statusCode: number;
+  public readonly isOperational = true;
+  public readonly code?: ErrorCode | undefined;
 
-  constructor(statusCode: number, message: string, code?: string) {
+  constructor(statusCode: number, message: string, code?: ErrorCode) {
     super(message);
-    this.type = "app";
     this.statusCode = statusCode;
-    this.isOperational = true;
     this.code = code;
-
     Error.captureStackTrace(this, this.constructor);
   }
 
