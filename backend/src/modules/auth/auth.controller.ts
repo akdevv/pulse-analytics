@@ -58,7 +58,7 @@ export const refreshToken = asyncHandler(
   async (req: Request, res: Response) => {
     const token = req.cookies?.refresh_token;
     if (!token) {
-      throw new AppError(401, "Unauthorized");
+      throw AppError.unauthorized();
     }
 
     const result = await refreshTokenService(token);
@@ -100,11 +100,11 @@ export const logout = asyncHandler(async (req: Request, res: Response) => {
 // GET /auth/me
 export const getUser = asyncHandler(async (req: Request, res: Response) => {
   if (!req.user?.userId) {
-    throw new AppError(401, "Unauthorized");
+    throw AppError.unauthorized();
   }
   const user = await getUserById(req.user.userId);
   if (!user) {
-    throw new AppError(404, "User not found");
+    throw AppError.notFound("User");
   }
 
   return res.status(200).json({
@@ -117,7 +117,7 @@ export const getUser = asyncHandler(async (req: Request, res: Response) => {
 // PATCH /auth/me
 export const updateUser = asyncHandler(async (req: Request, res: Response) => {
   if (!req.user?.userId) {
-    throw new AppError(401, "Unauthorized");
+    throw AppError.unauthorized();
   }
   const { name, email, password } = req.body;
   const result = await updateUserService(req.user.userId, {

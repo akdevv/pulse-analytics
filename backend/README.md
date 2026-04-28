@@ -58,7 +58,7 @@ pnpm dev
 Starts Postgres + Redis via Docker, then the API and worker together in one terminal.
 
 | Process | Port | Color  |
-|---------|------|--------|
+| ------- | ---- | ------ |
 | API     | 8000 | cyan   |
 | Worker  | —    | yellow |
 
@@ -72,36 +72,36 @@ pnpm dev:worker  # event worker
 
 ## Scripts
 
-| Command | Description |
-|---------|-------------|
-| `pnpm dev` | Start everything (infra + api + worker) |
-| `pnpm dev:api` | API server only (hot reload) |
-| `pnpm dev:worker` | Worker only |
-| `pnpm infra:up` | Start Postgres + Redis in background |
-| `pnpm infra:down` | Stop Postgres + Redis |
-| `pnpm db:migrate` | Run TimescaleDB hypertable migrations |
-| `pnpm seed` | Seed DB with fake users and sites |
-| `pnpm typecheck` | Run TypeScript type checks |
-| `pnpm lint` | Lint the codebase |
-| `pnpm format` | Format with Prettier |
+| Command           | Description                             |
+| ----------------- | --------------------------------------- |
+| `pnpm dev`        | Start everything (infra + api + worker) |
+| `pnpm dev:api`    | API server only (hot reload)            |
+| `pnpm dev:worker` | Worker only                             |
+| `pnpm infra:up`   | Start Postgres + Redis in background    |
+| `pnpm infra:down` | Stop Postgres + Redis                   |
+| `pnpm db:migrate` | Run TimescaleDB hypertable migrations   |
+| `pnpm seed`       | Seed DB with fake users and sites       |
+| `pnpm typecheck`  | Run TypeScript type checks              |
+| `pnpm lint`       | Lint the codebase                       |
+| `pnpm format`     | Format with Prettier                    |
 
 ## Environment Variables
 
-| Variable | Required | Default | Description |
-|----------|----------|---------|-------------|
-| `PORT` | No | `8000` | API server port |
-| `NODE_ENV` | No | `development` | `development`, `production`, or `test` |
-| `DATABASE_URL` | Yes | — | PostgreSQL connection string |
-| `ACCESS_TOKEN_SECRET` | Yes | — | JWT access token signing secret |
-| `REFRESH_TOKEN_SECRET` | Yes | — | JWT refresh token signing secret |
-| `ACCESS_TOKEN_EXPIRY` | No | `15m` | Access token TTL |
-| `REFRESH_TOKEN_EXPIRY` | No | `30d` | Refresh token TTL |
-| `REDIS_HOST` | No | `localhost` | Redis host |
-| `REDIS_PORT` | No | `6379` | Redis port |
-| `REDIS_PASSWORD` | No | — | Redis password (if auth enabled) |
-| `GEOIP_DB_PATH` | No | `./data/GeoLite2-City.mmdb` | Path to MaxMind GeoLite2 DB |
-| `FRONTEND_URL` | No | `http://localhost:3000` | Allowed CORS origin |
-| `TRACKING_SCRIPT_URL` | No | `http://localhost:8000` | Base URL embedded in tracking snippets |
+| Variable               | Required | Default                     | Description                            |
+| ---------------------- | -------- | --------------------------- | -------------------------------------- |
+| `PORT`                 | No       | `8000`                      | API server port                        |
+| `NODE_ENV`             | No       | `development`               | `development`, `production`, or `test` |
+| `DATABASE_URL`         | Yes      | —                           | PostgreSQL connection string           |
+| `ACCESS_TOKEN_SECRET`  | Yes      | —                           | JWT access token signing secret        |
+| `REFRESH_TOKEN_SECRET` | Yes      | —                           | JWT refresh token signing secret       |
+| `ACCESS_TOKEN_EXPIRY`  | No       | `15m`                       | Access token TTL                       |
+| `REFRESH_TOKEN_EXPIRY` | No       | `30d`                       | Refresh token TTL                      |
+| `REDIS_HOST`           | No       | `localhost`                 | Redis host                             |
+| `REDIS_PORT`           | No       | `6379`                      | Redis port                             |
+| `REDIS_PASSWORD`       | No       | —                           | Redis password (if auth enabled)       |
+| `GEOIP_DB_PATH`        | No       | `./data/GeoLite2-City.mmdb` | Path to MaxMind GeoLite2 DB            |
+| `FRONTEND_URL`         | No       | `http://localhost:3000`     | Allowed CORS origin                    |
+| `TRACKING_SCRIPT_URL`  | No       | `http://localhost:8000`     | Base URL embedded in tracking snippets |
 
 ## Project Structure
 
@@ -124,19 +124,19 @@ src/
 
 ## API Endpoints
 
-| Method | Path | Auth | Description |
-|--------|------|------|-------------|
-| `GET` | `/api/v1/health` | — | Health check |
-| `POST` | `/api/v1/auth/register` | — | Register |
-| `POST` | `/api/v1/auth/login` | — | Login |
-| `POST` | `/api/v1/auth/logout` | Bearer | Logout + revoke token |
-| `POST` | `/api/v1/auth/refresh` | Cookie | Refresh access token |
-| `GET` | `/api/v1/auth/me` | Bearer | Get current user |
-| `PATCH` | `/api/v1/auth/me` | Bearer | Update current user |
-| `GET` | `/api/v1/sites` | Bearer | List sites |
-| `POST` | `/api/v1/sites` | Bearer | Create site |
-| `GET` | `/api/v1/analytics/:siteId/*` | Bearer | Analytics queries |
-| `POST` | `/api/v1/track` | — | Ingest event (public) |
+| Method  | Path                          | Auth   | Description           |
+| ------- | ----------------------------- | ------ | --------------------- |
+| `GET`   | `/api/v1/health`              | —      | Health check          |
+| `POST`  | `/api/v1/auth/register`       | —      | Register              |
+| `POST`  | `/api/v1/auth/login`          | —      | Login                 |
+| `POST`  | `/api/v1/auth/logout`         | Bearer | Logout + revoke token |
+| `POST`  | `/api/v1/auth/refresh`        | Cookie | Refresh access token  |
+| `GET`   | `/api/v1/auth/me`             | Bearer | Get current user      |
+| `PATCH` | `/api/v1/auth/me`             | Bearer | Update current user   |
+| `GET`   | `/api/v1/sites`               | Bearer | List sites            |
+| `POST`  | `/api/v1/sites`               | Bearer | Create site           |
+| `GET`   | `/api/v1/analytics/:siteId/*` | Bearer | Analytics queries     |
+| `POST`  | `/api/v1/track`               | —      | Ingest event (public) |
 
 ## Deployment
 
@@ -147,6 +147,7 @@ docker build -t pulse-backend .
 ```
 
 On AWS, the recommended setup is:
+
 - **ECS Fargate** — runs the API and worker containers
 - **RDS** — managed PostgreSQL with TimescaleDB extension
 - **ElastiCache** — managed Redis

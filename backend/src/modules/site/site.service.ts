@@ -23,7 +23,7 @@ export const createSiteService = async ({
 }): Promise<{ site: ISite; embedCode: string }> => {
   const existingSite = await findSiteByDomain(domain);
   if (existingSite) {
-    throw new AppError(409, "Site already exists");
+    throw AppError.alreadyExists("Site");
   }
 
   // generate tracking id & embed code
@@ -49,7 +49,7 @@ export const getSiteByIdService = async (
 ): Promise<ISite> => {
   const site = await getSiteById(userId, siteId);
   if (!site) {
-    throw new AppError(404, "Site not found");
+    throw AppError.notFound("Site");
   }
   return site;
 };
@@ -62,14 +62,14 @@ export const updateSiteService = async (
   // Check if site exists and belongs to user
   const existingSite = await getSiteById(userId, siteId);
   if (!existingSite) {
-    throw new AppError(404, "Site not found");
+    throw AppError.notFound("Site");
   }
 
   // If domain is being updated, check if new domain is already taken
   if (data.domain && data.domain !== existingSite.domain) {
     const siteWithDomain = await findSiteByDomain(data.domain);
     if (siteWithDomain) {
-      throw new AppError(409, "Domain already exists");
+      throw AppError.alreadyExists("Domain");
     }
   }
 
@@ -84,7 +84,7 @@ export const deleteSiteService = async (
   // Check if site exists and belongs to user
   const existingSite = await getSiteById(userId, siteId);
   if (!existingSite) {
-    throw new AppError(404, "Site not found");
+    throw AppError.notFound("Site");
   }
 
   await deleteSite(userId, siteId);
@@ -98,7 +98,7 @@ export const regenerateTrackingIdService = async (
   // Check if site exists and belongs to user
   const existingSite = await getSiteById(userId, siteId);
   if (!existingSite) {
-    throw new AppError(404, "Site not found");
+    throw AppError.notFound("Site");
   }
 
   await invalidateSiteCache(existingSite.trackingId); // invalidate cache

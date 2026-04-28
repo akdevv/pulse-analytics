@@ -24,12 +24,12 @@ export const registerUser = async (
 ): Promise<{ accessToken: string; refreshToken: string }> => {
   const { name, email, password } = user;
   if (!email || !password) {
-    throw new AppError(400, "Email and password are required");
+    throw AppError.validation("Email and password are required");
   }
 
   const existingUser = await findUserByEmail(email);
   if (existingUser) {
-    throw new AppError(409, "User already exists");
+    throw AppError.alreadyExists("User");
   }
 
   const hashedPassword = await bcrypt.hash(password, 10);
@@ -49,17 +49,17 @@ export const loginUser = async (user: {
 }): Promise<{ accessToken: string; refreshToken: string }> => {
   const { email, password } = user;
   if (!email || !password) {
-    throw new AppError(400, "Email and password are required");
+    throw AppError.validation("Email and password are required");
   }
 
   const userData = await findUserByEmail(email);
   if (!userData) {
-    throw new AppError(404, "Failed to find user");
+    throw AppError.notFound("User");
   }
 
   const isPasswordValid = await bcrypt.compare(password, userData.password!);
   if (!isPasswordValid) {
-    throw new AppError(400, "Failed to login user");
+    throw AppError.validation("Invalid credentials");
   }
 
   const { accessToken, refreshToken } = generateTokens(
@@ -117,7 +117,7 @@ export const updateUserService = async (
 ): Promise<IUserPublic> => {
   const userData = await findUserById(id);
   if (!userData) {
-    throw new AppError(404, "User not found");
+    throw AppError.notFound("User");
   }
 
   const updateData: {
@@ -141,8 +141,7 @@ export const updateUserService = async (
 
   // Check if at least one field is provided
   if (Object.keys(updateData).length === 0) {
-    throw new AppError(
-      400,
+    throw AppError.validation(
       "At least one field (name, email, or password) must be provided"
     );
   }

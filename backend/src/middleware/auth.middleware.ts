@@ -17,17 +17,18 @@ export async function authenticateToken(
 ) {
   try {
     const token = req.headers.authorization?.split(" ")[1];
-    if (!token) throw new AppError(401, "No token provided");
+    if (!token) throw AppError.tokenMissing();
 
     const payload = jwt.verify(token, env.ACCESS_TOKEN_SECRET) as TokenPayload;
 
     if (payload.jti && (await redis.exists(`denylist:${payload.jti}`))) {
-      throw new AppError(401, "Token revoked");
+      throw AppError.tokenRevoked();
     }
 
     req.user = payload;
     next();
-  } catch {
-    throw new AppError(401, "Unauthorized");
+  } catch (err) {
+    if (err instanceof AppError) throw err;
+    throw AppError.unauthorized();
   }
 }

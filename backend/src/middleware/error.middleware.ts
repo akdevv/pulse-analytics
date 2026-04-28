@@ -3,14 +3,14 @@ import logger from "@/utils/logger.ts";
 import type { Request, Response, NextFunction } from "express";
 
 export const errorMiddleware = (
-  err: AppError,
+  err: Error,
   _req: Request,
   res: Response,
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   next: NextFunction
 ) => {
   // Express throws this when the request body isn't valid JSON
-  if (err?.type === "entity.parse.failed") {
+  if ((err as any)?.type === "entity.parse.failed") {
     return res.status(400).json({
       status: "error",
       message: "Invalid JSON in request body",

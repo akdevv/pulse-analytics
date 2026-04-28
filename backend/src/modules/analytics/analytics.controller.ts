@@ -15,7 +15,7 @@ const parseQuery = (req: Request) => {
 // GET /:siteId/overview
 export const getOverview = asyncHandler(async (req: Request, res: Response) => {
   const { siteId } = req.params;
-  if (!siteId) throw new AppError(404, "Site ID is required.");
+  if (!siteId) throw AppError.validation("Site ID is required");
 
   const userId = req.user!.userId;
 
@@ -40,7 +40,7 @@ export const getOverview = asyncHandler(async (req: Request, res: Response) => {
 export const getTimeseries = asyncHandler(
   async (req: Request, res: Response) => {
     const { siteId } = req.params;
-    if (!siteId) throw new AppError(404, "Site ID is required.");
+    if (!siteId) throw AppError.validation("Site ID is required");
 
     const userId = req.user!.userId;
 
@@ -66,7 +66,7 @@ export const getTimeseries = asyncHandler(
 // GET /:siteId/pages
 export const getTopPages = asyncHandler(async (req: Request, res: Response) => {
   const { siteId } = req.params;
-  if (!siteId) throw new AppError(404, "Site ID is required.");
+  if (!siteId) throw AppError.validation("Site ID is required");
 
   const userId = req.user!.userId;
 
@@ -92,7 +92,7 @@ export const getTopPages = asyncHandler(async (req: Request, res: Response) => {
 export const getReferrers = asyncHandler(
   async (req: Request, res: Response) => {
     const { siteId } = req.params;
-    if (!siteId) throw new AppError(404, "Site ID is required.");
+    if (!siteId) throw AppError.validation("Site ID is required");
 
     const userId = req.user!.userId;
 
@@ -118,7 +118,7 @@ export const getReferrers = asyncHandler(
 // GET /:siteId/devices
 export const getDevices = asyncHandler(async (req: Request, res: Response) => {
   const { siteId } = req.params;
-  if (!siteId) throw new AppError(404, "Site ID is required.");
+  if (!siteId) throw AppError.validation("Site ID is required");
 
   const userId = req.user!.userId;
 
@@ -142,7 +142,7 @@ export const getDevices = asyncHandler(async (req: Request, res: Response) => {
 // GET /:siteId/geo
 export const getGeo = asyncHandler(async (req: Request, res: Response) => {
   const { siteId } = req.params;
-  if (!siteId) throw new AppError(404, "Site ID is required.");
+  if (!siteId) throw AppError.validation("Site ID is required");
 
   const userId = req.user!.userId;
 
@@ -166,7 +166,7 @@ export const getGeo = asyncHandler(async (req: Request, res: Response) => {
 // GET /:siteId/realtime
 export const getRealtime = asyncHandler(async (req: Request, res: Response) => {
   const { siteId } = req.params;
-  if (!siteId) throw new AppError(404, "Site ID is required.");
+  if (!siteId) throw AppError.validation("Site ID is required");
 
   const userId = req.user!.userId;
 
@@ -183,7 +183,7 @@ export const getRealtime = asyncHandler(async (req: Request, res: Response) => {
 export const getRawEvents = asyncHandler(
   async (req: Request, res: Response) => {
     const { siteId } = req.params;
-    if (!siteId) throw new AppError(404, "Site ID is required.");
+    if (!siteId) throw AppError.validation("Site ID is required");
 
     const userId = req.user!.userId;
 

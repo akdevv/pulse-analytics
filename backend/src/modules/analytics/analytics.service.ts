@@ -24,7 +24,7 @@ export function resolveDateRange(from?: string, to?: string): DateRange {
 export const verifySiteOwnership = async (siteId: string, userId: string) => {
   const site = await getSiteForUser(siteId, userId);
   if (!site) {
-    throw new AppError(403, "Site not found or access denied");
+    throw AppError.forbidden("Site not found or access denied");
   }
 
   return site;

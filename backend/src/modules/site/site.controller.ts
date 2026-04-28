@@ -13,12 +13,12 @@ import {
 // POST /sites
 export const createSite = asyncHandler(async (req: Request, res: Response) => {
   if (!req?.user?.userId) {
-    throw new AppError(401, "Unauthorized");
+    throw AppError.unauthorized();
   }
 
   const { name, domain } = req.body;
   if (!name || !domain) {
-    throw new AppError(400, "Name and domain are required");
+    throw AppError.validation("Name and domain are required");
   }
 
   const site = await createSiteService({
@@ -36,7 +36,7 @@ export const createSite = asyncHandler(async (req: Request, res: Response) => {
 // GET /sites
 export const getSites = asyncHandler(async (req: Request, res: Response) => {
   if (!req?.user?.userId) {
-    throw new AppError(401, "Unauthorized");
+    throw AppError.unauthorized();
   }
 
   const sites = await getSitesService(req.user.userId);
@@ -50,7 +50,7 @@ export const getSites = asyncHandler(async (req: Request, res: Response) => {
 // GET /sites/:id
 export const getSiteById = asyncHandler(async (req: Request, res: Response) => {
   if (!req?.user?.userId) {
-    throw new AppError(401, "Unauthorized");
+    throw AppError.unauthorized();
   }
 
   const site = await getSiteByIdService(req.user.userId, req.params.id!);
@@ -64,7 +64,7 @@ export const getSiteById = asyncHandler(async (req: Request, res: Response) => {
 // PUT /sites/:id
 export const updateSite = asyncHandler(async (req: Request, res: Response) => {
   if (!req?.user?.userId) {
-    throw new AppError(401, "Unauthorized");
+    throw AppError.unauthorized();
   }
 
   const { name, domain } = req.body;
@@ -82,7 +82,7 @@ export const updateSite = asyncHandler(async (req: Request, res: Response) => {
 // DELETE /sites/:id
 export const deleteSite = asyncHandler(async (req: Request, res: Response) => {
   if (!req?.user?.userId) {
-    throw new AppError(401, "Unauthorized");
+    throw AppError.unauthorized();
   }
 
   await deleteSiteService(req.user.userId, req.params.id!);
@@ -96,7 +96,7 @@ export const deleteSite = asyncHandler(async (req: Request, res: Response) => {
 export const regenerateKey = asyncHandler(
   async (req: Request, res: Response) => {
     if (!req?.user?.userId) {
-      throw new AppError(401, "Unauthorized");
+      throw AppError.unauthorized();
     }
 
     const result = await regenerateTrackingIdService(
