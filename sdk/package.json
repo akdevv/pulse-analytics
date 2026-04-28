@@ -1,12 +1,12 @@
 {
-  "name": "pulse-analytics",
-  "version": "0.1.2",
+  "name": "@akdevv/pulse",
+  "version": "0.1.4",
   "description": "SDK for Pulse Analytics",
   "main": "dist/index.js",
   "module": "dist/index.mjs",
   "types": "dist/index.d.ts",
   "exports": {
-    ".": {
+    "./sdk": {
       "types": "./dist/index.d.ts",
       "import": "./dist/index.mjs",
       "require": "./dist/index.js"
@@ -15,6 +15,11 @@
       "types": "./dist/react.d.ts",
       "import": "./dist/react.js",
       "require": "./dist/react.cjs"
+    },
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.mjs",
+      "require": "./dist/index.js"
     }
   },
   "files": [
