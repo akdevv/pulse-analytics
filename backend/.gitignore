@@ -69,6 +69,7 @@ Thumbs.db
 # Testing
 .jest/
 tests/load/reports/
+tests/load/data/*.csv
 
 # Temporary files
 tmp/

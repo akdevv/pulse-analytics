@@ -20,6 +20,11 @@ const envSchema = z.object({
   REDIS_PORT: z.coerce.number().default(6379),
   REDIS_PASSWORD: z.string().optional(),
 
+  RATE_LIMIT_ENABLED: z
+    .enum(["true", "false"])
+    .default("true")
+    .transform((v) => v === "true"),
+
   GEOIP_DB_PATH: z.string().default("./data/GeoLite2-City.mmdb"),
 
   FRONTEND_URL: z.string().default("http://localhost:3000"),

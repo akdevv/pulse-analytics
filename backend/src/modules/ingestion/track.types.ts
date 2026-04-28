@@ -3,7 +3,7 @@ import { EventType } from "@/types/event.ts";
 
 export const TrackQuerySchema = z.object({
   v: z.string().default("1"), // version
-  tid: z.string().regex(/^pk-[a-zA-Z0-9]{29}$/, "Invalid tracking ID format"), // trackingId
+  tid: z.string().regex(/^pk-[a-zA-Z0-9_-]{32}$/, "Invalid tracking ID format"), // trackingId
   t: z.enum(EventType), // event type
   cid: z.uuid("Invalid client ID format").optional(), // visitorId
   sid: z.uuid("Invalid session ID format").optional(), // sessionId

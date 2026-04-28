@@ -2,7 +2,7 @@ import { describe, it, expect } from "vitest";
 import { TrackQuerySchema } from "@/modules/ingestion/track.types.ts";
 
 const validBase = {
-  tid: "pk-" + "a".repeat(29),
+  tid: "pk-" + "a".repeat(32),
   t: "PAGEVIEW",
   dl: "https://example.com",
 };

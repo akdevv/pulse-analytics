@@ -20,7 +20,11 @@
     "seed": "tsx src/seed/index.ts",
     "test": "vitest run",
     "test:watch": "vitest",
-    "test:coverage": "vitest run --coverage"
+    "test:coverage": "vitest run --coverage",
+    "load:seed": "node tests/load/seed-load-test.mjs",
+    "load:auth": ". ./tests/load/load-test.env && artillery run tests/load/auth.yml --output tests/load/reports/auth.json",
+    "load:ingestion": ". ./tests/load/load-test.env && artillery run tests/load/ingestion.yml --output tests/load/reports/ingestion.json",
+    "load:analytics": ". ./tests/load/load-test.env && artillery run tests/load/analytics.yml --output tests/load/reports/analytics.json"
   },
   "keywords": [
     "pulse-analytics",

@@ -13,6 +13,10 @@ export default defineConfig([
     extends: ["js/recommended"],
     languageOptions: { globals: globals.browser },
   },
+  {
+    files: ["tests/load/**/*.mjs", "tests/load/**/*.js"],
+    languageOptions: { globals: globals.node },
+  },
   tseslint.configs.recommended,
   {
     rules: {

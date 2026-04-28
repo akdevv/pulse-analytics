@@ -1,9 +1,11 @@
 # Artillery load test: auth endpoints
-# Run: npx artillery run backend/tests/load/auth.yml
+# Run: npx artillery run backend/tests/load/auth.yml --output tests/load/reports/auth.json
 #
-# Prerequisites:
-#   - Server running at localhost:8000
-#   - A pre-created test user: loadtest@example.com / LoadTest1!
+# Users: loadtest01-05@gmail.com / Password@123
+# First run creates them automatically. Subsequent runs reuse them.
+#
+# Rate limit fix: each VU sends a unique X-Forwarded-For IP so every VU
+# gets its own rate-limit bucket in Redis (requires trust proxy = true, which is set).
 #
 # Thresholds: p99 < 300ms, error rate < 0.5%
 
@@ -27,29 +29,114 @@ config:
       - expression: "(http.codes.5xx / http.requests) < 0.005"
         strict: false
 
+# Each scenario:
+#   1. Tries to register the fixed test user — no status expectation.
+#      201 on first run, 409 on subsequent runs. Both are fine.
+#      Uses a fixed IP per user so register rate limit is isolated per user.
+#   2. Logs in with a random IP so every VU gets its own rate-limit window.
+
 scenarios:
-  - name: "Register new user"
+  - name: "loadtest01"
     weight: 1
     flow:
       - post:
           url: "/api/v1/auth/register"
+          headers:
+            X-Forwarded-For: "10.0.0.1"
           json:
-            name: "Load Test User"
-            email: "loadtest-{{ $uuid() }}@example.com"
-            password: "LoadTest1!"
-          expect:
-            - statusCode: 201
-
-  - name: "Login existing user"
-    weight: 4
-    flow:
+            name: "Load Test 01"
+            email: "loadtest01@gmail.com"
+            password: "Password@123"
       - post:
           url: "/api/v1/auth/login"
+          headers:
+            X-Forwarded-For: "10.1.{{ $randomInt(0, 255) }}.{{ $randomInt(0, 255) }}"
           json:
-            email: "loadtest@example.com"
-            password: "LoadTest1!"
+            email: "loadtest01@gmail.com"
+            password: "Password@123"
           expect:
             - statusCode: 200
-          capture:
-            - json: "$.data.accessToken"
-              as: "accessToken"
+
+  - name: "loadtest02"
+    weight: 1
+    flow:
+      - post:
+          url: "/api/v1/auth/register"
+          headers:
+            X-Forwarded-For: "10.0.0.2"
+          json:
+            name: "Load Test 02"
+            email: "loadtest02@gmail.com"
+            password: "Password@123"
+      - post:
+          url: "/api/v1/auth/login"
+          headers:
+            X-Forwarded-For: "10.2.{{ $randomInt(0, 255) }}.{{ $randomInt(0, 255) }}"
+          json:
+            email: "loadtest02@gmail.com"
+            password: "Password@123"
+          expect:
+            - statusCode: 200
+
+  - name: "loadtest03"
+    weight: 1
+    flow:
+      - post:
+          url: "/api/v1/auth/register"
+          headers:
+            X-Forwarded-For: "10.0.0.3"
+          json:
+            name: "Load Test 03"
+            email: "loadtest03@gmail.com"
+            password: "Password@123"
+      - post:
+          url: "/api/v1/auth/login"
+          headers:
+            X-Forwarded-For: "10.3.{{ $randomInt(0, 255) }}.{{ $randomInt(0, 255) }}"
+          json:
+            email: "loadtest03@gmail.com"
+            password: "Password@123"
+          expect:
+            - statusCode: 200
+
+  - name: "loadtest04"
+    weight: 1
+    flow:
+      - post:
+          url: "/api/v1/auth/register"
+          headers:
+            X-Forwarded-For: "10.0.0.4"
+          json:
+            name: "Load Test 04"
+            email: "loadtest04@gmail.com"
+            password: "Password@123"
+      - post:
+          url: "/api/v1/auth/login"
+          headers:
+            X-Forwarded-For: "10.4.{{ $randomInt(0, 255) }}.{{ $randomInt(0, 255) }}"
+          json:
+            email: "loadtest04@gmail.com"
+            password: "Password@123"
+          expect:
+            - statusCode: 200
+
+  - name: "loadtest05"
+    weight: 1
+    flow:
+      - post:
+          url: "/api/v1/auth/register"
+          headers:
+            X-Forwarded-For: "10.0.0.5"
+          json:
+            name: "Load Test 05"
+            email: "loadtest05@gmail.com"
+            password: "Password@123"
+      - post:
+          url: "/api/v1/auth/login"
+          headers:
+            X-Forwarded-For: "10.5.{{ $randomInt(0, 255) }}.{{ $randomInt(0, 255) }}"
+          json:
+            email: "loadtest05@gmail.com"
+            password: "Password@123"
+          expect:
+            - statusCode: 200
