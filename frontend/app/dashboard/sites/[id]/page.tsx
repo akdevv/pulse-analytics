@@ -1,203 +1,114 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState, useMemo } from "react";
 import { useParams } from "next/navigation";
-import Link from "next/link";
-import { toast } from "sonner";
-import { GoCheck, GoCopy } from "react-icons/go";
-import { IoSettingsOutline } from "react-icons/io5";
 import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { getSiteById } from "@/lib/api/sites.api";
-import type { Site } from "@/lib/types/site.types";
+  useOverview,
+  useTimeseries,
+  useTopPages,
+  useReferrers,
+  useDevices,
+  useGeo,
+  useRealtime,
+} from "@/hooks/useAnalytics";
+import { DateRangeBar } from "@/components/analytics/date-range-bar";
+import type { Preset, Interval } from "@/components/analytics/date-range-bar";
+import { OverviewCards } from "@/components/analytics/overview-cards";
+import { TimeseriesChart } from "@/components/analytics/timeseries-chart";
+import { TopPagesChart } from "@/components/analytics/top-pages-chart";
+import { ReferrersChart } from "@/components/analytics/referrers-chart";
+import { DevicesChart } from "@/components/analytics/devices-chart";
+import { GeoChart } from "@/components/analytics/geo-chart";
+import { RealtimeWidget } from "@/components/analytics/realtime-widget";
 
-function getSnippet(trackingId: string) {
-  return `<!-- Pulse Analytics -->
-<script src="https://api.pulse.com/pulse-sdk.js?trackingId=${trackingId}"></script>
-<script>
-  window.pulse = {
-    trackingId: "${trackingId}"
-  };
-</script>`;
-}
-
-function CopyButton({ text }: { text: string }) {
-  const [copied, setCopied] = useState(false);
-
-  const handleCopy = async () => {
-    await navigator.clipboard.writeText(text);
-    setCopied(true);
-    toast.success("Copied to clipboard!");
-    setTimeout(() => setCopied(false), 2000);
-  };
-
-  return (
-    <button
-      onClick={handleCopy}
-      className="flex items-center gap-1.5 rounded-md border px-2.5 py-1.5 text-xs font-medium transition-all hover:bg-accent text-muted-foreground hover:text-foreground"
-    >
-      {copied ? (
-        <GoCheck className="size-3.5 text-green-500" />
-      ) : (
-        <GoCopy className="size-3.5" />
-      )}
-      {copied ? "Copied!" : "Copy"}
-    </button>
+function computeDateRange(preset: Preset, interval: Interval) {
+  const to = new Date();
+  const from = new Date(to);
+  from.setDate(
+    from.getDate() - (preset === "7d" ? 7 : preset === "30d" ? 30 : 90),
   );
+  return {
+    from: from.toISOString(),
+    to: to.toISOString(),
+    interval,
+    limit: 10,
+  };
 }
 
-export default function SitePage() {
+export default function SiteAnalyticsPage() {
   const { id } = useParams<{ id: string }>();
-  const [site, setSite] = useState<Site | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [preset, setPreset] = useState<Preset>("7d");
+  const [interval, setInterval] = useState<Interval>("hour");
+  const dateRange = useMemo(
+    () => computeDateRange(preset, interval),
+    [preset, interval],
+  );
 
-  useEffect(() => {
-    getSiteById(id)
-      .then(setSite)
-      .finally(() => setLoading(false));
-  }, [id]);
-
-  if (loading) {
-    return <div className="text-muted-foreground text-sm p-1">Loading...</div>;
-  }
-
-  if (!site) {
-    return <div className="text-muted-foreground text-sm p-1">Site not found.</div>;
-  }
-
-  const snippet = getSnippet(site.trackingId);
+  const { data: overview, isLoading: overviewLoading, error: overviewError } =
+    useOverview(id, dateRange);
+  const { data: timeseries, isLoading: timeseriesLoading, error: timeseriesError } =
+    useTimeseries(id, dateRange);
+  const { data: pages, isLoading: pagesLoading, error: pagesError } =
+    useTopPages(id, dateRange);
+  const { data: referrers, isLoading: referrersLoading, error: referrersError } =
+    useReferrers(id, dateRange);
+  const { data: devices, isLoading: devicesLoading, error: devicesError } =
+    useDevices(id, dateRange);
+  const { data: geo, isLoading: geoLoading, error: geoError } =
+    useGeo(id, dateRange);
+  const { data: realtime, isLoading: realtimeLoading, error: realtimeError } =
+    useRealtime(id);
 
   return (
-    <div className="space-y-6 p-1">
-      {/* Header */}
-      <div className="flex items-start justify-between">
-        <div className="space-y-1">
-          <div className="flex items-center gap-2.5">
-            <h1 className="text-xl font-semibold tracking-tight">{site.name}</h1>
-            <span
-              className={`inline-flex items-center gap-1.5 rounded-full px-2 py-0.5 text-xs font-medium ${
-                site.isActive
-                  ? "bg-green-500/10 text-green-600 dark:text-green-400"
-                  : "bg-muted text-muted-foreground"
-              }`}
-            >
-              <span
-                className={`size-1.5 rounded-full ${
-                  site.isActive ? "bg-green-500" : "bg-muted-foreground"
-                }`}
-              />
-              {site.isActive ? "Active" : "Inactive"}
-            </span>
-          </div>
-          <p className="text-muted-foreground text-sm">{site.domain}</p>
-        </div>
-        <Button variant="outline" size="sm" asChild className="gap-1.5">
-          <Link href={`/dashboard/sites/${id}/settings`}>
-            <IoSettingsOutline className="size-3.5" />
-            Settings
-          </Link>
-        </Button>
+    <div className="space-y-5">
+      <div className="flex items-center justify-end">
+        <DateRangeBar
+          preset={preset}
+          interval={interval}
+          onPresetChange={setPreset}
+          onIntervalChange={setInterval}
+        />
       </div>
 
-      {/* Stat Cards */}
-      <div className="grid gap-3 sm:grid-cols-3">
-        <Card className="py-0 overflow-hidden">
-          <CardContent className="p-4">
-            <p className="text-muted-foreground text-[11px] font-medium uppercase tracking-widest">
-              Tier
-            </p>
-            <p className="mt-2 text-sm font-semibold capitalize">
-              {site.rateLimitTier.toLowerCase()}
-            </p>
-          </CardContent>
-        </Card>
+      <OverviewCards
+        data={overview?.data}
+        isLoading={overviewLoading}
+        error={overviewError}
+      />
 
-        <Card className="py-0 overflow-hidden">
-          <CardContent className="p-4">
-            <p className="text-muted-foreground text-[11px] font-medium uppercase tracking-widest">
-              Created
-            </p>
-            <p className="mt-2 text-sm font-semibold">
-              {new Date(site.createdAt).toLocaleDateString("en-US", {
-                month: "short",
-                day: "numeric",
-                year: "numeric",
-              })}
-            </p>
-          </CardContent>
-        </Card>
+      <TimeseriesChart
+        data={timeseries?.data}
+        isLoading={timeseriesLoading}
+        error={timeseriesError}
+      />
 
-        <Card className="py-0 overflow-hidden">
-          <CardContent className="p-4">
-            <p className="text-muted-foreground text-[11px] font-medium uppercase tracking-widest">
-              Last Updated
-            </p>
-            <p className="mt-2 text-sm font-semibold">
-              {new Date(site.updatedAt).toLocaleDateString("en-US", {
-                month: "short",
-                day: "numeric",
-                year: "numeric",
-              })}
-            </p>
-          </CardContent>
-        </Card>
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+        <TopPagesChart
+          data={pages?.data}
+          isLoading={pagesLoading}
+          error={pagesError}
+        />
+        <ReferrersChart
+          data={referrers?.data}
+          isLoading={referrersLoading}
+          error={referrersError}
+        />
       </div>
 
-      {/* Tracking Details */}
-      <Card className="py-0">
-        <CardHeader className="px-5 pt-5 pb-0">
-          <CardTitle className="text-sm font-semibold">Tracking Details</CardTitle>
-        </CardHeader>
-        <CardContent className="px-5 pb-2 pt-3">
-          <dl>
-            {[
-              { label: "Site ID", value: site.id },
-              { label: "Tracking ID", value: site.trackingId },
-              { label: "Domain", value: site.domain },
-            ].map(({ label, value }, i, arr) => (
-              <div
-                key={label}
-                className={`flex items-center justify-between py-3 text-sm ${
-                  i < arr.length - 1 ? "border-b" : ""
-                }`}
-              >
-                <dt className="text-muted-foreground text-xs font-medium">{label}</dt>
-                <dd className="font-mono text-xs bg-muted px-2 py-0.5 rounded">{value}</dd>
-              </div>
-            ))}
-          </dl>
-        </CardContent>
-      </Card>
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+        <DevicesChart
+          data={devices?.data}
+          isLoading={devicesLoading}
+          error={devicesError}
+        />
+        <GeoChart data={geo?.data} isLoading={geoLoading} error={geoError} />
+      </div>
 
-      {/* Tracking Snippet */}
-      <Card className="py-0">
-        <CardHeader className="px-5 pt-5 pb-4">
-          <div className="flex items-start justify-between gap-4">
-            <div className="space-y-1">
-              <CardTitle className="text-sm font-semibold">Tracking Snippet</CardTitle>
-              <CardDescription className="text-xs">
-                Paste this inside the{" "}
-                <code className="bg-muted rounded px-1 py-0.5 font-mono text-[11px]">
-                  &lt;head&gt;
-                </code>{" "}
-                tag of your site.
-              </CardDescription>
-            </div>
-            <CopyButton text={snippet} />
-          </div>
-        </CardHeader>
-        <CardContent className="px-5 pb-5">
-          <pre className="bg-zinc-950 dark:bg-zinc-900 text-zinc-300 overflow-x-auto rounded-lg p-4 text-[11px] leading-relaxed border border-zinc-800">
-            <code>{snippet}</code>
-          </pre>
-        </CardContent>
-      </Card>
+      <RealtimeWidget
+        data={realtime?.data}
+        isLoading={realtimeLoading}
+        error={realtimeError}
+      />
     </div>
   );
 }

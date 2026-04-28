@@ -43,7 +43,7 @@ export function NewSiteForm() {
     try {
       const res = await createSite(data);
       toast.success(res.message ?? "Site created successfully!");
-      router.push(`/dashboard/sites/${res.data.site.id}`);
+      router.push(`/dashboard/sites/${res.data.site.id}/setup`);
     } catch (err: unknown) {
       const message =
         // eslint-disable-next-line @typescript-eslint/no-explicit-any

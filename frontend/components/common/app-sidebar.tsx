@@ -5,7 +5,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { IoMdLogOut } from "react-icons/io";
 import { MdLocalActivity } from "react-icons/md";
 import { PiGlobeSimpleBold } from "react-icons/pi";
-import { RiHome9Fill, RiUserSmileLine } from "react-icons/ri";
+import { RiUserSmileLine } from "react-icons/ri";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -23,11 +23,6 @@ import { useAuth } from "@/contexts/auth.context";
 
 // Menu items.
 const items = [
-  {
-    title: "Overview",
-    url: "/dashboard",
-    icon: RiHome9Fill,
-  },
   {
     title: "Sites",
     url: "/dashboard/sites",
@@ -55,7 +50,7 @@ export function AppSidebar() {
       <SidebarContent className="flex flex-col gap-0">
         <SidebarHeader className="text-lg font-semibold p-4">
           <Link
-            href="/dashboard"
+            href="/dashboard/sites"
             className="flex items-center gap-2 hover:opacity-80 transition-opacity"
           >
             <MdLocalActivity className="size-5 text-secondary" />
