@@ -1,10 +1,15 @@
 import { z } from "zod";
 
+const dateString = z
+  .string()
+  .refine((s) => !isNaN(Date.parse(s)), { message: "Invalid date" })
+  .optional();
+
 export const AnalyticsQuerySchema = z.object({
-  from: z.string().optional(),
-  to: z.string().optional(),
+  from: dateString,
+  to: dateString,
   interval: z.enum(["hour", "day"]).default("day"),
-  limit: z.coerce.number().min(1).max(100).default(10),
+  limit: z.coerce.number().int().min(1).max(100).default(10),
 });
 
 export type AnalyticsQuery = z.infer<typeof AnalyticsQuerySchema>;

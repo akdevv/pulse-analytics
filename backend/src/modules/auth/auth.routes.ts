@@ -1,4 +1,5 @@
 import { authenticateToken } from "@/middleware/auth.middleware.ts";
+import { authRateLimit } from "@/middleware/rate-limiter.ts";
 import { validate } from "@/middleware/validate.ts";
 import express, { type Router } from "express";
 import {
@@ -17,9 +18,9 @@ import {
 
 const router: Router = express.Router();
 
-router.post("/register", validate(registerUserSchema), register);
-router.post("/login", validate(loginUserSchema), login);
-router.post("/refresh", refreshToken);
+router.post("/register", authRateLimit, validate(registerUserSchema), register);
+router.post("/login", authRateLimit, validate(loginUserSchema), login);
+router.post("/refresh", authRateLimit, refreshToken);
 router.post("/logout", logout);
 
 router.get("/me", authenticateToken, getUser);

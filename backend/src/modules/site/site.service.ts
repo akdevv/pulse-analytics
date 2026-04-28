@@ -1,7 +1,4 @@
-import {
-  generateEmbedCode,
-  generateTrackingId,
-} from "@/utils/gen-tracking.ts";
+import { generateEmbedCode, generateTrackingId } from "@/utils/gen-tracking.ts";
 import { AppError } from "@/utils/app-error.ts";
 import {
   createSite,

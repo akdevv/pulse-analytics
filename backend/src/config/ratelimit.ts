@@ -1,20 +1,20 @@
 const rateLimitConfig = {
   enabled: true,
 
-  // Per-site limits (events per minute, per tier)
+  // How many events per minute each site can send, based on their plan
   siteLimits: {
     FREE: 1_000,
     PRO: 10_000,
     ENTERPRISE: 100_000,
   },
 
-  // Per-IP limit (events per minute, across all sites)
+  // Hard cap per IP regardless of which site they're hitting
   ipLimit: 500,
 
-  // Redis key TTL in seconds (should be > 60 to survive clock skew)
+  // Keep keys alive a bit longer than a minute to survive clock skew
   keyTtlSeconds: 120,
 
-  // Auth endpoint limits
+  // Stricter limits for login/register — slow down brute force attempts
   auth: {
     windowMs: 15 * 60 * 1000, // 15 minutes
     maxAttempts: 10,

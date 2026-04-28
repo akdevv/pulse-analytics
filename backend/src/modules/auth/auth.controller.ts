@@ -1,5 +1,7 @@
 import { AppError } from "@/utils/app-error.ts";
 import { asyncHandler } from "@/utils/async-handler.ts";
+import { redis } from "@/config/redis.ts";
+import jwt from "jsonwebtoken";
 import type { Request, Response } from "express";
 import {
   getUserById,
@@ -72,6 +74,17 @@ export const refreshToken = asyncHandler(
 
 // POST /auth/logout
 export const logout = asyncHandler(async (req: Request, res: Response) => {
+  const token = req.headers.authorization?.split(" ")[1];
+  if (token) {
+    const payload = jwt.decode(token) as { jti?: string; exp?: number } | null;
+    if (payload?.jti && payload?.exp) {
+      const ttl = payload.exp - Math.floor(Date.now() / 1000);
+      if (ttl > 0) {
+        await redis.set(`denylist:${payload.jti}`, "1", "EX", ttl);
+      }
+    }
+  }
+
   res.clearCookie("refresh_token", {
     secure: process.env.NODE_ENV === "production",
     httpOnly: true,

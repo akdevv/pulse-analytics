@@ -12,12 +12,12 @@ The backend has a solid foundation — clean module boundaries, typed throughout
 
 ## Priority Levels
 
-| Priority | Fix when |
-|----------|----------|
-| **P0** | Before any production traffic |
-| **P1** | Before public launch |
-| **P2** | Within first month of launch |
-| **P3** | Nice-to-have / future roadmap |
+| Priority | Fix when                      |
+| -------- | ----------------------------- |
+| **P0**   | Before any production traffic |
+| **P1**   | Before public launch          |
+| **P2**   | Within first month of launch  |
+| **P3**   | Nice-to-have / future roadmap |
 
 ---
 
@@ -35,7 +35,7 @@ BullMQ marks a job "completed" the moment the worker function returns — before
 // current — unsafe
 const worker = new Worker("event", async (job) => {
   const enriched = await enrichEvent(job.data);
-  batch.push(enriched);         // ← job ACK'd here, before DB write
+  batch.push(enriched); // ← job ACK'd here, before DB write
   if (batch.length >= BATCH_SIZE) await flushBatch();
 });
 
@@ -87,6 +87,7 @@ export const authRateLimit = rateLimit({
 ```
 
 Apply to routes:
+
 ```ts
 router.post("/login", authRateLimit, validate(loginUserSchema), login);
 router.post("/register", authRateLimit, validate(registerUserSchema), register);
@@ -126,7 +127,7 @@ The generated embed snippet hardcodes `api.pulse.com`. This URL goes into every 
 
 ```ts
 // currently hardcoded
-const script = `<script src="https://api.pulse.com/track.js" ...>`
+const script = `<script src="https://api.pulse.com/track.js" ...>`;
 ```
 
 **Fix:** Pull from env var:
@@ -154,15 +155,18 @@ Every log line should carry a request ID so you can correlate across the API →
 import { randomUUID } from "crypto";
 
 export const requestId = (req: Request, res: Response, next: NextFunction) => {
-  req.id = req.headers["x-request-id"] as string ?? randomUUID();
+  req.id = (req.headers["x-request-id"] as string) ?? randomUUID();
   res.setHeader("x-request-id", req.id);
   next();
 };
 ```
 
 Extend `express.d.ts`:
+
 ```ts
-interface Request { id?: string; }
+interface Request {
+  id?: string;
+}
 ```
 
 Then pass `req.id` to logger in `asyncHandler`.
@@ -211,7 +215,7 @@ if (payload.jti && payload.exp) {
 
 // in auth.middleware.ts — add check
 const jti = payload.jti;
-if (jti && await redis.exists(`denylist:${jti}`)) {
+if (jti && (await redis.exists(`denylist:${jti}`))) {
   throw new AppError(401, "Token revoked");
 }
 ```
@@ -229,14 +233,14 @@ Generate `jti` in `generateTokens()` using `randomUUID()`.
 **Fix:**
 
 ```ts
-const dateString = z.string().refine(
-  (s) => !isNaN(Date.parse(s)),
-  { message: "Invalid date" }
-).optional();
+const dateString = z
+  .string()
+  .refine((s) => !isNaN(Date.parse(s)), { message: "Invalid date" })
+  .optional();
 
 export const AnalyticsQuerySchema = z.object({
   from: dateString,
-  to:   dateString,
+  to: dateString,
   interval: z.enum(["hour", "day"]).default("day"),
   limit: z.coerce.number().int().min(1).max(100).default(10),
 });
@@ -278,7 +282,9 @@ export async function getSiteByTrackingId(trackingId: string) {
 
   if (inflight.has(trackingId)) return inflight.get(trackingId);
 
-  const promise = fetchFromDb(trackingId).finally(() => inflight.delete(trackingId));
+  const promise = fetchFromDb(trackingId).finally(() =>
+    inflight.delete(trackingId),
+  );
   inflight.set(trackingId, promise);
   return promise;
 }
@@ -323,7 +329,7 @@ Currently accepts any string, meaning typos like `NODE_ENV=producton` silently f
 
 ```ts
 // line ~110 — wrong: matches 172.20-172.29 AND 172.30-172.31
-ip.startsWith("172.2")
+ip.startsWith("172.2");
 
 // correct
 const PRIVATE_172 = /^172\.(1[6-9]|2\d|3[01])\./;
@@ -480,37 +486,37 @@ Move `src/helpers/gen-tracking.ts` → `src/utils/gen-tracking.ts`. The `helpers
 
 These test pure functions in isolation. No DB, no Redis, no HTTP.
 
-| File | What to test |
-|------|-------------|
-| `src/utils/ip.ts` | Header parsing, IPv6 handling, spoofed header detection |
-| `src/helpers/gen-tracking.ts` | ID format, uniqueness, length, URL-safety |
-| `src/modules/analytics/analytics.service.ts` | `resolveDateRange()` defaults, boundary dates |
-| `src/modules/ingestion/track.service.ts` | URL parsing edge cases, event building from params |
-| `src/modules/ingestion/track.types.ts` | Schema validation — valid inputs, invalid inputs, edge cases |
-| `src/workers/geo.service.ts` | Private IP detection, cache eviction, IPv6 normalization |
-| `src/modules/auth/auth.types.ts` | Password rules, email validation |
+| File                                         | What to test                                                 |
+| -------------------------------------------- | ------------------------------------------------------------ |
+| `src/utils/ip.ts`                            | Header parsing, IPv6 handling, spoofed header detection      |
+| `src/helpers/gen-tracking.ts`                | ID format, uniqueness, length, URL-safety                    |
+| `src/modules/analytics/analytics.service.ts` | `resolveDateRange()` defaults, boundary dates                |
+| `src/modules/ingestion/track.service.ts`     | URL parsing edge cases, event building from params           |
+| `src/modules/ingestion/track.types.ts`       | Schema validation — valid inputs, invalid inputs, edge cases |
+| `src/workers/geo.service.ts`                 | Private IP detection, cache eviction, IPv6 normalization     |
+| `src/modules/auth/auth.types.ts`             | Password rules, email validation                             |
 
 #### Integration Tests — `tests/integration/`
 
 These spin up Postgres + Redis (use `docker-compose.test.yml`) and test real DB interactions.
 
-| Area | What to test |
-|------|-------------|
-| Auth flow | Register → login → access protected route → logout → token invalid |
-| Site management | Create site → get tracking ID → update domain → delete |
-| Event ingestion | POST /track → event appears in DB → analytics query returns it |
-| Rate limiting | Exceed site rate limit → 204 returned → count resets after window |
-| Analytics queries | Date range filtering, empty result sets, large result sets |
-| Cache | Site cached after first lookup → cache invalidated after site update |
+| Area              | What to test                                                         |
+| ----------------- | -------------------------------------------------------------------- |
+| Auth flow         | Register → login → access protected route → logout → token invalid   |
+| Site management   | Create site → get tracking ID → update domain → delete               |
+| Event ingestion   | POST /track → event appears in DB → analytics query returns it       |
+| Rate limiting     | Exceed site rate limit → 204 returned → count resets after window    |
+| Analytics queries | Date range filtering, empty result sets, large result sets           |
+| Cache             | Site cached after first lookup → cache invalidated after site update |
 
 #### Load Tests — `tests/load/`
 
 Already have Artillery setup. Extend it:
 
-| Scenario | Target |
-|----------|--------|
-| Ingestion throughput | 10k events/sec sustained |
-| Analytics queries under load | P99 < 500ms with 100k events in DB |
+| Scenario                        | Target                              |
+| ------------------------------- | ----------------------------------- |
+| Ingestion throughput            | 10k events/sec sustained            |
+| Analytics queries under load    | P99 < 500ms with 100k events in DB  |
 | Auth endpoint under brute force | Rate limit kicks in, no DB overload |
 
 ---
@@ -526,6 +532,7 @@ pnpm add -D vitest @vitest/coverage-v8 supertest @types/supertest
 - No Jest (slower, worse ESM support)
 
 Add to `package.json`:
+
 ```json
 "scripts": {
   "test": "vitest run",
@@ -538,13 +545,13 @@ Add to `package.json`:
 
 ### Coverage Target
 
-| Layer | Target |
-|-------|--------|
-| Utils / helpers | 90%+ |
-| Service layer | 80%+ |
-| Controllers | 70%+ (via integration) |
+| Layer            | Target                 |
+| ---------------- | ---------------------- |
+| Utils / helpers  | 90%+                   |
+| Service layer    | 80%+                   |
+| Controllers      | 70%+ (via integration) |
 | Repository layer | 60%+ (via integration) |
-| Workers | 50%+ |
+| Workers          | 50%+                   |
 
 Start with the service layer — highest return on investment, pure logic, fast to run.
 

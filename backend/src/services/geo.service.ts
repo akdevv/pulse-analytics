@@ -97,18 +97,14 @@ function normalizeIp(ip: string): string {
   return ip;
 }
 
+const PRIVATE_172 = /^172\.(1[6-9]|2\d|3[01])\./;
+
 function isPrivateIp(ip: string): boolean {
   return (
     ip === "127.0.0.1" ||
     ip === "::1" ||
     ip.startsWith("10.") ||
     ip.startsWith("192.168.") ||
-    ip.startsWith("172.16.") ||
-    ip.startsWith("172.17.") ||
-    ip.startsWith("172.18.") ||
-    ip.startsWith("172.19.") ||
-    ip.startsWith("172.2") ||
-    ip.startsWith("172.30.") ||
-    ip.startsWith("172.31.")
+    PRIVATE_172.test(ip)
   );
 }

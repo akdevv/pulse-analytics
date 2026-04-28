@@ -1,32 +1,30 @@
 import jwt from "jsonwebtoken";
 import env from "@/config/env.ts";
+import { redis } from "@/config/redis.ts";
 import type { NextFunction, Request, Response } from "express";
 import { AppError } from "@/utils/app-error.ts";
 
 interface TokenPayload {
   userId: string;
   email: string;
+  jti?: string;
 }
 
 export async function authenticateToken(
   req: Request,
-  res: Response,
+  _res: Response,
   next: NextFunction
 ) {
   try {
-    // Get the token
     const token = req.headers.authorization?.split(" ")[1];
-    if (!token) {
-      throw new AppError(401, "No token provided");
+    if (!token) throw new AppError(401, "No token provided");
+
+    const payload = jwt.verify(token, env.ACCESS_TOKEN_SECRET) as TokenPayload;
+
+    if (payload.jti && (await redis.exists(`denylist:${payload.jti}`))) {
+      throw new AppError(401, "Token revoked");
     }
 
-    // Verify the token
-    const payload = jwt.verify(token!, env.ACCESS_TOKEN_SECRET) as TokenPayload;
-    if (!payload) {
-      throw new AppError(401, "Invalid token");
-    }
-
-    // Add the user to the request
     req.user = payload;
     next();
   } catch {

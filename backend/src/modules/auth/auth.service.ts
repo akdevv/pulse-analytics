@@ -1,6 +1,8 @@
 import bcrypt from "bcrypt";
 import jwt, { type SignOptions } from "jsonwebtoken";
+import { randomUUID } from "crypto";
 import { config } from "@/config/index.ts";
+import env from "@/config/env.ts";
 import type { IUserPublic } from "./auth.types.ts";
 import {
   findUserByEmail,
@@ -72,16 +74,16 @@ export const loginUser = async (user: {
 export const refreshTokenService = async (
   token: string
 ): Promise<{ accessToken: string }> => {
-  const payload = jwt.verify(token, config.jwt.refreshTokenSecret) as {
+  const payload = jwt.verify(token, env.REFRESH_TOKEN_SECRET) as {
     userId: string;
     email: string;
   };
 
   const newAccessToken = jwt.sign(
     { userId: payload.userId, email: payload.email },
-    config.jwt.accessTokenSecret,
+    env.ACCESS_TOKEN_SECRET,
     {
-      expiresIn: config.jwt.accessTokenExpiresIn as string,
+      expiresIn: env.ACCESS_TOKEN_EXPIRY as string,
       issuer: config.jwt.issuer,
       algorithm: config.jwt.algorithm,
     } as SignOptions
@@ -158,20 +160,20 @@ export const updateUserService = async (
 
 const generateTokens = (userId: string, email: string) => {
   const accessToken = jwt.sign(
-    { userId, email },
-    config.jwt.accessTokenSecret,
+    { userId, email, jti: randomUUID() },
+    env.ACCESS_TOKEN_SECRET,
     {
-      expiresIn: config.jwt.accessTokenExpiresIn as string,
+      expiresIn: env.ACCESS_TOKEN_EXPIRY as string,
       issuer: config.jwt.issuer,
       algorithm: config.jwt.algorithm,
     } as SignOptions
   );
 
   const refreshToken = jwt.sign(
-    { userId, email },
-    config.jwt.refreshTokenSecret,
+    { userId, email, jti: randomUUID() },
+    env.REFRESH_TOKEN_SECRET,
     {
-      expiresIn: config.jwt.refreshTokenExpiresIn as string,
+      expiresIn: env.REFRESH_TOKEN_EXPIRY as string,
       issuer: config.jwt.issuer,
       algorithm: config.jwt.algorithm,
     } as SignOptions

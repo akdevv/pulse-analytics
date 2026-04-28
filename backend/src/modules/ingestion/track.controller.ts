@@ -1,6 +1,7 @@
 import { enqueue } from "@/config/queue.ts";
 import { asyncHandler } from "@/utils/async-handler.ts";
 import logger from "@/utils/logger.ts";
+import { extractClientIp } from "@/utils/ip.ts";
 import type { Request, Response } from "express";
 import { performance } from "perf_hooks";
 import { getCachedSite } from "./track.cache.ts";
@@ -46,7 +47,7 @@ export const track = asyncHandler(async (req: Request, res: Response) => {
 
     // Rate Limiting
     const t2b = performance.now();
-    const ip = req.ip ?? "unknown";
+    const ip = extractClientIp(req);
     const [siteResult, ipResult] = await Promise.all([
       checkSiteRateLimit(site.id, site.rateLimitTier),
       checkIpRateLimit(ip),
@@ -97,7 +98,7 @@ export const track = asyncHandler(async (req: Request, res: Response) => {
         request: {
           tid: params.tid,
           eventType: params.t,
-          ip: req.ip,
+          ip,
         },
       });
     }

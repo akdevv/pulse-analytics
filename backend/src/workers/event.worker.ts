@@ -4,10 +4,21 @@ import { type ParsedEvent, type RawEvent } from "@/types/event.ts";
 import logger from "@/utils/logger.ts";
 import { Job, Queue, Worker } from "bullmq";
 import { insertManyEvents } from "@/modules/ingestion/track.repository.ts";
-import { lookupGeoIp } from "./geo.service.ts";
+import { lookupGeoIp } from "@/services/geo.service.ts";
 import { UAParser } from "ua-parser-js";
 
 const QUEUE_DEPTH_WARN_THRESHOLD = 10_000;
+
+const uaCache = new Map<string, UAParser.IResult>();
+
+function parseUA(ua: string): UAParser.IResult {
+  const cached = uaCache.get(ua);
+  if (cached) return cached;
+  const result = new UAParser(ua).getResult();
+  if (uaCache.size >= 5_000) uaCache.clear();
+  uaCache.set(ua, result);
+  return result;
+}
 
 const connection = {
   host: env.REDIS_HOST || "localhost",
@@ -87,8 +98,7 @@ function scheduleFlusher() {
 
 async function enrichEvent(raw: RawEvent) {
   const uaString = raw.userAgent ?? "";
-  const parser = new UAParser(uaString);
-  const uaInfo = parser.getResult();
+  const uaInfo = parseUA(uaString);
 
   const geo = await lookupGeoIp(raw.ipAddress);
 

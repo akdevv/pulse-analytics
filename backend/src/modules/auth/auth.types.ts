@@ -1,5 +1,12 @@
 import { z } from "zod";
 
+const password = z
+  .string()
+  .min(8)
+  .max(128)
+  .regex(/[A-Z]/, "Must contain uppercase")
+  .regex(/[0-9]/, "Must contain number");
+
 export const userSchema = z.object({
   id: z.string(),
   name: z.string().nullable(),
@@ -14,18 +21,18 @@ export const userSchema = z.object({
 export const registerUserSchema = z.object({
   name: z.string(),
   email: z.string().email(),
-  password: z.string().min(8),
+  password,
 });
 
 export const loginUserSchema = z.object({
   email: z.string().email(),
-  password: z.string().min(8),
+  password: z.string().min(1),
 });
 
 export const updateUserSchema = z.object({
   name: z.string().optional(),
   email: z.string().email().optional(),
-  password: z.string().min(8).optional(),
+  password: password.optional(),
 });
 
 export type IUser = z.infer<typeof userSchema>;

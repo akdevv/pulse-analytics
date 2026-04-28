@@ -2,28 +2,21 @@ import { Redis } from "ioredis";
 import env from "@/config/env.ts";
 import logger from "@/utils/logger.ts";
 
-const redis = new Redis({
+export const redis = new Redis({
   host: env.REDIS_HOST,
   port: env.REDIS_PORT,
   ...(env.REDIS_PASSWORD && { password: env.REDIS_PASSWORD }),
   maxRetriesPerRequest: 3,
 
-  // reconnect with backoff, if conn drops
-  retryStrategy(times: number) {
+  // Exponential backoff up to 3s, give up after 10 attempts
+  retryStrategy(times) {
     if (times > 10) {
-      logger.error("[redis] max reconnection attemps reached");
-      return null; // stop retrying
+      logger.error("[redis] max reconnection attempts reached");
+      return null;
     }
-    return Math.min(times * 100, 3000); // wait up to 3s between retries
+    return Math.min(times * 100, 3000);
   },
 });
 
-redis.on("connect", () => {
-  logger.info("[redis] Redis connected");
-});
-
-redis.on("error", (err: Error) => {
-  logger.error("[redis] Redis error", err);
-});
-
-export { redis };
+redis.on("connect", () => logger.info("[redis] connected"));
+redis.on("error", (err: Error) => logger.error("[redis] error", err));

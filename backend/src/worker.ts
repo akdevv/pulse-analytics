@@ -1,6 +1,6 @@
 import "dotenv/config";
 import logger from "@/utils/logger.ts";
-import { initGeoIp } from "./workers/geo.service.ts";
+import { initGeoIp } from "@/services/geo.service.ts";
 import {
   worker,
   flushBatch,

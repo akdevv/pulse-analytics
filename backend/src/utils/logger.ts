@@ -15,6 +15,7 @@ interface RequestMetadata {
   ip?: string | undefined;
   userAgent?: string | undefined;
   userId?: string | undefined;
+  requestId?: string | undefined;
 }
 
 interface ResponseMetadata extends RequestMetadata {
@@ -110,6 +111,7 @@ function logRequest(req: Request, meta: Record<string, unknown> = {}): void {
     ip: req.ip || undefined,
     userAgent: req.get("user-agent") || undefined,
     userId: (req as any).user?._id?.toString(),
+    requestId: req.id,
     ...meta,
   };
 
@@ -128,6 +130,7 @@ function logResponse(
     statusCode: res.statusCode,
     responseTime: `${responseTime}ms`,
     userId: (req as any).user?._id?.toString(),
+    requestId: req.id,
     ...meta,
   };
 
@@ -149,6 +152,7 @@ function logError(
       path: req.path,
       ip: req.ip,
       userId: (req as any).user?._id?.toString(),
+      requestId: req.id,
     };
   }
 

@@ -12,8 +12,19 @@ interface CachedSite {
 
 const SITE_CACHE_TTL = 300; // 5 mins
 
+const inflight = new Map<string, Promise<CachedSite | null>>();
+
 function siteKey(trackingId: string): string {
   return `site:tid:${trackingId}`;
+}
+
+async function fetchAndCache(trackingId: string): Promise<CachedSite | null> {
+  const key = siteKey(trackingId);
+  const site = await getSiteByTrackingId(trackingId);
+  if (site) {
+    await redis.setex(key, SITE_CACHE_TTL, JSON.stringify(site));
+  }
+  return site;
 }
 
 export async function getCachedSite(
@@ -31,12 +42,14 @@ export async function getCachedSite(
 
     logger.debug("[cache] MISS", { trackingId });
 
-    const site = await getSiteByTrackingId(trackingId);
-    if (site) {
-      await redis.setex(key, SITE_CACHE_TTL, JSON.stringify(site));
-    }
+    const existing = inflight.get(trackingId);
+    if (existing) return existing;
 
-    return site;
+    const promise = fetchAndCache(trackingId).finally(() =>
+      inflight.delete(trackingId)
+    );
+    inflight.set(trackingId, promise);
+    return promise;
   } catch (err) {
     // if redis is down, fallback to DB
     logger.warn("[cache] Redis error, falling back to DB", { err, trackingId });

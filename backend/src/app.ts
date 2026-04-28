@@ -5,11 +5,13 @@ import express, { type Express } from "express";
 import { config } from "@/config/index.ts";
 import cookieParser from "cookie-parser";
 import { errorMiddleware } from "@/middleware/error.middleware.ts";
+import { requestId } from "@/middleware/request-id.ts";
 import env from "@/config/env.ts";
 
 // Routes
 import analyticsRoutes from "@/modules/analytics/analytics.routes.ts";
 import authRoutes from "@/modules/auth/auth.routes.ts";
+import healthRoutes from "@/modules/health/health.routes.ts";
 import siteRoutes from "@/modules/site/site.routes.ts";
 import trackRoutes from "@/modules/ingestion/track.routes.ts";
 
@@ -32,6 +34,7 @@ const restrictedCors = cors({
   allowedHeaders: ["Content-Type", "Authorization"],
 });
 
+app.use(requestId);
 app.use(helmet());
 app.use(cookieParser());
 app.use(express.json());
@@ -41,17 +44,10 @@ app.set("json replacer", jsonReplacer);
 
 const apiRoute = express.Router();
 
-// Health check
-apiRoute.get("/health", (_, res) => {
-  res.json({
-    status: "OK",
-    timestamp: new Date().toISOString(),
-  });
-});
-
 // Routes
 apiRoute.use("/analytics", restrictedCors, analyticsRoutes);
 apiRoute.use("/auth", restrictedCors, authRoutes);
+apiRoute.use("/health", healthRoutes);
 apiRoute.use("/sites", restrictedCors, siteRoutes);
 apiRoute.use("/track", openCors, trackRoutes);
 
