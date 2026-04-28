@@ -1,4 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
+import { useEffect, useRef, useState } from "react";
 import {
   getOverview,
   getTimeseries,
@@ -10,7 +11,11 @@ import {
   getRawEvents,
   runRawQuery,
 } from "@/lib/api/analytics.api";
-import type { DateRangeParams } from "@/lib/types/analytics.types";
+import { getAccessToken } from "@/lib/api/client";
+import type {
+  DateRangeParams,
+  RealtimeStats,
+} from "@/lib/types/analytics.types";
 
 export function useOverview(siteId: string, params: DateRangeParams) {
   return useQuery({
@@ -74,6 +79,84 @@ export function useRealtime(siteId: string) {
     staleTime: 0,
     enabled: !!siteId,
   });
+}
+
+export function useRealtimeStream(siteId: string) {
+  const [data, setData] = useState<RealtimeStats | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<Error | null>(null);
+  const abortRef = useRef<AbortController | null>(null);
+
+  useEffect(() => {
+    if (!siteId) return;
+
+    let retryTimeout: ReturnType<typeof setTimeout>;
+
+    async function connect() {
+      abortRef.current = new AbortController();
+      const { signal } = abortRef.current;
+
+      try {
+        const token = getAccessToken();
+        const res = await fetch(
+          `${process.env.NEXT_PUBLIC_API_URL}/analytics/${siteId}/realtime/stream`,
+          {
+            signal,
+            headers: {
+              Authorization: `Bearer ${token}`,
+              Accept: "text/event-stream",
+            },
+          },
+        );
+
+        if (!res.ok || !res.body) {
+          throw new Error(`HTTP ${res.status}`);
+        }
+
+        const reader = res.body.getReader();
+        const decoder = new TextDecoder();
+        let buf = "";
+
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+
+          buf += decoder.decode(value, { stream: true });
+          const lines = buf.split("\n");
+          buf = lines.pop() ?? "";
+
+          for (const line of lines) {
+            if (!line.startsWith("data: ")) continue;
+            try {
+              const parsed = JSON.parse(line.slice(6));
+              if (parsed.status === "success") {
+                setData(parsed.data as RealtimeStats);
+                setIsLoading(false);
+                setError(null);
+              }
+            } catch {
+              // malformed SSE frame — skip
+            }
+          }
+        }
+      } catch (err) {
+        if ((err as Error).name === "AbortError") return;
+        setError(err as Error);
+        setIsLoading(false);
+        // reconnect after 5s on error
+        retryTimeout = setTimeout(connect, 5000);
+      }
+    }
+
+    connect();
+
+    return () => {
+      abortRef.current?.abort();
+      clearTimeout(retryTimeout);
+    };
+  }, [siteId]);
+
+  return { data, isLoading, error };
 }
 
 export function useRawEvents(siteId: string) {

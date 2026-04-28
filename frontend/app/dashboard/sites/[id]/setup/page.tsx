@@ -14,6 +14,21 @@ import {
 import { getSiteById } from "@/lib/api/sites.api";
 import type { Site } from "@/lib/types/site.types";
 
+function getCurlCommand(trackingId: string, domain: string) {
+  const origin = domain.startsWith("http") ? domain : `https://${domain}`;
+  return `curl -X POST "${process.env.NEXT_PUBLIC_API_URL}/track" \\
+  -G \\
+  --data-urlencode "v=1" \\
+  --data-urlencode "tid=${trackingId}" \\
+  --data-urlencode "t=PAGEVIEW" \\
+  --data-urlencode "dl=${origin}/" \\
+  --data-urlencode "dt=Home" \\
+  --data-urlencode "dr=" \\
+  --data-urlencode "sr=1920x1080" \\
+  --data-urlencode "vp=1280x800" \\
+  --data-urlencode "ul=en-US"`;
+}
+
 function getSnippet(trackingId: string) {
   return `<!-- Pulse Analytics -->
 <script src="https://api.pulse.com/pulse-sdk.js?trackingId=${trackingId}"></script>
@@ -71,6 +86,7 @@ export default function SiteSetupPage() {
   }
 
   const snippet = getSnippet(site.trackingId);
+  const curlCmd = getCurlCommand(site.trackingId, site.domain);
 
   return (
     <div className="space-y-6 p-1">
@@ -172,6 +188,27 @@ export default function SiteSetupPage() {
         <CardContent className="px-5 pb-5">
           <pre className="bg-zinc-950 dark:bg-zinc-900 text-zinc-300 overflow-x-auto rounded-lg p-4 text-[11px] leading-relaxed border border-zinc-800">
             <code>{snippet}</code>
+          </pre>
+        </CardContent>
+      </Card>
+
+      {/* Quick Test */}
+      <Card className="py-0">
+        <CardHeader className="px-5 pt-5 pb-4">
+          <div className="flex items-start justify-between gap-4">
+            <div className="space-y-1">
+              <CardTitle className="text-sm font-semibold">Quick Test</CardTitle>
+              <CardDescription className="text-xs">
+                Fire a test pageview from your terminal to verify tracking is
+                working.
+              </CardDescription>
+            </div>
+            <CopyButton text={curlCmd} />
+          </div>
+        </CardHeader>
+        <CardContent className="px-5 pb-5">
+          <pre className="bg-zinc-950 dark:bg-zinc-900 text-zinc-300 overflow-x-auto rounded-lg p-4 text-[11px] leading-relaxed border border-zinc-800">
+            <code>{curlCmd}</code>
           </pre>
         </CardContent>
       </Card>

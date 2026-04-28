@@ -10,7 +10,7 @@ export function RealtimeAnalytics() {
   return (
     <div className="relative border border-border/50 rounded-2xl p-6 sm:p-10 bg-card shadow-sm hover:shadow-md transition-shadow duration-300">
       {/* Subtle gradient overlay */}
-      <div className="absolute inset-0 bg-gradient-to-br from-green-500/[0.02] to-transparent rounded-2xl pointer-events-none" />
+      <div className="absolute inset-0 bg-linear-to-br from-green-500/2 to-transparent rounded-2xl pointer-events-none" />
 
       <div className="relative">
         <div className="flex items-center gap-3 mb-8">

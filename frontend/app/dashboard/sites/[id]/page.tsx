@@ -9,7 +9,7 @@ import {
   useReferrers,
   useDevices,
   useGeo,
-  useRealtime,
+  useRealtimeStream,
 } from "@/hooks/useAnalytics";
 import { DateRangeBar } from "@/components/analytics/date-range-bar";
 import type { Preset, Interval } from "@/components/analytics/date-range-bar";
@@ -57,7 +57,7 @@ export default function SiteAnalyticsPage() {
   const { data: geo, isLoading: geoLoading, error: geoError } =
     useGeo(id, dateRange);
   const { data: realtime, isLoading: realtimeLoading, error: realtimeError } =
-    useRealtime(id);
+    useRealtimeStream(id);
 
   return (
     <div className="space-y-5">
@@ -69,6 +69,12 @@ export default function SiteAnalyticsPage() {
           onIntervalChange={setInterval}
         />
       </div>
+
+      <RealtimeWidget
+        data={realtime ?? undefined}
+        isLoading={realtimeLoading}
+        error={realtimeError}
+      />
 
       <OverviewCards
         data={overview?.data}
@@ -103,12 +109,6 @@ export default function SiteAnalyticsPage() {
         />
         <GeoChart data={geo?.data} isLoading={geoLoading} error={geoError} />
       </div>
-
-      <RealtimeWidget
-        data={realtime?.data}
-        isLoading={realtimeLoading}
-        error={realtimeError}
-      />
     </div>
   );
 }

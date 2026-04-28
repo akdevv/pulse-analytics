@@ -20,7 +20,7 @@ export function RealtimeWidget({ data, isLoading, error }: Props) {
         </span>
         <h2 className="text-sm font-semibold text-foreground">Realtime</h2>
         <span className="ml-auto text-[11px] text-muted-foreground/60">
-          auto-refreshes every 30s
+          live · updates every 5s
         </span>
       </div>
 
