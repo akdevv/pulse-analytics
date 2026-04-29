@@ -27,12 +27,12 @@ Backend needs: Node API + TimescaleDB + Redis. All three deploy as separate Rail
    - Railway auto-detects `Dockerfile`
 
 Tasks:
-- [ ] Create Railway project
-- [ ] Add TimescaleDB service (Docker image: `timescale/timescaledb:latest-pg18`)
+- [x] Create Railway project
+- [x] Add TimescaleDB service (Docker image: `timescale/timescaledb:latest-pg18`)
   - Set `POSTGRES_USER`, `POSTGRES_PASSWORD`, `POSTGRES_DB`
-- [ ] Add Redis service (Docker image: `redis:7-alpine`)
-- [ ] Add backend service — connect GitHub repo, root `backend/`
-- [ ] Set env vars on backend service (see `.env.example`):
+- [x] Add Redis service (Docker image: `redis:7-alpine`)
+- [x] Add backend service — connect GitHub repo, root `backend/`
+- [x] Set env vars on backend service (see `.env.example`):
   - `DATABASE_URL` — use Railway internal ref: `postgresql://${{TimescaleDB.POSTGRES_USER}}:${{TimescaleDB.POSTGRES_PASSWORD}}@${{TimescaleDB.RAILWAY_PRIVATE_DOMAIN}}:5432/${{TimescaleDB.POSTGRES_DB}}`
   - `REDIS_HOST` — `${{Redis.RAILWAY_PRIVATE_DOMAIN}}`
   - `REDIS_PORT=6379`
@@ -41,9 +41,9 @@ Tasks:
   - `NODE_ENV=production`
   - `FRONTEND_URL` — Vercel URL (set after Step 4, or `*` for now)
   - `RATE_LIMIT_ENABLED=true`
-- [ ] Deploy all services
-- [ ] Run DB migrations via Railway shell on backend service: `pnpm prisma migrate deploy`
-- [ ] Copy backend public URL (e.g. `https://pulse-backend.up.railway.app`)
+- [x] Deploy all services
+- [x] Run DB migrations via Railway shell on backend service: `pnpm prisma migrate deploy`
+- [x] Copy backend public URL — `https://pulse-analytics-main.up.railway.app`
 
 ### Step 2 · Fix SDK import in test-site
 
@@ -124,6 +124,6 @@ Deliverable: `docs/case-study.md` or PDF.
 
 | Phase | Status |
 |-------|--------|
-| Phase 1 — E2E Smoke Test | Not started |
+| Phase 1 — E2E Smoke Test | Step 1 done ✓ |
 | Phase 2 — Load Test | Not started |
 | Phase 3 — Case Study | Not started |
