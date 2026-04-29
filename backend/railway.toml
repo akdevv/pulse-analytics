@@ -1,0 +1,2 @@
+[deploy]
+releaseCommand = "pnpm exec prisma migrate deploy && pnpm run db:migrate"
