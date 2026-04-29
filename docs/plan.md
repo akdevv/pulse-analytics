@@ -7,22 +7,43 @@ Deploy test-site to Vercel pointing at a live backend, verify the full analytics
 
 ## Phase 1 — E2E Smoke Test
 
-### Step 1 · Host the backend
+### Step 1 · Host the backend on Railway
 
-Backend needs: Node API + TimescaleDB (Postgres) + Redis.
+Backend needs: Node API + TimescaleDB + Redis. All three deploy as separate Railway services.
 
-**Recommended: Railway**
-- Free tier, supports Docker Compose, managed Postgres + Redis addons
-- ~5 min to provision
+**Services to create:**
 
-**Alternatives:** Render (free, slow cold starts), Fly.io (more control)
+1. **TimescaleDB** — custom Docker image
+   - Image: `timescale/timescaledb:latest-pg18`
+   - Set env vars: `POSTGRES_USER`, `POSTGRES_PASSWORD`, `POSTGRES_DB`
+   - Railway exposes internal hostname for other services
+
+2. **Redis** — custom Docker image
+   - Image: `redis:7-alpine`
+   - Railway exposes internal hostname
+
+3. **Backend** — Docker deploy from GitHub
+   - Connect repo, root dir `backend/`
+   - Railway auto-detects `Dockerfile`
 
 Tasks:
 - [ ] Create Railway project
-- [ ] Add managed Postgres (TimescaleDB image or standard Postgres)
-- [ ] Add managed Redis
-- [ ] Set env vars (DATABASE_URL, REDIS_URL, PORT, etc.)
-- [ ] Deploy backend — get public URL
+- [ ] Add TimescaleDB service (Docker image: `timescale/timescaledb:latest-pg18`)
+  - Set `POSTGRES_USER`, `POSTGRES_PASSWORD`, `POSTGRES_DB`
+- [ ] Add Redis service (Docker image: `redis:7-alpine`)
+- [ ] Add backend service — connect GitHub repo, root `backend/`
+- [ ] Set env vars on backend service (see `.env.example`):
+  - `DATABASE_URL` — use Railway internal ref: `postgresql://${{TimescaleDB.POSTGRES_USER}}:${{TimescaleDB.POSTGRES_PASSWORD}}@${{TimescaleDB.RAILWAY_PRIVATE_DOMAIN}}:5432/${{TimescaleDB.POSTGRES_DB}}`
+  - `REDIS_HOST` — `${{Redis.RAILWAY_PRIVATE_DOMAIN}}`
+  - `REDIS_PORT=6379`
+  - `ACCESS_TOKEN_SECRET` / `REFRESH_TOKEN_SECRET` — `openssl rand -hex 32`
+  - `PORT=8000`
+  - `NODE_ENV=production`
+  - `FRONTEND_URL` — Vercel URL (set after Step 4, or `*` for now)
+  - `RATE_LIMIT_ENABLED=true`
+- [ ] Deploy all services
+- [ ] Run DB migrations via Railway shell on backend service: `pnpm prisma migrate deploy`
+- [ ] Copy backend public URL (e.g. `https://pulse-backend.up.railway.app`)
 
 ### Step 2 · Fix SDK import in test-site
 
@@ -33,12 +54,12 @@ test-site currently uses a local file reference that Vercel can't resolve:
 
 Switch to published npm package:
 ```json
-"pulse-analytics": "^0.1.2"
+"@akdevv/pulse": "latest"
 ```
 
 Update all imports in test-site:
-- `from "@pulse/sdk/react"` → `from "pulse-analytics/react"`
-- `from "@pulse/sdk"` → `from "pulse-analytics"`
+- `from "@pulse/sdk/react"` → `from "@akdevv/pulse/sdk/react"`
+- `from "@pulse/sdk"` → `from "@akdevv/pulse/sdk"`
 
 Tasks:
 - [ ] Update package.json dependency
