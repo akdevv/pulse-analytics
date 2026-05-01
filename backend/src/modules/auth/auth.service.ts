@@ -32,7 +32,7 @@ export const registerUser = async (
     throw AppError.alreadyExists("User");
   }
 
-  const hashedPassword = await bcrypt.hash(password, 10);
+  const hashedPassword = await bcrypt.hash(password, 12);
   const newUser = await createUser(name, email, hashedPassword);
 
   // Generate tokens
@@ -80,7 +80,7 @@ export const refreshTokenService = async (
   };
 
   const newAccessToken = jwt.sign(
-    { userId: payload.userId, email: payload.email },
+    { userId: payload.userId, email: payload.email, jti: randomUUID() },
     env.ACCESS_TOKEN_SECRET,
     {
       expiresIn: env.ACCESS_TOKEN_EXPIRY as string,
@@ -135,7 +135,7 @@ export const updateUserService = async (
   }
 
   if (user.password !== undefined) {
-    const hashedPassword = await bcrypt.hash(user.password, 10);
+    const hashedPassword = await bcrypt.hash(user.password, 12);
     updateData.password = hashedPassword;
   }
 

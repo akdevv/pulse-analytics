@@ -1,13 +1,18 @@
 import { describe, it, expect } from "vitest";
 import type { Request } from "express";
-import { getClientIp, buildRawEvent } from "@/modules/ingestion/track.service.ts";
+import {
+  getClientIp,
+  buildRawEvent,
+} from "@/modules/ingestion/track.service.ts";
 import type { TrackQueryParams } from "@/modules/ingestion/track.types.ts";
 
-function makeReq(opts: {
-  forwardedFor?: string | string[];
-  remoteAddress?: string;
-  userAgent?: string;
-} = {}): Request {
+function makeReq(
+  opts: {
+    forwardedFor?: string | string[];
+    remoteAddress?: string;
+    userAgent?: string;
+  } = {}
+): Request {
   return {
     headers: {
       ...(opts.forwardedFor ? { "x-forwarded-for": opts.forwardedFor } : {}),
@@ -61,7 +66,6 @@ describe("buildRawEvent", () => {
   });
 
   it("strips empty urlSearch (bare ?)", () => {
-    const params = { ...baseParams, dl: "https://example.com/path?" };
     // URL("https://example.com/path?").search === "?" → treated as empty
     // Actually "?" is a non-empty string, let's test with no search params
     const noSearch = { ...baseParams, dl: "https://example.com/path" };

@@ -74,16 +74,23 @@ export const refreshToken = asyncHandler(
 
 // POST /auth/logout
 export const logout = asyncHandler(async (req: Request, res: Response) => {
-  const token = req.headers.authorization?.split(" ")[1];
-  if (token) {
+  const now = Math.floor(Date.now() / 1000);
+
+  const denylistToken = async (token: string) => {
     const payload = jwt.decode(token) as { jti?: string; exp?: number } | null;
     if (payload?.jti && payload?.exp) {
-      const ttl = payload.exp - Math.floor(Date.now() / 1000);
-      if (ttl > 0) {
-        await redis.set(`denylist:${payload.jti}`, "1", "EX", ttl);
-      }
+      const ttl = payload.exp - now;
+      if (ttl > 0) await redis.set(`denylist:${payload.jti}`, "1", "EX", ttl);
     }
-  }
+  };
+
+  const accessToken = req.headers.authorization?.split(" ")[1];
+  const refreshToken = req.cookies?.refresh_token;
+
+  await Promise.all([
+    accessToken ? denylistToken(accessToken) : Promise.resolve(),
+    refreshToken ? denylistToken(refreshToken) : Promise.resolve(),
+  ]);
 
   res.clearCookie("refresh_token", {
     secure: process.env.NODE_ENV === "production",

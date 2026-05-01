@@ -1,8 +1,5 @@
 import { describe, it, expect } from "vitest";
-import {
-  generateTrackingId,
-  generateEmbedCode,
-} from "@/utils/gen-tracking.ts";
+import { generateTrackingId, generateEmbedCode } from "@/utils/gen-tracking.ts";
 
 // ─── generateTrackingId ───────────────────────────────────────────────────────
 

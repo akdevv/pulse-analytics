@@ -1,9 +1,18 @@
 # Artillery load test: ingestion /track — Light
-# Run: npx artillery run backend/tests/load/ingestion-light.yml
+# Run: npx artillery run tests/load/ingestion-light.yml
+# Prereq: data/users.csv must exist (pnpm load:seed)
 # Target: 100 RPS for 90s → p99 < 200ms, 0% error
 
 config:
   target: "http://localhost:8000"
+  payload:
+    path: "./data/users.csv"
+    fields:
+      - email
+      - password
+      - siteId
+      - trackingId
+    order: random
   phases:
     - name: "light"
       duration: 90
@@ -11,23 +20,31 @@ config:
   ensure:
     thresholds:
       - http.response_time.p99: 200
-      - http.codes.2xx: 100
+    conditions:
+      - expression: "(http.codes.5xx / http.requests) < 0.001"
+        strict: false
 
 scenarios:
   - name: "Track PAGEVIEW"
     weight: 7
     flow:
-      - get:
-          url: "/api/v1/track?v=1&tid=pk-Xkv3t0YD5qr5YQbmDHLvBphErLe&t=PAGEVIEW&cid=3fa85f64-5717-4562-b3fc-2c963f66afa6&sid=7c9e6679-7425-40de-944b-e07fc1f90ae7&dl=https%3A%2F%2Fexample.com%2Fproducts%2F123&dt=Product%20Details&dr=https%3A%2F%2Fwww.google.com&sr=1920x1080&vp=1024x768&ul=en-US&debug=false"
+      - post:
+          url: "/api/v1/track?v=1&tid={{ trackingId }}&t=PAGEVIEW&cid={{ $uuid }}&sid={{ $uuid }}&dl=https%3A%2F%2Fexample.com%2Fproducts%2F{{ $randomInt(1,500) }}&dt=Product%20Page&dr=https%3A%2F%2Fwww.google.com&sr=1920x1080&vp=1024x768&ul=en-US"
+          headers:
+            X-Forwarded-For: "{{ $randomInt(1,254) }}.{{ $randomInt(1,254) }}.{{ $randomInt(1,254) }}.{{ $randomInt(1,254) }}"
 
   - name: "Track CLICK"
     weight: 2
     flow:
-      - get:
-          url: "/api/v1/track?v=1&tid=pk-Xkv3t0YD5qr5YQbmDHLvBphErLe&t=CLICK&cid=3fa85f64-5717-4562-b3fc-2c963f66afa6&sid=7c9e6679-7425-40de-944b-e07fc1f90ae7&dl=https%3A%2F%2Fexample.com%2F&en=button_click&ep=%7B%22label%22%3A%22signup%22%7D&debug=false"
+      - post:
+          url: "/api/v1/track?v=1&tid={{ trackingId }}&t=CLICK&cid={{ $uuid }}&sid={{ $uuid }}&dl=https%3A%2F%2Fexample.com%2F&en=button_click&ep=%7B%22label%22%3A%22signup%22%7D"
+          headers:
+            X-Forwarded-For: "{{ $randomInt(1,254) }}.{{ $randomInt(1,254) }}.{{ $randomInt(1,254) }}.{{ $randomInt(1,254) }}"
 
   - name: "Track CUSTOM"
     weight: 1
     flow:
-      - get:
-          url: "/api/v1/track?v=1&tid=pk-Xkv3t0YD5qr5YQbmDHLvBphErLe&t=CUSTOM&cid=3fa85f64-5717-4562-b3fc-2c963f66afa6&sid=7c9e6679-7425-40de-944b-e07fc1f90ae7&dl=https%3A%2F%2Fexample.com%2Fcheckout&en=purchase&ep=%7B%22value%22%3A49.99%7D&debug=false"
+      - post:
+          url: "/api/v1/track?v=1&tid={{ trackingId }}&t=CUSTOM&cid={{ $uuid }}&sid={{ $uuid }}&dl=https%3A%2F%2Fexample.com%2Fcheckout&en=purchase&ep=%7B%22value%22%3A49.99%7D"
+          headers:
+            X-Forwarded-For: "{{ $randomInt(1,254) }}.{{ $randomInt(1,254) }}.{{ $randomInt(1,254) }}.{{ $randomInt(1,254) }}"

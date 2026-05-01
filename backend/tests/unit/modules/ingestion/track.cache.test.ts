@@ -12,7 +12,10 @@ vi.mock("@/utils/logger.ts", () => ({
 
 import { redis } from "@/config/redis.ts";
 import { getSiteByTrackingId } from "@/modules/ingestion/track.repository.ts";
-import { getCachedSite, invalidateSiteCache } from "@/modules/ingestion/track.cache.ts";
+import {
+  getCachedSite,
+  invalidateSiteCache,
+} from "@/modules/ingestion/track.cache.ts";
 
 const mockSite = {
   id: "site-1",
@@ -65,7 +68,9 @@ describe("getCachedSite", () => {
 
     let resolveDb!: (v: typeof mockSite) => void;
     vi.mocked(getSiteByTrackingId).mockReturnValue(
-      new Promise((resolve) => { resolveDb = resolve; }) as any
+      new Promise((resolve) => {
+        resolveDb = resolve;
+      }) as any
     );
 
     const p1 = getCachedSite("pk-concurrent");

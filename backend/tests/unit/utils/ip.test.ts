@@ -2,10 +2,7 @@ import { describe, it, expect } from "vitest";
 import type { Request } from "express";
 import { extractClientIp } from "@/utils/ip.ts";
 
-function makeReq(
-  forwardedFor?: string,
-  ip?: string
-): Request {
+function makeReq(forwardedFor?: string, ip?: string): Request {
   return {
     headers: forwardedFor ? { "x-forwarded-for": forwardedFor } : {},
     ip,

@@ -26,12 +26,18 @@ describe("TrackQuerySchema", () => {
   });
 
   it("invalid dl (not a URL) fails", () => {
-    const result = TrackQuerySchema.safeParse({ ...validBase, dl: "not-a-url" });
+    const result = TrackQuerySchema.safeParse({
+      ...validBase,
+      dl: "not-a-url",
+    });
     expect(result.success).toBe(false);
   });
 
   it("invalid cid (not UUID) fails", () => {
-    const result = TrackQuerySchema.safeParse({ ...validBase, cid: "not-a-uuid" });
+    const result = TrackQuerySchema.safeParse({
+      ...validBase,
+      cid: "not-a-uuid",
+    });
     expect(result.success).toBe(false);
   });
 
@@ -47,7 +53,10 @@ describe("TrackQuerySchema", () => {
   });
 
   it("malformed ep JSON becomes undefined (no throw)", () => {
-    const result = TrackQuerySchema.safeParse({ ...validBase, ep: "{bad json" });
+    const result = TrackQuerySchema.safeParse({
+      ...validBase,
+      ep: "{bad json",
+    });
     expect(result.success).toBe(true);
     if (result.success) {
       expect(result.data.ep).toBeUndefined();
@@ -55,12 +64,18 @@ describe("TrackQuerySchema", () => {
   });
 
   it("valid sr NxN format passes", () => {
-    const result = TrackQuerySchema.safeParse({ ...validBase, sr: "1920x1080" });
+    const result = TrackQuerySchema.safeParse({
+      ...validBase,
+      sr: "1920x1080",
+    });
     expect(result.success).toBe(true);
   });
 
   it("invalid sr format fails", () => {
-    const result = TrackQuerySchema.safeParse({ ...validBase, sr: "1920-1080" });
+    const result = TrackQuerySchema.safeParse({
+      ...validBase,
+      sr: "1920-1080",
+    });
     expect(result.success).toBe(false);
   });
 
@@ -70,7 +85,10 @@ describe("TrackQuerySchema", () => {
   });
 
   it("ts non-numeric string → undefined", () => {
-    const result = TrackQuerySchema.safeParse({ ...validBase, ts: "not-a-number" });
+    const result = TrackQuerySchema.safeParse({
+      ...validBase,
+      ts: "not-a-number",
+    });
     expect(result.success).toBe(true);
     if (result.success) {
       expect(result.data.ts).toBeUndefined();

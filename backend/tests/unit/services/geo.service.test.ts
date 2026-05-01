@@ -23,32 +23,57 @@ describe("lookupGeoIp", () => {
   it("null IP → returns empty GeoInfo", async () => {
     const { lookupGeoIp } = await import("@/services/geo.service.ts");
     const result = await lookupGeoIp(null);
-    expect(result).toEqual({ country: null, countryCode: null, city: null, region: null });
+    expect(result).toEqual({
+      country: null,
+      countryCode: null,
+      city: null,
+      region: null,
+    });
   });
 
   it("private IP 127.0.0.1 → returns empty", async () => {
     const { lookupGeoIp } = await import("@/services/geo.service.ts");
     const result = await lookupGeoIp("127.0.0.1");
-    expect(result).toEqual({ country: null, countryCode: null, city: null, region: null });
+    expect(result).toEqual({
+      country: null,
+      countryCode: null,
+      city: null,
+      region: null,
+    });
     expect(mockCity).not.toHaveBeenCalled();
   });
 
   it("private IP 10.x.x.x → returns empty", async () => {
     const { lookupGeoIp } = await import("@/services/geo.service.ts");
     const result = await lookupGeoIp("10.0.0.1");
-    expect(result).toEqual({ country: null, countryCode: null, city: null, region: null });
+    expect(result).toEqual({
+      country: null,
+      countryCode: null,
+      city: null,
+      region: null,
+    });
   });
 
   it("private IP 192.168.x.x → returns empty", async () => {
     const { lookupGeoIp } = await import("@/services/geo.service.ts");
     const result = await lookupGeoIp("192.168.1.1");
-    expect(result).toEqual({ country: null, countryCode: null, city: null, region: null });
+    expect(result).toEqual({
+      country: null,
+      countryCode: null,
+      city: null,
+      region: null,
+    });
   });
 
   it("private IP 172.16.x.x → returns empty", async () => {
     const { lookupGeoIp } = await import("@/services/geo.service.ts");
     const result = await lookupGeoIp("172.16.0.1");
-    expect(result).toEqual({ country: null, countryCode: null, city: null, region: null });
+    expect(result).toEqual({
+      country: null,
+      countryCode: null,
+      city: null,
+      region: null,
+    });
   });
 
   it("172.15.x.x → NOT private, reader called", async () => {
@@ -77,7 +102,12 @@ describe("lookupGeoIp", () => {
   it("::ffff:192.168.1.1 → private after normalization, reader not called", async () => {
     const { lookupGeoIp } = await import("@/services/geo.service.ts");
     const result = await lookupGeoIp("::ffff:192.168.1.1");
-    expect(result).toEqual({ country: null, countryCode: null, city: null, region: null });
+    expect(result).toEqual({
+      country: null,
+      countryCode: null,
+      city: null,
+      region: null,
+    });
     expect(mockCity).not.toHaveBeenCalled();
   });
 
@@ -98,9 +128,16 @@ describe("lookupGeoIp", () => {
   });
 
   it("public IP + city() throws → returns empty", async () => {
-    mockCity.mockImplementation(() => { throw new Error("IP not in database"); });
+    mockCity.mockImplementation(() => {
+      throw new Error("IP not in database");
+    });
     const { lookupGeoIp } = await import("@/services/geo.service.ts");
     const result = await lookupGeoIp("5.5.5.5");
-    expect(result).toEqual({ country: null, countryCode: null, city: null, region: null });
+    expect(result).toEqual({
+      country: null,
+      countryCode: null,
+      city: null,
+      region: null,
+    });
   });
 });

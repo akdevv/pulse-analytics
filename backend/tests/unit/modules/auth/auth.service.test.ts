@@ -54,7 +54,11 @@ describe("registerUser", () => {
   it("existing user → throws AppError(409)", async () => {
     vi.mocked(repo.findUserByEmail).mockResolvedValue(mockUser);
     await expect(
-      registerUser({ name: "Alice", email: "alice@example.com", password: "Password1" })
+      registerUser({
+        name: "Alice",
+        email: "alice@example.com",
+        password: "Password1",
+      })
     ).rejects.toMatchObject({ statusCode: 409 });
   });
 
@@ -72,9 +76,12 @@ describe("registerUser", () => {
       password: "Password1",
     });
 
-    expect(bcrypt.hash).toHaveBeenCalledWith("Password1", 10);
+    expect(bcrypt.hash).toHaveBeenCalledWith("Password1", 12);
     expect(repo.createUser).toHaveBeenCalled();
-    expect(result).toEqual({ accessToken: "access-token", refreshToken: "refresh-token" });
+    expect(result).toEqual({
+      accessToken: "access-token",
+      refreshToken: "refresh-token",
+    });
   });
 
   it("both tokens are non-empty strings", async () => {
@@ -130,7 +137,10 @@ describe("loginUser", () => {
     });
 
     expect(repo.updateLastLoginAt).toHaveBeenCalledWith(mockUser.id);
-    expect(result).toEqual({ accessToken: "access-token", refreshToken: "refresh-token" });
+    expect(result).toEqual({
+      accessToken: "access-token",
+      refreshToken: "refresh-token",
+    });
   });
 });
 
@@ -141,11 +151,16 @@ describe("refreshTokenService", () => {
     vi.mocked(jwt.verify).mockImplementation(() => {
       throw new Error("jwt expired");
     });
-    await expect(refreshTokenService("bad-token")).rejects.toThrow("jwt expired");
+    await expect(refreshTokenService("bad-token")).rejects.toThrow(
+      "jwt expired"
+    );
   });
 
   it("valid token → returns new accessToken", async () => {
-    vi.mocked(jwt.verify).mockReturnValue({ userId: "123", email: "a@b.com" } as any);
+    vi.mocked(jwt.verify).mockReturnValue({
+      userId: "123",
+      email: "a@b.com",
+    } as any);
     vi.mocked(jwt.sign).mockReturnValue("new-access-token" as any);
 
     const result = await refreshTokenService("valid-refresh");
@@ -191,7 +206,10 @@ describe("updateUserService", () => {
 
   it("name update only → calls updateUserById with just name", async () => {
     vi.mocked(repo.findUserById).mockResolvedValue(mockUser);
-    vi.mocked(repo.updateUserById).mockResolvedValue({ ...mockUser, name: "Bob" });
+    vi.mocked(repo.updateUserById).mockResolvedValue({
+      ...mockUser,
+      name: "Bob",
+    });
 
     await updateUserService("user-1", { name: "Bob" });
 
@@ -205,7 +223,7 @@ describe("updateUserService", () => {
 
     await updateUserService("user-1", { password: "NewPass1" });
 
-    expect(bcrypt.hash).toHaveBeenCalledWith("NewPass1", 10);
+    expect(bcrypt.hash).toHaveBeenCalledWith("NewPass1", 12);
     expect(repo.updateUserById).toHaveBeenCalledWith(
       "user-1",
       expect.objectContaining({ password: "new-hashed" })
@@ -214,7 +232,10 @@ describe("updateUserService", () => {
 
   it("returns public user shape", async () => {
     vi.mocked(repo.findUserById).mockResolvedValue(mockUser);
-    vi.mocked(repo.updateUserById).mockResolvedValue({ ...mockUser, name: "Bob" });
+    vi.mocked(repo.updateUserById).mockResolvedValue({
+      ...mockUser,
+      name: "Bob",
+    });
 
     const result = await updateUserService("user-1", { name: "Bob" });
 

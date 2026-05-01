@@ -51,7 +51,11 @@ describe("createSiteService", () => {
     vi.mocked(repo.findSiteByDomain).mockResolvedValue(mockSite);
 
     await expect(
-      createSiteService({ userId: "user-1", name: "My Site", domain: "example.com" })
+      createSiteService({
+        userId: "user-1",
+        name: "My Site",
+        domain: "example.com",
+      })
     ).rejects.toMatchObject({ statusCode: 409 });
   });
 
@@ -122,7 +126,10 @@ describe("updateSiteService", () => {
 
   it("new domain already taken → throws AppError(409)", async () => {
     vi.mocked(repo.getSiteById).mockResolvedValue(mockSite);
-    vi.mocked(repo.findSiteByDomain).mockResolvedValue({ ...mockSite, id: "other-site" });
+    vi.mocked(repo.findSiteByDomain).mockResolvedValue({
+      ...mockSite,
+      id: "other-site",
+    });
 
     await expect(
       updateSiteService("user-1", "site-1", { domain: "taken.com" })
@@ -143,7 +150,9 @@ describe("updateSiteService", () => {
     vi.mocked(repo.getSiteById).mockResolvedValue(mockSite);
     vi.mocked(repo.updateSite).mockResolvedValue(updated);
 
-    const result = await updateSiteService("user-1", "site-1", { name: "New Name" });
+    const result = await updateSiteService("user-1", "site-1", {
+      name: "New Name",
+    });
 
     expect(result).toEqual(updated);
   });

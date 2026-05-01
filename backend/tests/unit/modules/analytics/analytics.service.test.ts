@@ -43,7 +43,9 @@ describe("resolveDateRange", () => {
     expect(toDate.getTime()).toBeLessThanOrEqual(after);
 
     const sevenDaysMs = 7 * 24 * 60 * 60 * 1000;
-    expect(Math.abs(toDate.getTime() - fromDate.getTime() - sevenDaysMs)).toBeLessThan(100);
+    expect(
+      Math.abs(toDate.getTime() - fromDate.getTime() - sevenDaysMs)
+    ).toBeLessThan(100);
   });
 
   it("custom from/to strings → correct Date objects", () => {
@@ -67,9 +69,11 @@ describe("verifySiteOwnership", () => {
   it("site not found → throws AppError(403)", async () => {
     vi.mocked(analyticsRepo.getSiteForUser).mockResolvedValue(null);
 
-    await expect(verifySiteOwnership("site-x", "user-1")).rejects.toMatchObject({
-      statusCode: 403,
-    });
+    await expect(verifySiteOwnership("site-x", "user-1")).rejects.toMatchObject(
+      {
+        statusCode: 403,
+      }
+    );
   });
 });
 
@@ -82,14 +86,19 @@ describe("getOverview", () => {
 
     await getOverview("site-1", "user-1");
 
-    expect(analyticsRepo.getSiteForUser).toHaveBeenCalledWith("site-1", "user-1");
+    expect(analyticsRepo.getSiteForUser).toHaveBeenCalledWith(
+      "site-1",
+      "user-1"
+    );
     expect(analyticsRepo.getOverview).toHaveBeenCalled();
   });
 
   it("unauthorized user → throws 403 before hitting repository", async () => {
     vi.mocked(analyticsRepo.getSiteForUser).mockResolvedValue(null);
 
-    await expect(getOverview("site-x", "user-1")).rejects.toMatchObject({ statusCode: 403 });
+    await expect(getOverview("site-x", "user-1")).rejects.toMatchObject({
+      statusCode: 403,
+    });
     expect(analyticsRepo.getOverview).not.toHaveBeenCalled();
   });
 });
@@ -106,7 +115,9 @@ describe("getTimeseries", () => {
 
   it("unauthorized user → throws 403", async () => {
     vi.mocked(analyticsRepo.getSiteForUser).mockResolvedValue(null);
-    await expect(getTimeseries("site-x", "user-1")).rejects.toMatchObject({ statusCode: 403 });
+    await expect(getTimeseries("site-x", "user-1")).rejects.toMatchObject({
+      statusCode: 403,
+    });
   });
 });
 
@@ -122,7 +133,9 @@ describe("getTopPages", () => {
 
   it("unauthorized user → throws 403", async () => {
     vi.mocked(analyticsRepo.getSiteForUser).mockResolvedValue(null);
-    await expect(getTopPages("site-x", "user-1")).rejects.toMatchObject({ statusCode: 403 });
+    await expect(getTopPages("site-x", "user-1")).rejects.toMatchObject({
+      statusCode: 403,
+    });
   });
 });
 
@@ -138,7 +151,9 @@ describe("getReferrers", () => {
 
   it("unauthorized user → throws 403", async () => {
     vi.mocked(analyticsRepo.getSiteForUser).mockResolvedValue(null);
-    await expect(getReferrers("site-x", "user-1")).rejects.toMatchObject({ statusCode: 403 });
+    await expect(getReferrers("site-x", "user-1")).rejects.toMatchObject({
+      statusCode: 403,
+    });
   });
 });
 
@@ -154,7 +169,9 @@ describe("getDevices", () => {
 
   it("unauthorized user → throws 403", async () => {
     vi.mocked(analyticsRepo.getSiteForUser).mockResolvedValue(null);
-    await expect(getDevices("site-x", "user-1")).rejects.toMatchObject({ statusCode: 403 });
+    await expect(getDevices("site-x", "user-1")).rejects.toMatchObject({
+      statusCode: 403,
+    });
   });
 });
 
@@ -170,7 +187,9 @@ describe("getGeo", () => {
 
   it("unauthorized user → throws 403", async () => {
     vi.mocked(analyticsRepo.getSiteForUser).mockResolvedValue(null);
-    await expect(getGeo("site-x", "user-1")).rejects.toMatchObject({ statusCode: 403 });
+    await expect(getGeo("site-x", "user-1")).rejects.toMatchObject({
+      statusCode: 403,
+    });
   });
 });
 
@@ -186,6 +205,8 @@ describe("getRealtime", () => {
 
   it("unauthorized user → throws 403", async () => {
     vi.mocked(analyticsRepo.getSiteForUser).mockResolvedValue(null);
-    await expect(getRealtime("site-x", "user-1")).rejects.toMatchObject({ statusCode: 403 });
+    await expect(getRealtime("site-x", "user-1")).rejects.toMatchObject({
+      statusCode: 403,
+    });
   });
 });

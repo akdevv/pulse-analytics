@@ -33,9 +33,9 @@ ALB (HTTPS, port 443)
 | **ACM** | SSL certificate | Free |
 | **Secrets Manager** | Store env vars and secrets | — |
 | **VPC** | Network isolation | Default VPC is fine to start |
-| **Timescale Cloud** | Managed TimescaleDB | `Basic-8` plan to start |
+| **EC2 + EBS** | Self-hosted TimescaleDB | `t3.small` + 20GB `gp3` EBS |
 
-> **Why not RDS?** AWS RDS does not support the TimescaleDB extension. Your migrations use TimescaleDB-specific features (hypertables, continuous aggregates, compression). Use **Timescale Cloud** — it's a managed TimescaleDB service with a free trial.
+> **Why not RDS?** AWS RDS does not support the TimescaleDB extension. Your migrations use TimescaleDB-specific features (hypertables, continuous aggregates, compression). Run TimescaleDB on EC2 with EBS — block storage gives ~1ms latency, same as a local disk.
 
 ---
 
@@ -69,22 +69,69 @@ Note the repository URI — looks like:
 
 ---
 
-## Step 3 — Set Up Timescale Cloud (Database)
+## Step 3 — Set Up TimescaleDB on EC2 (Database)
 
-1. Go to [timescale.com](https://timescale.com) → Create account
-2. Create a new service:
-   - **Type**: Time-series (TimescaleDB)
-   - **Region**: Same as your AWS region (e.g., `ap-south-1`)
-   - **Plan**: Basic-8 (2 vCPU, 8GB RAM) — scale down to Basic-2 for early stage
-3. After creation, copy the connection string:
-   ```
-   postgres://user:password@host.tsdb.cloud:5432/tsdb
-   ```
-4. Run your migrations against it:
-   ```bash
-   DATABASE_URL="your-connection-string" pnpm exec prisma migrate deploy
-   DATABASE_URL="your-connection-string" pnpm db:migrate
-   ```
+### 3a — Launch EC2 instance
+
+1. Go to **AWS Console → EC2 → Launch Instance**
+2. Configuration:
+   - **AMI**: Amazon Linux 2023
+   - **Instance type**: `t3.small`
+   - **Key pair**: Create or select existing (you'll need SSH access)
+   - **Security group**: Create `pulse-db-sg`
+     - Inbound: port `5432` from your ECS security group (add after ECS is set up)
+     - Inbound: port `22` from your IP only (for setup)
+     - Outbound: all traffic
+3. Click **Launch Instance**
+
+### 3b — Attach EBS volume
+
+1. Go to **EC2 → Volumes → Create Volume**
+   - **Type**: `gp3`
+   - **Size**: `20 GB`
+   - **Availability Zone**: same as your EC2 instance
+2. After creation, select the volume → **Actions → Attach Volume** → select your EC2 instance
+3. Note the device name (e.g., `/dev/xvdf`)
+
+### 3c — Set up TimescaleDB
+
+SSH into the EC2 instance and run:
+
+```bash
+# Format and mount the EBS volume
+sudo mkfs -t ext4 /dev/xvdf
+sudo mkdir -p /data/timescaledb
+sudo mount /dev/xvdf /data/timescaledb
+# Make mount persist on reboot
+echo "/dev/xvdf /data/timescaledb ext4 defaults,nofail 0 2" | sudo tee -a /etc/fstab
+
+# Install Docker
+sudo dnf install -y docker
+sudo systemctl enable --now docker
+sudo usermod -aG docker ec2-user
+
+# Run TimescaleDB
+docker run -d \
+  --name timescaledb \
+  --restart always \
+  -e POSTGRES_USER=pulse \
+  -e POSTGRES_PASSWORD=<strong-password> \
+  -e POSTGRES_DB=pulse \
+  -v /data/timescaledb:/var/lib/postgresql/data \
+  -p 5432:5432 \
+  timescale/timescaledb:latest-pg18
+```
+
+### 3d — Run migrations
+
+From your local machine:
+
+```bash
+DATABASE_URL="postgresql://pulse:<password>@<ec2-private-ip>:5432/pulse" pnpm exec prisma migrate deploy
+DATABASE_URL="postgresql://pulse:<password>@<ec2-private-ip>:5432/pulse" pnpm db:migrate
+```
+
+Note the EC2 **private IP** — use this in `DATABASE_URL` for ECS (same VPC, no public routing needed).
 
 ---
 
@@ -117,7 +164,7 @@ Never put secrets in environment variables directly in ECS task definitions.
 ```
 ACCESS_TOKEN_SECRET       = <strong-random-string>
 REFRESH_TOKEN_SECRET      = <strong-random-string>
-DATABASE_URL              = <timescale-connection-string>
+DATABASE_URL              = postgresql://pulse:<password>@<ec2-private-ip>:5432/pulse
 REDIS_HOST                = <elasticache-primary-endpoint>
 FRONTEND_URL              = https://your-frontend-domain.com
 TRACKING_SCRIPT_URL       = https://your-api-domain.com
@@ -459,7 +506,9 @@ GitHub Actions
 ## First Deploy Checklist
 
 - [ ] ECR repository created
-- [ ] Timescale Cloud DB provisioned and migrations run
+- [ ] EC2 instance launched with EBS volume mounted
+- [ ] TimescaleDB running on EC2 via Docker
+- [ ] DB migrations run against EC2 TimescaleDB
 - [ ] ElastiCache Redis cluster running
 - [ ] Secrets stored in AWS Secrets Manager
 - [ ] ECS cluster created
@@ -482,7 +531,8 @@ GitHub Actions
 | ElastiCache `cache.t3.micro` | ~$15 |
 | ALB | ~$20 |
 | ECR storage | ~$1 |
-| Timescale Cloud Basic-2 | ~$29 |
-| **Total** | **~$80–85/month** |
+| EC2 `t3.small` (TimescaleDB) | ~$15 |
+| EBS `gp3` 20GB | ~$2 |
+| **Total** | **~$68–73/month** |
 
 Scale up Fargate task size and Timescale plan as traffic grows.
