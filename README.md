@@ -10,7 +10,7 @@ Track pageviews and custom events on any site with a tiny SDK, ingest them throu
 ![TypeScript](https://img.shields.io/badge/TypeScript-007ACC?logo=typescript&logoColor=white)
 ![License](https://img.shields.io/badge/License-MIT-green)
 
-![Pulse Analytics dashboard](./docs/screen.png)
+![Pulse Analytics](./docs/screen-hero.png)
 
 </div>
 
