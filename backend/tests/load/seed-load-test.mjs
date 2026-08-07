@@ -19,7 +19,7 @@ import { fileURLToPath } from "url";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
-// Read load-test.env so the script works without manually sourcing it
+// avoid requiring the caller to manually source load-test.env
 const envPath = join(__dirname, "load-test.env");
 if (existsSync(envPath)) {
   for (const line of readFileSync(envPath, "utf-8").split("\n")) {
@@ -74,8 +74,8 @@ async function register(user) {
       password: user.password,
     }),
   });
-  // 201 = created, 409 = already exists — both are fine
-  if (res.status !== 201 && res.status !== 409) {
+  // 409 just means the user already exists from a previous run, that's fine
+  if (res.status !== 200 && res.status !== 201 && res.status !== 409) {
     const body = await res.text();
     throw new Error(
       `Register failed for ${user.email}: HTTP ${res.status} — ${body}`
@@ -100,7 +100,6 @@ async function login(user) {
 }
 
 async function createOrGetSite(token, user) {
-  // Try create
   const res = await fetch(`${TARGET}/api/v1/sites`, {
     method: "POST",
     headers: {
@@ -113,13 +112,13 @@ async function createOrGetSite(token, user) {
     }),
   });
 
-  if (res.status === 201) {
+  if (res.status === 200 || res.status === 201) {
     const body = await res.json();
     return body.data.site;
   }
 
   if (res.status === 409) {
-    // Site already exists — find it in the site list
+    // site already exists, fetch the list and match by domain
     const listRes = await fetch(`${TARGET}/api/v1/sites`, {
       headers: { Authorization: `Bearer ${token}` },
     });

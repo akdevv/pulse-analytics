@@ -1,5 +1,7 @@
+import env from "@/config/env.ts";
+
 const rateLimitConfig = {
-  enabled: true,
+  enabled: env.RATE_LIMIT_ENABLED,
 
   // How many events per minute each site can send, based on their plan
   siteLimits: {

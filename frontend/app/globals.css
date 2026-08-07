@@ -232,7 +232,29 @@ input:-webkit-autofill {
   user-select: none;
 }
 
-/* Landing animations */
+/* ───────────────────────────────────────────────────────────
+   Landing design system — dark + warm amber (Emil-grade craft)
+   ─────────────────────────────────────────────────────────── */
+:root {
+  /* strong custom easings — built-ins lack punch */
+  --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+  --ease-in-out: cubic-bezier(0.77, 0, 0.175, 1);
+  --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+
+  /* surface elevation ladder (near-black warm-neutral) */
+  --pa-bg: oklch(0.145 0.004 285);
+  --pa-surface-1: oklch(0.165 0.004 285);
+  --pa-surface-2: oklch(0.185 0.005 285);
+  --pa-line: rgba(255, 255, 255, 0.08);
+  --pa-line-strong: rgba(255, 255, 255, 0.14);
+
+  /* accent — warm amber */
+  --pa-accent: oklch(0.6429 0.1675 45.988);
+  --pa-accent-soft: oklch(0.78 0.13 55);
+  --pa-accent-glow: oklch(0.6429 0.1675 45.988 / 0.25);
+}
+
+/* ── Marquee ───────────────────────────────────────────────── */
 @keyframes marquee {
   from { transform: translateX(0); }
   to { transform: translateX(-50%); }
@@ -241,13 +263,104 @@ input:-webkit-autofill {
   animation: marquee 40s linear infinite;
   width: max-content;
 }
-
-@keyframes fade-in {
-  from { opacity: 0; transform: translateY(8px); }
-  to { opacity: 1; transform: translateY(0); }
+.animate-marquee:hover {
+  animation-play-state: paused;
 }
-.animate-fade-in {
-  animation: fade-in 0.8s ease-out both;
+
+/* ── Scroll reveal (paired with IntersectionObserver) ──────── */
+.pa-reveal {
+  opacity: 0;
+  transform: translateY(16px);
+  filter: blur(6px);
+  transition:
+    opacity 700ms var(--ease-out),
+    transform 700ms var(--ease-out),
+    filter 700ms var(--ease-out);
+  transition-delay: var(--pa-delay, 0ms);
+  will-change: opacity, transform;
+}
+.pa-reveal[data-shown="true"] {
+  opacity: 1;
+  transform: translateY(0);
+  filter: blur(0);
+}
+
+/* ── Aurora mesh (hero ambient) — slow drift, GPU only ─────── */
+@keyframes pa-aurora {
+  0%   { transform: translate3d(-6%, -4%, 0) scale(1.05); }
+  50%  { transform: translate3d(6%, 5%, 0) scale(1.18); }
+  100% { transform: translate3d(-6%, -4%, 0) scale(1.05); }
+}
+.pa-aurora {
+  animation: pa-aurora 24s var(--ease-in-out) infinite;
+  will-change: transform;
+}
+.pa-aurora-slow {
+  animation: pa-aurora 34s var(--ease-in-out) infinite reverse;
+  will-change: transform;
+}
+
+/* ── Pulse EKG line — draws across, the brand signature ───── */
+@keyframes pa-pulse-draw {
+  0%   { stroke-dashoffset: var(--pa-len); }
+  60%  { stroke-dashoffset: 0; }
+  100% { stroke-dashoffset: 0; }
+}
+@keyframes pa-pulse-travel {
+  0%   { offset-distance: 0%; opacity: 0; }
+  8%   { opacity: 1; }
+  92%  { opacity: 1; }
+  100% { offset-distance: 100%; opacity: 0; }
+}
+.pa-pulse-path {
+  stroke-dasharray: var(--pa-len);
+  animation: pa-pulse-draw 4.5s var(--ease-out) forwards;
+}
+
+/* ── Sheen sweep on primary buttons ────────────────────────── */
+@keyframes pa-sheen {
+  from { transform: translateX(-120%) skewX(-18deg); }
+  to   { transform: translateX(220%) skewX(-18deg); }
+}
+.pa-btn {
+  position: relative;
+  overflow: hidden;
+  transition: filter 150ms var(--ease-out), transform 150ms var(--ease-out),
+    box-shadow 200ms var(--ease-out);
+}
+.pa-btn:active {
+  transform: scale(0.97);
+}
+.pa-btn::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  width: 40%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.35), transparent);
+  transform: translateX(-120%) skewX(-18deg);
+  pointer-events: none;
+}
+@media (hover: hover) and (pointer: fine) {
+  .pa-btn:hover::after {
+    animation: pa-sheen 700ms var(--ease-out);
+  }
+}
+
+/* ── Soft breathing glow (live dots, accents) ──────────────── */
+@keyframes pa-breathe {
+  0%, 100% { opacity: 0.35; }
+  50%      { opacity: 0.9; }
+}
+.pa-breathe { animation: pa-breathe 2.4s var(--ease-in-out) infinite; }
+
+/* ── Animated chart line draw (dashboard mockup) ───────────── */
+@keyframes pa-chart-draw {
+  to { stroke-dashoffset: 0; }
+}
+
+/* ── Conic spotlight border (CTA / cards) ──────────────────── */
+@keyframes pa-spin {
+  to { transform: rotate(1turn); }
 }
 
 /* Hide scrollbar utility class */
@@ -279,4 +392,21 @@ input:-webkit-autofill {
 .hide-scrollbar::-webkit-scrollbar-corner {
   display: none !important;
   background: transparent !important;
+}
+
+/* Reduced motion — kill movement, keep comprehension */
+@media (prefers-reduced-motion: reduce) {
+  .animate-marquee {
+    animation: none;
+  }
+  .animate-ping {
+    animation: none;
+  }
+  *,
+  *::before,
+  *::after {
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+  }
 }

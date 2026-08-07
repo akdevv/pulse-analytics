@@ -10,6 +10,7 @@ interface AuthContextValue {
   login: (email: string, password: string) => Promise<void>;
   register: (name: string, email: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
+  refreshUser: () => Promise<void>;
 }
 
 export const AuthContext = createContext<AuthContextValue | null>(null);
@@ -48,6 +49,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setUser(user.data);
   };
 
+  // Re-read the profile after it changes (account page saves)
+  const refreshUser = async () => {
+    const res = await api.get("/auth/me");
+    setUser(res.data);
+  };
+
   const logout = async () => {
     try {
       await api.post("/auth/logout");
@@ -63,6 +70,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     login,
     register,
     logout,
+    refreshUser,
   };
 
   return (

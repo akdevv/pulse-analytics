@@ -1,4 +1,4 @@
-import { ACCENT, DISPLAY, SectionEyebrow, SectionHeading } from "./shared";
+import { ACCENT, DISPLAY, Reveal, SectionEyebrow, SectionHeading } from "./shared";
 
 const ITEMS = [
   {
@@ -29,25 +29,31 @@ const ITEMS = [
 
 export function Testimonials() {
   return (
-    <section id="story" className="relative py-40 bg-black overflow-hidden">
+    <section
+      id="story"
+      className="relative py-40 overflow-hidden"
+      style={{ background: "var(--pa-bg)" }}
+    >
       <div className="relative mx-auto max-w-6xl px-6">
-        <div className="flex flex-col items-start gap-6 mb-20 max-w-3xl">
+        <Reveal className="flex flex-col items-start gap-6 mb-20 max-w-3xl">
           <SectionEyebrow>The story</SectionEyebrow>
           <SectionHeading
             line1="Not real customers."
             line2="Real commit messages."
           />
-        </div>
+        </Reveal>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          {ITEMS.map(({ quote, name, role, avatar, mono }) => (
-            <figure
+          {ITEMS.map(({ quote, name, role, avatar, mono }, i) => (
+            <Reveal
+              as="figure"
               key={name}
-              className="group relative flex flex-col rounded-2xl border border-white/8 p-8 overflow-hidden transition-all duration-300 hover:-translate-y-0.5 hover:border-white/15"
+              delay={i * 90}
+              className="group relative flex flex-col rounded-2xl border border-white/8 p-8 overflow-hidden transition-[border-color,box-shadow] duration-[220ms] ease-[var(--ease-out)] hover:border-white/15 hover:shadow-[0_24px_60px_-30px_rgba(0,0,0,0.8)]"
               style={{
                 background:
-                  "linear-gradient(160deg, oklch(0.16 0.005 285) 0%, oklch(0.13 0.003 285) 100%)",
-                boxShadow: "0 1px 0 rgba(255,255,255,0.04) inset",
+                  "linear-gradient(160deg, oklch(0.18 0.005 285) 0%, oklch(0.145 0.003 285) 100%)",
+                boxShadow: "0 1px 0 rgba(255,255,255,0.05) inset",
               }}
             >
               {/* subtle top accent line on hover */}
@@ -101,7 +107,7 @@ export function Testimonials() {
                   </div>
                 </div>
               </figcaption>
-            </figure>
+            </Reveal>
           ))}
         </div>
       </div>

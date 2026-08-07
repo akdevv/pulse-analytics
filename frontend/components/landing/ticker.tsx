@@ -20,18 +20,21 @@ export function Ticker() {
   return (
     <section
       id="stack"
-      className="relative border-y border-white/6 bg-black overflow-hidden"
+      className="relative border-y border-white/8 overflow-hidden"
+      style={{ background: "var(--pa-bg)" }}
     >
       <div
-        className="pointer-events-none absolute inset-y-0 left-0 w-32 z-10"
+        className="pointer-events-none absolute inset-y-0 left-0 w-40 z-10"
         style={{
-          background: "linear-gradient(90deg, rgb(0 0 0), rgb(0 0 0 / 0))",
+          background:
+            "linear-gradient(90deg, var(--pa-bg), oklch(0.145 0.004 285 / 0))",
         }}
       />
       <div
-        className="pointer-events-none absolute inset-y-0 right-0 w-32 z-10"
+        className="pointer-events-none absolute inset-y-0 right-0 w-40 z-10"
         style={{
-          background: "linear-gradient(270deg, rgb(0 0 0), rgb(0 0 0 / 0))",
+          background:
+            "linear-gradient(270deg, var(--pa-bg), oklch(0.145 0.004 285 / 0))",
         }}
       />
       <div className="flex whitespace-nowrap py-5 animate-marquee">

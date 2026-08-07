@@ -1,4 +1,4 @@
-import { ACCENT, DISPLAY, SectionEyebrow, SectionHeading } from "./shared";
+import { ACCENT, DISPLAY, Reveal, SectionEyebrow, SectionHeading } from "./shared";
 import { highlight, type Lang } from "./highlight";
 
 const STEPS: {
@@ -163,7 +163,8 @@ export function HowItWorks() {
   return (
     <section
       id="how-it-works"
-      className="relative py-40 bg-black overflow-hidden"
+      className="relative py-40 overflow-hidden"
+      style={{ background: "var(--pa-bg)" }}
     >
       <div
         aria-hidden
@@ -177,7 +178,7 @@ export function HowItWorks() {
       />
 
       <div className="relative mx-auto max-w-6xl px-6">
-        <div className="flex flex-col items-start gap-6 mb-28 max-w-3xl">
+        <Reveal className="flex flex-col items-start gap-6 mb-28 max-w-3xl">
           <SectionEyebrow>Architecture</SectionEyebrow>
           <SectionHeading
             line1="The pipeline, roughly"
@@ -187,13 +188,13 @@ export function HowItWorks() {
             Collect hot, process async, persist for time. Every piece picked
             because it refuses to blink under load.
           </p>
-        </div>
+        </Reveal>
 
         <div className="flex flex-col gap-28">
           {STEPS.map((step, i) => {
             const reversed = i % 2 === 1;
             return (
-              <div
+              <Reveal
                 key={step.n}
                 className="grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-16 items-center"
               >
@@ -230,7 +231,7 @@ export function HowItWorks() {
                     code={step.code}
                   />
                 </div>
-              </div>
+              </Reveal>
             );
           })}
         </div>

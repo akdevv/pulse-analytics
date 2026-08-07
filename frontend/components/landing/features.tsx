@@ -1,5 +1,5 @@
 import { Zap, BarChart2, Globe, Code2, Bell, Lock } from "lucide-react";
-import { ACCENT, DISPLAY, SectionEyebrow, SectionHeading } from "./shared";
+import { ACCENT, DISPLAY, Reveal, SectionEyebrow, SectionHeading } from "./shared";
 
 const ICON = {
   bolt: <Zap size={18} />,
@@ -18,8 +18,8 @@ const HIGHLIGHT_EVENTS = [
   { event: "scroll_depth", path: "/story", ms: 4 },
 ];
 
-const BG = { background: "oklch(0.14 0.004 285)" };
-const INNER = { background: "oklch(0.11 0.003 285)" };
+const BG = { background: "oklch(0.165 0.004 285)" };
+const INNER = { background: "oklch(0.13 0.003 285)" };
 
 function FeatureCell({
   iconKey,
@@ -36,22 +36,41 @@ function FeatureCell({
 }) {
   return (
     <div
-      className={`group relative flex flex-col p-8 transition-colors duration-300 hover:bg-white/3 ${className}`}
+      className={`group relative flex flex-col p-8 overflow-hidden transition-colors duration-200 ease-[var(--ease-out)] ${className}`}
       style={BG}
     >
+      {/* hover accent hairline */}
       <div
-        className="inline-flex items-center justify-center w-9 h-9 mb-6 text-white/70 transition-colors duration-300 group-hover:text-white"
-        style={{ background: "rgba(255,255,255,0.04)" }}
+        aria-hidden
+        className="absolute inset-x-0 top-0 h-px opacity-0 transition-opacity duration-300 group-hover:opacity-100"
+        style={{
+          background: `linear-gradient(90deg, transparent, ${ACCENT}, transparent)`,
+        }}
+      />
+      {/* hover corner glow */}
+      <div
+        aria-hidden
+        className="absolute -right-16 -top-16 h-40 w-40 rounded-full blur-3xl opacity-0 transition-opacity duration-300 group-hover:opacity-20"
+        style={{ background: ACCENT }}
+      />
+
+      <div
+        className="relative inline-flex items-center justify-center w-9 h-9 mb-6 rounded-lg transition-transform duration-200 ease-[var(--ease-out)] group-hover:scale-105"
+        style={{
+          background: "color-mix(in oklab, " + ACCENT + " 13%, transparent)",
+          color: ACCENT,
+          border: "1px solid color-mix(in oklab, " + ACCENT + " 22%, transparent)",
+        }}
       >
         {ICON[iconKey]}
       </div>
       <h3
-        className="text-[18px] text-white mb-2 tracking-tight"
+        className="relative text-[18px] text-white mb-2 tracking-tight"
         style={DISPLAY}
       >
         {title}
       </h3>
-      <p className="text-[13.5px] text-white/50 leading-relaxed">
+      <p className="relative text-[13.5px] text-white/50 leading-relaxed">
         {description}
       </p>
       {children}
@@ -61,17 +80,22 @@ function FeatureCell({
 
 export function Features() {
   return (
-    <section id="features" className="relative py-40 bg-black overflow-hidden">
+    <section
+      id="features"
+      className="relative py-40 overflow-hidden"
+      style={{ background: "var(--pa-bg)" }}
+    >
       <div className="relative mx-auto max-w-6xl px-6">
-        <div className="flex flex-col items-start gap-6 mb-20 max-w-3xl">
+        <Reveal className="flex flex-col items-start gap-6 mb-20 max-w-3xl">
           <SectionEyebrow>Metrics</SectionEyebrow>
           <SectionHeading
             line1="Small system, big numbers,"
             line2="zero pager duty."
           />
-        </div>
+        </Reveal>
 
-        <div
+        <Reveal
+          delay={80}
           className="grid grid-cols-6 grid-rows-[auto_auto_auto] gap-px overflow-hidden rounded-2xl border border-white/10 bg-white/10"
         >
           {/* Row 1 — hero feature (4 cols) + stat cell (2 cols) */}
@@ -217,7 +241,7 @@ export function Features() {
               ))}
             </div>
           </div>
-        </div>
+        </Reveal>
       </div>
     </section>
   );

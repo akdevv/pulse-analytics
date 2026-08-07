@@ -10,7 +10,7 @@ const COLS = [
 
 export function Footer() {
   return (
-    <footer className="relative bg-black">
+    <footer className="relative" style={{ background: "var(--pa-bg)" }}>
       {/* top separator with accent center */}
       <div
         className="h-px w-full"
@@ -70,7 +70,7 @@ export function Footer() {
         {/* bottom bar */}
         <div className="flex flex-col md:flex-row items-center justify-between gap-4 pt-8 border-t border-white/6">
           <p className="text-[11px] font-mono text-white/25 tracking-wider">
-            © 2025 · made with ink and grit
+            © {new Date().getFullYear()} · made with ink and grit
           </p>
           <div className="flex items-center gap-5">
             {["GitHub", "X", "LinkedIn"].map((s) => (

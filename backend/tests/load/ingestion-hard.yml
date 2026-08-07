@@ -1,17 +1,10 @@
-# Artillery load test: ingestion /track (holistic)
-#
-# Run:    pnpm load:ingestion
-# Prereq: pnpm load:seed  (generates data/users.csv)
-#
-# Target is read from load-test.env → TARGET env var.
-# Phases: warm (10 RPS) → ramp (10→100 RPS) → sustained (100 RPS)
-# Thresholds: p99 < 200ms, error rate < 0.5%
-#
-# Event mix: 70% PAGEVIEW · 20% CLICK · 10% CUSTOM
-# Each VU gets a random IP so every request gets its own rate-limit bucket.
+# Artillery load test: ingestion /track — Light
+# Run: npx artillery run tests/load/ingestion-light.yml
+# Prereq: data/users.csv must exist (pnpm load:seed)
+# Target: 100 RPS for 90s → p99 < 200ms, 0% error
 
 config:
-  target: "{{ $processEnvironment.TARGET }}"
+  target: "http://localhost:8000"
   payload:
     path: "./data/users.csv"
     fields:
@@ -21,21 +14,14 @@ config:
       - trackingId
     order: random
   phases:
-    - name: warm
-      duration: 30
-      arrivalRate: 10
-    - name: ramp
+    - name: "hard-cap"
       duration: 60
-      arrivalRate: 10
-      rampTo: 100
-    - name: sustained
-      duration: 60
-      arrivalRate: 100
+      arrivalRate: 10000
   ensure:
     thresholds:
       - http.response_time.p99: 200
     conditions:
-      - expression: "(http.codes.5xx / http.requests) < 0.005"
+      - expression: "(http.codes.5xx / http.requests) < 0.001"
         strict: false
 
 scenarios:
