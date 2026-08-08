@@ -1,0 +1,92 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id          String   @id @default(uuid())
+  name        String?
+  email       String   @unique
+  password    String?
+  isVerified  Boolean  @default(false)
+  lastLoginAt DateTime @default(now())
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  sites       Site[]
+}
+
+model Site {
+  id            String        @id @default(uuid())
+  name          String
+  domain        String        @unique
+  userId        String
+  trackingId    String
+  rateLimitTier RateLimitTier @default(FREE)
+  isActive      Boolean       @default(true)
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+  events        Event[]
+  user          User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([trackingId])
+  @@index([userId])
+  @@map("sites")
+}
+
+model Event {
+  id               String    @default(uuid())
+  siteId           String
+  eventId          String
+  eventType        EventType
+  eventName        String?
+  url              String    @db.VarChar(2048)
+  urlHostname      String    @db.VarChar(255)
+  urlPathname      String    @db.VarChar(1024)
+  urlSearch        String?   @db.VarChar(1024)
+  pageTitle        String?   @db.VarChar(500)
+  referrer         String?   @db.VarChar(2048)
+  sessionId        String?   @db.Uuid
+  visitorId        String?   @db.Uuid
+  ipAddress        String?   @db.Inet
+  userAgent        String?   @db.VarChar(500)
+  deviceType       String?   @db.VarChar(20)
+  browser          String    @db.VarChar(50)
+  browserVersion   String    @db.VarChar(20)
+  os               String    @db.VarChar(50)
+  osVersion        String    @db.VarChar(20)
+  country          String?
+  countryCode      String?
+  city             String?
+  region           String?
+  eventProperties  Json?
+  timestamp        DateTime
+  receivedAt       DateTime  @default(now())
+  screenResolution String?   @db.VarChar(15)
+  userLanguage     String?   @db.VarChar(10)
+  viewportSize     String?   @db.VarChar(15)
+  site             Site      @relation(fields: [siteId], references: [id])
+
+  @@id([id, receivedAt])
+  @@index([siteId, timestamp(sort: Desc)])
+  @@index([sessionId])
+  @@index([visitorId])
+  @@index([urlPathname, siteId])
+  @@index([eventType, siteId])
+  @@map("events")
+}
+
+enum RateLimitTier {
+  FREE
+  PRO
+  ENTERPRISE
+}
+
+enum EventType {
+  PAGEVIEW
+  CLICK
+  CUSTOM
+}
