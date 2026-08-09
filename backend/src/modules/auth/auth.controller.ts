@@ -1,0 +1,138 @@
+import { AppError } from "@/utils/app-error.ts";
+import { redis } from "@/config/redis.ts";
+import jwt from "jsonwebtoken";
+import type { Request, Response } from "express";
+import {
+  getUserById,
+  loginUser,
+  refreshTokenService,
+  registerUser,
+  updateUserService,
+} from "./auth.service.ts";
+
+// POST /auth/register
+export const register = async (req: Request, res: Response) => {
+  const { name, email, password } = req.body;
+  const result = await registerUser({ name, email, password });
+
+  res.cookie("refresh_token", result.refreshToken, {
+    httpOnly: true,
+    sameSite: "strict",
+    maxAge: 1000 * 60 * 60 * 24 * 30, // 30 days
+    secure: process.env.NODE_ENV === "production",
+  });
+
+  return res.status(200).json({
+    status: "success",
+    message: "User registered successfully",
+    data: {
+      accessToken: result.accessToken,
+    },
+  });
+};
+
+// POST /auth/login
+export const login = async (req: Request, res: Response) => {
+  const { email, password } = req.body;
+  const result = await loginUser({ email, password });
+
+  res.cookie("refresh_token", result.refreshToken, {
+    httpOnly: true,
+    sameSite: "strict",
+    maxAge: 1000 * 60 * 60 * 24 * 30, // 30 days
+    secure: process.env.NODE_ENV === "production",
+  });
+
+  return res.status(200).json({
+    status: "success",
+    message: "Login successful",
+    data: {
+      accessToken: result.accessToken,
+    },
+  });
+};
+
+// POST /auth/refresh
+export const refreshToken = async (req: Request, res: Response) => {
+  const token = req.cookies?.refresh_token;
+  if (!token) {
+    throw AppError.unauthorized();
+  }
+
+  const result = await refreshTokenService(token);
+  return res.status(200).json({
+    status: "success",
+    message: "Refresh token successful!",
+    data: {
+      accessToken: result.accessToken,
+    },
+  });
+};
+
+// POST /auth/logout
+export const logout = async (req: Request, res: Response) => {
+  const now = Math.floor(Date.now() / 1000);
+
+  const denylistToken = async (token: string) => {
+    const payload = jwt.decode(token) as { jti?: string; exp?: number } | null;
+    if (payload?.jti && payload?.exp) {
+      const ttl = payload.exp - now;
+      if (ttl > 0) await redis.set(`denylist:${payload.jti}`, "1", "EX", ttl);
+    }
+  };
+
+  const accessToken = req.headers.authorization?.split(" ")[1];
+  const refreshToken = req.cookies?.refresh_token;
+
+  await Promise.all([
+    accessToken ? denylistToken(accessToken) : Promise.resolve(),
+    refreshToken ? denylistToken(refreshToken) : Promise.resolve(),
+  ]);
+
+  res.clearCookie("refresh_token", {
+    secure: process.env.NODE_ENV === "production",
+    httpOnly: true,
+    sameSite: "strict",
+  });
+
+  return res.status(200).json({
+    status: "success",
+    message: "Logout successful",
+  });
+};
+
+// GET /auth/me
+export const getUser = async (req: Request, res: Response) => {
+  if (!req.user?.userId) {
+    throw AppError.unauthorized();
+  }
+  const user = await getUserById(req.user.userId);
+  if (!user) {
+    throw AppError.notFound("User");
+  }
+
+  return res.status(200).json({
+    status: "success",
+    message: "User fetched successfully",
+    data: user,
+  });
+};
+
+// PATCH /auth/me
+export const updateUser = async (req: Request, res: Response) => {
+  if (!req.user?.userId) {
+    throw AppError.unauthorized();
+  }
+  const { name, email, password } = req.body;
+  const result = await updateUserService(req.user.userId, {
+    name,
+    email,
+    password,
+  });
+
+  return res.status(200).json({
+    status: "success",
+    message: "User updated successfully",
+    data: result,
+  });
+};
