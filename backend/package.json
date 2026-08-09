@@ -11,7 +11,10 @@
     "typecheck": "tsc --noEmit",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
-    "format": "prettier --write ."
+    "format": "prettier --write .",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage"
   },
   "packageManager": "pnpm@10.27.0",
   "dependencies": {
@@ -44,8 +47,10 @@
     "@types/jsonwebtoken": "^9.0.10",
     "@types/node": "^24.13.3",
     "@types/pg": "^8.21.0",
+    "@types/supertest": "^7.2.1",
     "@typescript-eslint/eslint-plugin": "^8.66.0",
     "@typescript-eslint/parser": "^8.66.0",
+    "@vitest/coverage-v8": "^4.1.10",
     "concurrently": "^10.0.4",
     "eslint": "^10.8.1",
     "eslint-config-prettier": "^10.1.8",
@@ -53,9 +58,12 @@
     "jiti": "^2.7.0",
     "prettier": "^3.9.6",
     "prisma": "^7.9.1",
+    "supertest": "^7.2.2",
     "tsup": "^8.5.1",
     "tsx": "^4.23.11",
     "typescript": "^5.9.3",
-    "typescript-eslint": "^8.66.0"
+    "typescript-eslint": "^8.66.0",
+    "vite-tsconfig-paths": "^6.1.1",
+    "vitest": "^4.1.10"
   }
 }
