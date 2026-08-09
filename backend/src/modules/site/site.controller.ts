@@ -52,7 +52,10 @@ export const getSiteById = async (req: Request, res: Response) => {
     throw AppError.unauthorized();
   }
 
-  const site = await getSiteByIdService(req.user.userId, req.params.id as string);
+  const site = await getSiteByIdService(
+    req.user.userId,
+    req.params.id as string
+  );
   return res.status(200).json({
     status: "success",
     message: "Site fetched successfully!",
@@ -67,10 +70,14 @@ export const updateSite = async (req: Request, res: Response) => {
   }
 
   const { name, domain } = req.body;
-  const site = await updateSiteService(req.user.userId, req.params.id as string, {
-    name,
-    domain,
-  });
+  const site = await updateSiteService(
+    req.user.userId,
+    req.params.id as string,
+    {
+      name,
+      domain,
+    }
+  );
   return res.status(200).json({
     status: "success",
     message: "Site updated successfully!",
