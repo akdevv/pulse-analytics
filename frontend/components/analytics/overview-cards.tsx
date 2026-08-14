@@ -50,7 +50,7 @@ export function OverviewCards({ data, isLoading, error }: Props) {
   }
 
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+    <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
       {STATS.map(({ key, label, icon: Icon, accent, bg }) => (
         <div
           key={key}
@@ -64,7 +64,7 @@ export function OverviewCards({ data, isLoading, error }: Props) {
           <div className="relative flex items-start justify-between gap-4">
             <div className="min-w-0">
               <p
-                className="text-[11px] font-bold uppercase tracking-[0.12em]"
+                className="text-[11px] font-bold tracking-[0.12em] uppercase"
                 style={{ color: accent, opacity: 0.8 }}
               >
                 {label}
@@ -72,13 +72,13 @@ export function OverviewCards({ data, isLoading, error }: Props) {
               {isLoading ? (
                 <Skeleton className="mt-2.5 h-10 w-28 rounded-lg" />
               ) : (
-                <p className="mt-1 text-[2.75rem] font-bold leading-none tracking-tight tabular-nums">
+                <p className="mt-1 text-[2.75rem] leading-none font-bold tracking-tight tabular-nums">
                   {fmt(data?.[key] ?? 0)}
                 </p>
               )}
             </div>
             <div
-              className="shrink-0 rounded-xl p-2.5 mt-0.5"
+              className="mt-0.5 shrink-0 rounded-xl p-2.5"
               style={{ background: bg }}
             >
               <Icon className="size-[18px]" style={{ color: accent }} />

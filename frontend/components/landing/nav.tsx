@@ -30,8 +30,8 @@ export function Nav() {
       <nav
         className={`flex items-center gap-1 rounded-full transition-[padding,background-color,border-color,box-shadow] duration-300 ease-[var(--ease-out)] ${
           scrolled
-            ? "pl-3 pr-1.5 py-1.5 border-white/10 bg-[oklch(0.165_0.004_285_/_0.72)] shadow-[0_12px_40px_-12px_rgba(0,0,0,0.7)]"
-            : "pl-4 pr-2 py-2 border-white/8 bg-[oklch(0.18_0.005_285_/_0.5)]"
+            ? "border-white/10 bg-[oklch(0.165_0.004_285_/_0.72)] py-1.5 pr-1.5 pl-3 shadow-[0_12px_40px_-12px_rgba(0,0,0,0.7)]"
+            : "border-white/8 bg-[oklch(0.18_0.005_285_/_0.5)] py-2 pr-2 pl-4"
         } border backdrop-blur-xl`}
         style={{
           boxShadow: scrolled
@@ -41,7 +41,7 @@ export function Nav() {
       >
         <Link
           href="/"
-          className="flex items-center gap-2 pr-2 group"
+          className="group flex items-center gap-2 pr-2"
           aria-label="Pulse home"
         >
           <PulseLogo size={24} />

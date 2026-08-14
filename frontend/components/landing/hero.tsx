@@ -29,21 +29,21 @@ export function Hero() {
       {/* aurora mesh — drifting amber light */}
       <div aria-hidden className="absolute inset-0 overflow-hidden">
         <div
-          className="pa-aurora absolute left-1/2 top-[-10%] h-[620px] w-[820px] -translate-x-1/2 rounded-full blur-[120px]"
+          className="pa-aurora absolute top-[-10%] left-1/2 h-[620px] w-[820px] -translate-x-1/2 rounded-full blur-[120px]"
           style={{
             background: `radial-gradient(circle at center, ${ACCENT} 0%, transparent 62%)`,
             opacity: 0.22,
           }}
         />
         <div
-          className="pa-aurora-slow absolute right-[8%] top-[6%] h-[420px] w-[420px] rounded-full blur-[120px]"
+          className="pa-aurora-slow absolute top-[6%] right-[8%] h-[420px] w-[420px] rounded-full blur-[120px]"
           style={{
             background: `radial-gradient(circle at center, ${ACCENT_SOFT} 0%, transparent 60%)`,
             opacity: 0.14,
           }}
         />
         <div
-          className="pa-aurora absolute left-[4%] top-[24%] h-[360px] w-[360px] rounded-full blur-[120px]"
+          className="pa-aurora absolute top-[24%] left-[4%] h-[360px] w-[360px] rounded-full blur-[120px]"
           style={{
             background:
               "radial-gradient(circle at center, oklch(0.6 0.13 250) 0%, transparent 60%)",
@@ -78,10 +78,10 @@ export function Hero() {
         <Reveal>
           <Link
             href="/changelog"
-            className="group inline-flex items-center gap-2.5 rounded-full border border-white/10 bg-white/[0.03] px-3 py-1 text-[12px] text-white/65 backdrop-blur-sm transition-colors duration-150 ease-[var(--ease-out)] hover:border-white/20 hover:text-white mb-10"
+            className="group mb-10 inline-flex items-center gap-2.5 rounded-full border border-white/10 bg-white/[0.03] px-3 py-1 text-[12px] text-white/65 backdrop-blur-sm transition-colors duration-150 ease-[var(--ease-out)] hover:border-white/20 hover:text-white"
           >
             <span
-              className="rounded-full px-1.5 py-0.5 text-[10px] font-mono uppercase tracking-wider text-black"
+              className="rounded-full px-1.5 py-0.5 font-mono text-[10px] tracking-wider text-black uppercase"
               style={{ background: ACCENT }}
             >
               v0.1
@@ -96,14 +96,18 @@ export function Hero() {
               strokeWidth="2"
               className="text-white/40 transition-transform duration-200 ease-[var(--ease-out)] group-hover:translate-x-0.5"
             >
-              <path d="M9 6l6 6-6 6" strokeLinecap="round" strokeLinejoin="round" />
+              <path
+                d="M9 6l6 6-6 6"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
             </svg>
           </Link>
         </Reveal>
 
         <Reveal delay={60}>
           <h1
-            className="text-[64px] sm:text-[84px] md:text-[108px] text-white leading-[0.92] tracking-[-0.03em] mb-8"
+            className="mb-8 text-[64px] leading-[0.92] tracking-[-0.03em] text-white sm:text-[84px] md:text-[108px]"
             style={DISPLAY}
           >
             Event analytics,
@@ -113,7 +117,7 @@ export function Hero() {
         </Reveal>
 
         <Reveal delay={120}>
-          <p className="text-[17px] text-white/55 mb-12 max-w-xl mx-auto leading-relaxed">
+          <p className="mx-auto mb-12 max-w-xl text-[17px] leading-relaxed text-white/55">
             A weekend that turned into a project. Node, Redis, RabbitMQ,
             TimescaleDB — ten thousand events a second at sub-five ms. No
             roadmap. No investors. Just vibes and hyper-tables.
@@ -121,7 +125,7 @@ export function Hero() {
         </Reveal>
 
         <Reveal delay={180}>
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-2.5 mb-20">
+          <div className="mb-20 flex flex-col items-center justify-center gap-2.5 sm:flex-row">
             <PrimaryButton href="/signup" className="px-6 py-3">
               Try the demo
             </PrimaryButton>
@@ -130,7 +134,7 @@ export function Hero() {
         </Reveal>
 
         <Reveal delay={240}>
-          <div className="flex items-center justify-center gap-10 sm:gap-16 max-w-xl mx-auto">
+          <div className="mx-auto flex max-w-xl items-center justify-center gap-10 sm:gap-16">
             {STATS.map(({ value, suffix, label }) => (
               <div key={label} className="text-center">
                 <div
@@ -139,7 +143,7 @@ export function Hero() {
                 >
                   <AnimatedCounter end={value} suffix={suffix} />
                 </div>
-                <div className="mt-1 text-[10px] font-mono uppercase tracking-[0.18em] text-white/35">
+                <div className="mt-1 font-mono text-[10px] tracking-[0.18em] text-white/35 uppercase">
                   {label}
                 </div>
               </div>
@@ -149,11 +153,14 @@ export function Hero() {
       </div>
 
       {/* signature pulse line — the brand EKG, drawn across */}
-      <div className="relative z-10 mt-20 mx-auto max-w-6xl px-6">
+      <div className="relative z-10 mx-auto mt-20 max-w-6xl px-6">
         <PulseLine />
       </div>
 
-      <Reveal delay={120} className="relative z-10 mt-10 w-full max-w-6xl mx-auto px-6">
+      <Reveal
+        delay={120}
+        className="relative z-10 mx-auto mt-10 w-full max-w-6xl px-6"
+      >
         <DashboardMockup />
       </Reveal>
     </section>
@@ -166,7 +173,7 @@ function PulseLine() {
       aria-hidden
       viewBox="0 0 1200 60"
       preserveAspectRatio="none"
-      className="w-full h-[60px]"
+      className="h-[60px] w-full"
     >
       <defs>
         <linearGradient id="pulseFade" x1="0" y1="0" x2="1" y2="0">

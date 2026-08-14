@@ -20,28 +20,28 @@ export function Ticker() {
   return (
     <section
       id="stack"
-      className="relative border-y border-white/8 overflow-hidden"
+      className="relative overflow-hidden border-y border-white/8"
       style={{ background: "var(--pa-bg)" }}
     >
       <div
-        className="pointer-events-none absolute inset-y-0 left-0 w-40 z-10"
+        className="pointer-events-none absolute inset-y-0 left-0 z-10 w-40"
         style={{
           background:
             "linear-gradient(90deg, var(--pa-bg), oklch(0.145 0.004 285 / 0))",
         }}
       />
       <div
-        className="pointer-events-none absolute inset-y-0 right-0 w-40 z-10"
+        className="pointer-events-none absolute inset-y-0 right-0 z-10 w-40"
         style={{
           background:
             "linear-gradient(270deg, var(--pa-bg), oklch(0.145 0.004 285 / 0))",
         }}
       />
-      <div className="flex whitespace-nowrap py-5 animate-marquee">
+      <div className="animate-marquee flex py-5 whitespace-nowrap">
         {items.map((t, i) => (
           <span
             key={i}
-            className="mx-8 flex items-center gap-4 font-mono text-[12px] uppercase tracking-[0.24em] text-white/55"
+            className="mx-8 flex items-center gap-4 font-mono text-[12px] tracking-[0.24em] text-white/55 uppercase"
           >
             <span style={{ color: ACCENT }}>✦</span>
             {t}

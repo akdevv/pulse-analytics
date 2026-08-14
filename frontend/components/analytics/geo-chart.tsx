@@ -17,7 +17,7 @@ function toFlag(code: string): string {
   try {
     return String.fromCodePoint(
       upper.charCodeAt(0) + base,
-      upper.charCodeAt(1) + base,
+      upper.charCodeAt(1) + base
     );
   } catch {
     return "🌐";
@@ -72,7 +72,7 @@ export function GeoChart({ data, isLoading, error }: Props) {
                   <span className="truncate text-xs text-foreground/75">
                     {row.country || "Unknown"}
                   </span>
-                  <span className="shrink-0 text-xs font-semibold tabular-nums text-foreground/80">
+                  <span className="shrink-0 text-xs font-semibold text-foreground/80 tabular-nums">
                     {fmt(row.pageviews)}
                   </span>
                 </div>

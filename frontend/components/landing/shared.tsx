@@ -114,7 +114,7 @@ export function GhostButton({
     <Link
       href={href}
       {...(external ? { target: "_blank", rel: "noreferrer" } : {})}
-      className={`group inline-flex items-center gap-2 rounded-full px-6 py-3 text-[14px] text-white/75 border border-white/12 bg-white/[0.02] transition-[color,border-color,background-color,transform] duration-150 ease-[var(--ease-out)] hover:text-white hover:border-white/25 hover:bg-white/[0.04] active:scale-[0.97] ${className}`}
+      className={`group inline-flex items-center gap-2 rounded-full border border-white/12 bg-white/[0.02] px-6 py-3 text-[14px] text-white/75 transition-[color,border-color,background-color,transform] duration-150 ease-[var(--ease-out)] hover:border-white/25 hover:bg-white/[0.04] hover:text-white active:scale-[0.97] ${className}`}
     >
       {children}
     </Link>
@@ -191,7 +191,7 @@ export function AnimatedCounter({
 export function PulseLogo({ size = 28 }: { size?: number }) {
   return (
     <div
-      className="relative rounded-[9px] flex items-center justify-center shrink-0"
+      className="relative flex shrink-0 items-center justify-center rounded-[9px]"
       style={{
         width: size,
         height: size,
@@ -223,7 +223,7 @@ export function PulseLogo({ size = 28 }: { size?: number }) {
 /* ── Section primitives ────────────────────────────────────── */
 export function SectionEyebrow({ children }: { children: React.ReactNode }) {
   return (
-    <div className="inline-flex items-center gap-3 text-[11px] font-mono uppercase tracking-[0.24em] text-white/45">
+    <div className="inline-flex items-center gap-3 font-mono text-[11px] tracking-[0.24em] text-white/45 uppercase">
       <span
         className="h-1.5 w-1.5 rounded-full"
         style={{
@@ -245,7 +245,7 @@ export function SectionHeading({
 }) {
   return (
     <h2
-      className="text-[44px] md:text-[64px] text-white leading-[0.98] tracking-[-0.025em] max-w-3xl"
+      className="max-w-3xl text-[44px] leading-[0.98] tracking-[-0.025em] text-white md:text-[64px]"
       style={DISPLAY}
     >
       {line1}

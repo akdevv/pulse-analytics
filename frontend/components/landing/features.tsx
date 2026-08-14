@@ -1,5 +1,11 @@
 import { Zap, BarChart2, Globe, Code2, Bell, Lock } from "lucide-react";
-import { ACCENT, DISPLAY, Reveal, SectionEyebrow, SectionHeading } from "./shared";
+import {
+  ACCENT,
+  DISPLAY,
+  Reveal,
+  SectionEyebrow,
+  SectionHeading,
+} from "./shared";
 
 const ICON = {
   bolt: <Zap size={18} />,
@@ -36,7 +42,7 @@ function FeatureCell({
 }) {
   return (
     <div
-      className={`group relative flex flex-col p-8 overflow-hidden transition-colors duration-200 ease-[var(--ease-out)] ${className}`}
+      className={`group relative flex flex-col overflow-hidden p-8 transition-colors duration-200 ease-out ${className}`}
       style={BG}
     >
       {/* hover accent hairline */}
@@ -50,27 +56,28 @@ function FeatureCell({
       {/* hover corner glow */}
       <div
         aria-hidden
-        className="absolute -right-16 -top-16 h-40 w-40 rounded-full blur-3xl opacity-0 transition-opacity duration-300 group-hover:opacity-20"
+        className="absolute -top-16 -right-16 h-40 w-40 rounded-full opacity-0 blur-3xl transition-opacity duration-300 group-hover:opacity-20"
         style={{ background: ACCENT }}
       />
 
       <div
-        className="relative inline-flex items-center justify-center w-9 h-9 mb-6 rounded-lg transition-transform duration-200 ease-[var(--ease-out)] group-hover:scale-105"
+        className="relative mb-6 inline-flex h-9 w-9 items-center justify-center rounded-lg transition-transform duration-200 ease-out group-hover:scale-105"
         style={{
           background: "color-mix(in oklab, " + ACCENT + " 13%, transparent)",
           color: ACCENT,
-          border: "1px solid color-mix(in oklab, " + ACCENT + " 22%, transparent)",
+          border:
+            "1px solid color-mix(in oklab, " + ACCENT + " 22%, transparent)",
         }}
       >
         {ICON[iconKey]}
       </div>
       <h3
-        className="relative text-[18px] text-white mb-2 tracking-tight"
+        className="relative mb-2 text-[18px] tracking-tight text-white"
         style={DISPLAY}
       >
         {title}
       </h3>
-      <p className="relative text-[13.5px] text-white/50 leading-relaxed">
+      <p className="relative text-[13.5px] leading-relaxed text-white/50">
         {description}
       </p>
       {children}
@@ -82,11 +89,11 @@ export function Features() {
   return (
     <section
       id="features"
-      className="relative py-40 overflow-hidden"
+      className="relative overflow-hidden py-40"
       style={{ background: "var(--pa-bg)" }}
     >
       <div className="relative mx-auto max-w-6xl px-6">
-        <Reveal className="flex flex-col items-start gap-6 mb-20 max-w-3xl">
+        <Reveal className="mb-20 flex max-w-3xl flex-col items-start gap-6">
           <SectionEyebrow>Metrics</SectionEyebrow>
           <SectionHeading
             line1="Small system, big numbers,"
@@ -100,18 +107,18 @@ export function Features() {
         >
           {/* Row 1 — hero feature (4 cols) + stat cell (2 cols) */}
           <div
-            className="col-span-6 lg:col-span-4 row-span-1 relative p-10 lg:p-12 overflow-hidden"
+            className="relative col-span-6 row-span-1 overflow-hidden p-10 lg:col-span-4 lg:p-12"
             style={BG}
           >
             <div
               aria-hidden
-              className="absolute -top-24 -right-24 w-72 h-72 rounded-full blur-3xl opacity-20"
+              className="absolute -top-24 -right-24 h-72 w-72 rounded-full opacity-20 blur-3xl"
               style={{ background: ACCENT }}
             />
-            <div className="relative grid grid-cols-1 lg:grid-cols-[1fr_auto] gap-10 items-center">
+            <div className="relative grid grid-cols-1 items-center gap-10 lg:grid-cols-[1fr_auto]">
               <div>
                 <div
-                  className="inline-flex w-9 h-9 items-center justify-center mb-6"
+                  className="mb-6 inline-flex h-9 w-9 items-center justify-center"
                   style={{
                     background:
                       "color-mix(in oklab, " + ACCENT + " 14%, transparent)",
@@ -121,45 +128,45 @@ export function Features() {
                   {ICON.bolt}
                 </div>
                 <h3
-                  className="text-[30px] md:text-[38px] text-white mb-4 tracking-[-0.02em] leading-[1.02]"
+                  className="mb-4 text-[30px] leading-[1.02] tracking-[-0.02em] text-white md:text-[38px]"
                   style={DISPLAY}
                 >
                   Ten thousand RPS,
                   <br />
                   <span className="text-white/45">zero drops.</span>
                 </h3>
-                <p className="text-[14.5px] text-white/55 leading-relaxed max-w-md">
+                <p className="max-w-md text-[14.5px] leading-relaxed text-white/55">
                   Load-tested on a single box. Ingest stays under 5ms p90 while
                   the queue drains in the background.
                 </p>
               </div>
 
               <div
-                className="border border-white/10 p-4 min-w-[280px]"
+                className="min-w-[280px] border border-white/10 p-4"
                 style={{ ...INNER, borderRadius: 0 }}
               >
-                <div className="flex items-center gap-2 mb-3 pb-3 border-b border-white/10">
+                <div className="mb-3 flex items-center gap-2 border-b border-white/10 pb-3">
                   <span className="relative flex h-1.5 w-1.5">
                     <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-60" />
                     <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-emerald-400" />
                   </span>
-                  <span className="text-[10px] font-mono text-white/55 uppercase tracking-[0.2em]">
+                  <span className="font-mono text-[10px] tracking-[0.2em] text-white/55 uppercase">
                     Live feed
                   </span>
-                  <span className="ml-auto text-[10px] font-mono text-white/30 tabular-nums">
+                  <span className="ml-auto font-mono text-[10px] text-white/30 tabular-nums">
                     247 on
                   </span>
                 </div>
                 <div className="flex flex-col gap-2.5">
                   {HIGHLIGHT_EVENTS.map((e, i) => (
                     <div key={i} className="flex items-center gap-3">
-                      <span className="text-[10px] font-mono text-white/70 w-[80px] truncate">
+                      <span className="w-[80px] truncate font-mono text-[10px] text-white/70">
                         {e.event}
                       </span>
-                      <span className="text-[10.5px] text-white/45 font-mono flex-1 truncate">
+                      <span className="flex-1 truncate font-mono text-[10.5px] text-white/45">
                         {e.path}
                       </span>
-                      <span className="text-[10px] text-emerald-400/70 font-mono tabular-nums">
+                      <span className="font-mono text-[10px] text-emerald-400/70 tabular-nums">
                         {e.ms}ms
                       </span>
                     </div>
@@ -204,15 +211,15 @@ export function Features() {
             className="col-span-6 lg:col-span-3"
           />
           <div
-            className="col-span-6 lg:col-span-3 relative p-8 flex flex-col justify-between overflow-hidden"
+            className="relative col-span-6 flex flex-col justify-between overflow-hidden p-8 lg:col-span-3"
             style={BG}
           >
             <div>
-              <div className="text-[11px] font-mono uppercase tracking-[0.22em] text-white/50 mb-3">
+              <div className="mb-3 font-mono text-[11px] tracking-[0.22em] text-white/50 uppercase">
                 Stack
               </div>
               <h3
-                className="text-[20px] text-white tracking-tight leading-snug"
+                className="text-[20px] leading-snug tracking-tight text-white"
                 style={DISPLAY}
               >
                 Node, Redis, RabbitMQ,
@@ -233,7 +240,7 @@ export function Features() {
               ].map((t) => (
                 <span
                   key={t}
-                  className="text-[10.5px] font-mono text-white/65 px-2 py-1 border border-white/10 rounded-md"
+                  className="rounded-md border border-white/10 px-2 py-1 font-mono text-[10.5px] text-white/65"
                   style={INNER}
                 >
                   {t}

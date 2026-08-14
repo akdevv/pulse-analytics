@@ -52,7 +52,7 @@ function CopyButton({ text }: { text: string }) {
   return (
     <button
       onClick={handleCopy}
-      className="flex items-center gap-1.5 rounded-md border px-2.5 py-1.5 text-xs font-medium transition-all hover:bg-accent text-muted-foreground hover:text-foreground"
+      className="flex items-center gap-1.5 rounded-md border px-2.5 py-1.5 text-xs font-medium text-muted-foreground transition-all hover:bg-accent hover:text-foreground"
     >
       {copied ? (
         <GoCheck className="size-3.5 text-green-500" />
@@ -76,12 +76,12 @@ export default function SiteSetupPage() {
   }, [id]);
 
   if (loading) {
-    return <div className="text-muted-foreground text-sm p-1">Loading...</div>;
+    return <div className="p-1 text-sm text-muted-foreground">Loading...</div>;
   }
 
   if (!site) {
     return (
-      <div className="text-muted-foreground text-sm p-1">Site not found.</div>
+      <div className="p-1 text-sm text-muted-foreground">Site not found.</div>
     );
   }
 
@@ -92,9 +92,9 @@ export default function SiteSetupPage() {
     <div className="space-y-6 p-1">
       {/* Stat Cards */}
       <div className="grid gap-3 sm:grid-cols-3">
-        <Card className="py-0 overflow-hidden">
+        <Card className="overflow-hidden py-0">
           <CardContent className="p-4">
-            <p className="text-muted-foreground text-[11px] font-medium uppercase tracking-widest">
+            <p className="text-[11px] font-medium tracking-widest text-muted-foreground uppercase">
               Tier
             </p>
             <p className="mt-2 text-sm font-semibold capitalize">
@@ -103,9 +103,9 @@ export default function SiteSetupPage() {
           </CardContent>
         </Card>
 
-        <Card className="py-0 overflow-hidden">
+        <Card className="overflow-hidden py-0">
           <CardContent className="p-4">
-            <p className="text-muted-foreground text-[11px] font-medium uppercase tracking-widest">
+            <p className="text-[11px] font-medium tracking-widest text-muted-foreground uppercase">
               Created
             </p>
             <p className="mt-2 text-sm font-semibold">
@@ -118,9 +118,9 @@ export default function SiteSetupPage() {
           </CardContent>
         </Card>
 
-        <Card className="py-0 overflow-hidden">
+        <Card className="overflow-hidden py-0">
           <CardContent className="p-4">
-            <p className="text-muted-foreground text-[11px] font-medium uppercase tracking-widest">
+            <p className="text-[11px] font-medium tracking-widest text-muted-foreground uppercase">
               Last Updated
             </p>
             <p className="mt-2 text-sm font-semibold">
@@ -141,7 +141,7 @@ export default function SiteSetupPage() {
             Tracking Details
           </CardTitle>
         </CardHeader>
-        <CardContent className="px-5 pb-2 pt-3">
+        <CardContent className="px-5 pt-3 pb-2">
           <dl>
             {[
               { label: "Site ID", value: site.id },
@@ -154,10 +154,10 @@ export default function SiteSetupPage() {
                   i < arr.length - 1 ? "border-b" : ""
                 }`}
               >
-                <dt className="text-muted-foreground text-xs font-medium">
+                <dt className="text-xs font-medium text-muted-foreground">
                   {label}
                 </dt>
-                <dd className="font-mono text-xs bg-muted px-2 py-0.5 rounded">
+                <dd className="rounded bg-muted px-2 py-0.5 font-mono text-xs">
                   {value}
                 </dd>
               </div>
@@ -176,7 +176,7 @@ export default function SiteSetupPage() {
               </CardTitle>
               <CardDescription className="text-xs">
                 Paste this inside the{" "}
-                <code className="bg-muted rounded px-1 py-0.5 font-mono text-[11px]">
+                <code className="rounded bg-muted px-1 py-0.5 font-mono text-[11px]">
                   &lt;head&gt;
                 </code>{" "}
                 tag of your site.
@@ -186,7 +186,7 @@ export default function SiteSetupPage() {
           </div>
         </CardHeader>
         <CardContent className="px-5 pb-5">
-          <pre className="bg-zinc-950 dark:bg-zinc-900 text-zinc-300 overflow-x-auto rounded-lg p-4 text-[11px] leading-relaxed border border-zinc-800">
+          <pre className="overflow-x-auto rounded-lg border border-zinc-800 bg-zinc-950 p-4 text-[11px] leading-relaxed text-zinc-300 dark:bg-zinc-900">
             <code>{snippet}</code>
           </pre>
         </CardContent>
@@ -197,7 +197,9 @@ export default function SiteSetupPage() {
         <CardHeader className="px-5 pt-5 pb-4">
           <div className="flex items-start justify-between gap-4">
             <div className="space-y-1">
-              <CardTitle className="text-sm font-semibold">Quick Test</CardTitle>
+              <CardTitle className="text-sm font-semibold">
+                Quick Test
+              </CardTitle>
               <CardDescription className="text-xs">
                 Fire a test pageview from your terminal to verify tracking is
                 working.
@@ -207,7 +209,7 @@ export default function SiteSetupPage() {
           </div>
         </CardHeader>
         <CardContent className="px-5 pb-5">
-          <pre className="bg-zinc-950 dark:bg-zinc-900 text-zinc-300 overflow-x-auto rounded-lg p-4 text-[11px] leading-relaxed border border-zinc-800">
+          <pre className="overflow-x-auto rounded-lg border border-zinc-800 bg-zinc-950 p-4 text-[11px] leading-relaxed text-zinc-300 dark:bg-zinc-900">
             <code>{curlCmd}</code>
           </pre>
         </CardContent>

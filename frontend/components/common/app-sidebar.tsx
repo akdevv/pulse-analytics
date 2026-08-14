@@ -48,10 +48,10 @@ export function AppSidebar() {
   return (
     <Sidebar className="border-none">
       <SidebarContent className="flex flex-col gap-0">
-        <SidebarHeader className="text-lg font-semibold p-4">
+        <SidebarHeader className="p-4 text-lg font-semibold">
           <Link
             href="/dashboard/sites"
-            className="flex items-center gap-2 hover:opacity-80 transition-opacity"
+            className="flex items-center gap-2 transition-opacity hover:opacity-80"
           >
             <MdLocalActivity className="size-5 text-secondary" />
             <span>Pulse Analytics</span>
@@ -81,9 +81,9 @@ export function AppSidebar() {
           <Button
             onClick={handleLogout}
             variant="ghost"
-            className="w-full justify-start cursor-pointer"
+            className="w-full cursor-pointer justify-start"
           >
-            <IoMdLogOut className="size-5 mr-2" />
+            <IoMdLogOut className="mr-2 size-5" />
             <span>Logout</span>
           </Button>
         </SidebarFooter>

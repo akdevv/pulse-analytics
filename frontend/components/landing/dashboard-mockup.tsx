@@ -24,14 +24,14 @@ export function DashboardMockup() {
       {/* soft floor glow */}
       <div
         aria-hidden
-        className="absolute -inset-x-8 -bottom-10 top-1/3 blur-[100px] opacity-30 pointer-events-none"
+        className="pointer-events-none absolute -inset-x-8 top-1/3 -bottom-10 opacity-30 blur-[100px]"
         style={{
           background: `radial-gradient(ellipse 60% 80% at 50% 100%, ${ACCENT} 0%, transparent 70%)`,
         }}
       />
 
       <div
-        className="relative rounded-2xl overflow-hidden border border-white/10"
+        className="relative overflow-hidden rounded-2xl border border-white/10"
         style={{
           background: SURFACE_1,
           boxShadow:
@@ -49,14 +49,14 @@ export function DashboardMockup() {
         />
 
         {/* browser chrome */}
-        <div className="flex items-center gap-2 px-4 py-2.5 border-b border-white/8">
+        <div className="flex items-center gap-2 border-b border-white/8 px-4 py-2.5">
           <div className="flex gap-1.5">
-            <span className="w-2.5 h-2.5 rounded-full bg-white/15" />
-            <span className="w-2.5 h-2.5 rounded-full bg-white/15" />
-            <span className="w-2.5 h-2.5 rounded-full bg-white/15" />
+            <span className="h-2.5 w-2.5 rounded-full bg-white/15" />
+            <span className="h-2.5 w-2.5 rounded-full bg-white/15" />
+            <span className="h-2.5 w-2.5 rounded-full bg-white/15" />
           </div>
-          <div className="flex-1 mx-3">
-            <div className="h-6 rounded-md bg-white/[0.03] border border-white/5 flex items-center justify-center gap-1.5">
+          <div className="mx-3 flex-1">
+            <div className="flex h-6 items-center justify-center gap-1.5 rounded-md border border-white/5 bg-white/[0.03]">
               <svg
                 width="9"
                 height="9"
@@ -69,26 +69,26 @@ export function DashboardMockup() {
                 <rect x="3" y="11" width="18" height="11" rx="2" />
                 <path d="M7 11V7a5 5 0 0 1 10 0v4" />
               </svg>
-              <span className="text-[11px] text-white/35 font-mono">
+              <span className="font-mono text-[11px] text-white/35">
                 app.pulseanalytics.io/dashboard
               </span>
             </div>
           </div>
         </div>
 
-        <div className="grid grid-cols-12 gap-5 p-6 min-h-[440px]">
+        <div className="grid min-h-[440px] grid-cols-12 gap-5 p-6">
           {/* sidebar */}
           <div className="col-span-2 flex flex-col gap-0.5">
             {NAV.map((label, i) => (
               <div
                 key={label}
-                className={`relative px-2.5 py-1.5 rounded-md text-[11px] font-medium transition-colors ${
-                  i === 0 ? "text-white bg-white/[0.06]" : "text-white/35"
+                className={`relative rounded-md px-2.5 py-1.5 text-[11px] font-medium transition-colors ${
+                  i === 0 ? "bg-white/[0.06] text-white" : "text-white/35"
                 }`}
               >
                 {i === 0 && (
                   <span
-                    className="absolute left-0 top-1/2 -translate-y-1/2 h-3.5 w-0.5 rounded-full"
+                    className="absolute top-1/2 left-0 h-3.5 w-0.5 -translate-y-1/2 rounded-full"
                     style={{ background: ACCENT }}
                   />
                 )}
@@ -99,19 +99,23 @@ export function DashboardMockup() {
 
           {/* main */}
           <div className="col-span-10 flex flex-col gap-5">
-            <div className="grid grid-cols-4 gap-px rounded-xl border border-white/8 overflow-hidden bg-white/[0.06]">
+            <div className="grid grid-cols-4 gap-px overflow-hidden rounded-xl border border-white/8 bg-white/[0.06]">
               {METRICS.map(({ label, value, delta }) => {
                 const up = !delta.startsWith("-");
                 return (
-                  <div key={label} className="p-4" style={{ background: SURFACE_1 }}>
-                    <div className="text-[10px] font-mono uppercase tracking-[0.15em] text-white/40 mb-2">
+                  <div
+                    key={label}
+                    className="p-4"
+                    style={{ background: SURFACE_1 }}
+                  >
+                    <div className="mb-2 font-mono text-[10px] tracking-[0.15em] text-white/40 uppercase">
                       {label}
                     </div>
                     <div className="text-[17px] font-semibold text-white tabular-nums">
                       {value}
                     </div>
                     <div
-                      className={`inline-flex items-center gap-1 text-[10px] mt-1 font-mono tabular-nums ${
+                      className={`mt-1 inline-flex items-center gap-1 font-mono text-[10px] tabular-nums ${
                         up ? "text-emerald-400/85" : "text-rose-400/75"
                       }`}
                     >
@@ -124,19 +128,23 @@ export function DashboardMockup() {
             </div>
 
             <div className="flex-1 rounded-xl border border-white/8 p-5">
-              <div className="flex items-center justify-between mb-4">
+              <div className="mb-4 flex items-center justify-between">
                 <div>
-                  <div className="text-[11px] font-mono uppercase tracking-[0.15em] text-white/40">
+                  <div className="font-mono text-[11px] tracking-[0.15em] text-white/40 uppercase">
                     Visitors
                   </div>
-                  <div className="text-sm text-white/85 mt-0.5">Last 7 days</div>
+                  <div className="mt-0.5 text-sm text-white/85">
+                    Last 7 days
+                  </div>
                 </div>
                 <div className="flex gap-1">
                   {["7d", "30d", "90d"].map((t, i) => (
                     <div
                       key={t}
-                      className={`text-[10px] px-2 py-1 rounded font-mono ${
-                        i === 0 ? "bg-white/[0.07] text-white/85" : "text-white/35"
+                      className={`rounded px-2 py-1 font-mono text-[10px] ${
+                        i === 0
+                          ? "bg-white/[0.07] text-white/85"
+                          : "text-white/35"
                       }`}
                     >
                       {t}
@@ -184,22 +192,29 @@ export function DashboardMockup() {
                   style={{
                     strokeDasharray: 600,
                     strokeDashoffset: 600,
-                    animation: "pa-chart-draw 1.8s var(--ease-out) 0.3s forwards",
+                    animation:
+                      "pa-chart-draw 1.8s var(--ease-out) 0.3s forwards",
                     filter: "drop-shadow(0 0 6px var(--pa-accent-glow))",
                   }}
                 />
                 <circle cx="400" cy="18" r="4" fill={ACCENT} opacity="0.25" />
-                <circle cx="400" cy="18" r="2.2" fill={ACCENT} className="pa-breathe" />
+                <circle
+                  cx="400"
+                  cy="18"
+                  r="2.2"
+                  fill={ACCENT}
+                  className="pa-breathe"
+                />
               </svg>
             </div>
 
             <div className="rounded-xl border border-white/8 p-4">
-              <div className="flex items-center gap-2 mb-3">
+              <div className="mb-3 flex items-center gap-2">
                 <span className="relative flex h-1.5 w-1.5">
                   <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-60" />
                   <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-emerald-400" />
                 </span>
-                <span className="text-[10px] font-mono text-white/50 uppercase tracking-[0.18em]">
+                <span className="font-mono text-[10px] tracking-[0.18em] text-white/50 uppercase">
                   Live · 247 online
                 </span>
               </div>
@@ -211,7 +226,7 @@ export function DashboardMockup() {
                   >
                     <span className="font-mono text-white/70">{path}</span>
                     <span className="text-white/40">{loc}</span>
-                    <span className="text-white/30 font-mono tabular-nums">
+                    <span className="font-mono text-white/30 tabular-nums">
                       {time}
                     </span>
                   </div>

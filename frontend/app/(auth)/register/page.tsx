@@ -5,7 +5,13 @@ import Link from "next/link";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
 
-import { ACCENT, BG, LOGO_FONT, PulseLogo, SURFACE } from "@/components/landing/shared";
+import {
+  ACCENT,
+  BG,
+  LOGO_FONT,
+  PulseLogo,
+  SURFACE,
+} from "@/components/landing/shared";
 import { PasswordInput } from "@/components/common/password-input";
 import {
   Form,
@@ -22,25 +28,60 @@ import { useState } from "react";
 
 const PERSONAL_EMAIL_DOMAINS = new Set([
   // Google
-  "gmail.com", "googlemail.com",
+  "gmail.com",
+  "googlemail.com",
   // Microsoft
-  "outlook.com", "hotmail.com", "hotmail.co.uk", "hotmail.fr", "hotmail.de",
-  "live.com", "live.co.uk", "live.fr", "live.de", "msn.com",
+  "outlook.com",
+  "hotmail.com",
+  "hotmail.co.uk",
+  "hotmail.fr",
+  "hotmail.de",
+  "live.com",
+  "live.co.uk",
+  "live.fr",
+  "live.de",
+  "msn.com",
   // Apple
-  "icloud.com", "me.com", "mac.com",
+  "icloud.com",
+  "me.com",
+  "mac.com",
   // Yahoo
-  "yahoo.com", "yahoo.co.uk", "yahoo.fr", "yahoo.de", "yahoo.es",
-  "yahoo.it", "yahoo.co.in", "yahoo.ca", "yahoo.com.au", "yahoo.com.br",
-  "yahoo.com.mx", "yahoo.co.jp", "rocketmail.com", "ymail.com",
+  "yahoo.com",
+  "yahoo.co.uk",
+  "yahoo.fr",
+  "yahoo.de",
+  "yahoo.es",
+  "yahoo.it",
+  "yahoo.co.in",
+  "yahoo.ca",
+  "yahoo.com.au",
+  "yahoo.com.br",
+  "yahoo.com.mx",
+  "yahoo.co.jp",
+  "rocketmail.com",
+  "ymail.com",
   // Privacy-focused
-  "protonmail.com", "protonmail.ch", "proton.me", "pm.me",
-  "tutanota.com", "tutamail.com", "tuta.io",
+  "protonmail.com",
+  "protonmail.ch",
+  "proton.me",
+  "pm.me",
+  "tutanota.com",
+  "tutamail.com",
+  "tuta.io",
   // Other established
-  "aol.com", "aol.co.uk",
-  "mail.com", "email.com",
-  "gmx.com", "gmx.net", "gmx.de", "gmx.at", "gmx.ch",
-  "yandex.com", "yandex.ru",
-  "fastmail.com", "fastmail.fm",
+  "aol.com",
+  "aol.co.uk",
+  "mail.com",
+  "email.com",
+  "gmx.com",
+  "gmx.net",
+  "gmx.de",
+  "gmx.at",
+  "gmx.ch",
+  "yandex.com",
+  "yandex.ru",
+  "fastmail.com",
+  "fastmail.fm",
   "hey.com",
   "zoho.com",
   "inbox.com",
@@ -57,7 +98,10 @@ const registerSchema = z
     name: z.string().min(2, "Name must be at least 2 characters."),
     email: z
       .email("Please enter a valid email address.")
-      .refine(isPersonalEmail, "Please use a personal email (Gmail, Outlook, iCloud, etc.). Work emails aren't supported."),
+      .refine(
+        isPersonalEmail,
+        "Please use a personal email (Gmail, Outlook, iCloud, etc.). Work emails aren't supported."
+      ),
     password: z
       .string()
       .min(8, "Password must be at least 8 characters.")
@@ -92,7 +136,9 @@ export default function Register() {
       await register(data.name, data.email, data.password);
       router.push("/dashboard");
     } catch (err) {
-      setError(err instanceof Error ? err.message : "An unknown error occurred");
+      setError(
+        err instanceof Error ? err.message : "An unknown error occurred"
+      );
     } finally {
       setLoading(false);
     }
@@ -100,7 +146,7 @@ export default function Register() {
 
   return (
     <div
-      className="dark min-h-screen flex flex-col relative overflow-hidden"
+      className="dark relative flex min-h-screen flex-col overflow-hidden"
       style={{ background: BG }}
     >
       {/* Grid texture */}
@@ -123,10 +169,10 @@ export default function Register() {
 
       {/* Logo — top left */}
       <div className="relative z-10 p-6">
-        <Link href="/" className="inline-flex items-center gap-2 group">
+        <Link href="/" className="group inline-flex items-center gap-2">
           <PulseLogo size={26} />
           <span
-            className="text-white/80 group-hover:text-white transition-colors text-[15px]"
+            className="text-[15px] text-white/80 transition-colors group-hover:text-white"
             style={LOGO_FONT}
           >
             Pulse
@@ -135,10 +181,10 @@ export default function Register() {
       </div>
 
       {/* Centered card */}
-      <div className="relative z-10 flex-1 flex items-center justify-center px-4 pb-10">
+      <div className="relative z-10 flex flex-1 items-center justify-center px-4 pb-10">
         <div className="w-full max-w-[380px]">
           <div
-            className="rounded-2xl overflow-hidden animate-fade-in"
+            className="animate-fade-in overflow-hidden rounded-2xl"
             style={{
               background: SURFACE,
               border: "1px solid oklch(0.3 0.005 285)",
@@ -163,12 +209,12 @@ export default function Register() {
               {/* Heading */}
               <div className="mb-8">
                 <h1
-                  className="text-white text-[24px] mb-1.5"
+                  className="mb-1.5 text-[24px] text-white"
                   style={{ ...LOGO_FONT, fontWeight: 700 }}
                 >
                   Create account
                 </h1>
-                <p className="text-[14px] text-white/40 leading-snug">
+                <p className="text-[14px] leading-snug text-white/40">
                   Get started with Pulse Analytics for free
                 </p>
               </div>
@@ -188,7 +234,10 @@ export default function Register() {
 
               {/* Form */}
               <Form {...form}>
-                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+                <form
+                  onSubmit={form.handleSubmit(onSubmit)}
+                  className="space-y-4"
+                >
                   <FormField
                     control={form.control}
                     name="name"
@@ -201,11 +250,11 @@ export default function Register() {
                           <Input
                             placeholder="John Doe"
                             disabled={loading}
-                            className="h-10 text-[14px] text-white placeholder:text-white/20 bg-white/5 border-white/10"
+                            className="h-10 border-white/10 bg-white/5 text-[14px] text-white placeholder:text-white/20"
                             {...field}
                           />
                         </FormControl>
-                        <FormMessage className="text-red-400 text-[12px]" />
+                        <FormMessage className="text-[12px] text-red-400" />
                       </FormItem>
                     )}
                   />
@@ -223,14 +272,14 @@ export default function Register() {
                             type="email"
                             placeholder="you@example.com"
                             disabled={loading}
-                            className="h-10 text-[14px] text-white placeholder:text-white/20 bg-white/5 border-white/10"
+                            className="h-10 border-white/10 bg-white/5 text-[14px] text-white placeholder:text-white/20"
                             {...field}
                           />
                         </FormControl>
-                        <p className="text-[11px] text-white/25 leading-snug">
+                        <p className="text-[11px] leading-snug text-white/25">
                           Personal email only — Gmail, Outlook, iCloud, etc.
                         </p>
-                        <FormMessage className="text-red-400 text-[12px]" />
+                        <FormMessage className="text-[12px] text-red-400" />
                       </FormItem>
                     )}
                   />
@@ -247,14 +296,15 @@ export default function Register() {
                           <PasswordInput
                             placeholder="Min. 8 characters"
                             disabled={loading}
-                            className="h-10 text-[14px] text-white placeholder:text-white/20 bg-white/5 border-white/10"
+                            className="h-10 border-white/10 bg-white/5 text-[14px] text-white placeholder:text-white/20"
                             {...field}
                           />
                         </FormControl>
-                        <p className="text-[11px] text-white/25 leading-snug">
-                          8+ chars · uppercase · lowercase · number · special character
+                        <p className="text-[11px] leading-snug text-white/25">
+                          8+ chars · uppercase · lowercase · number · special
+                          character
                         </p>
-                        <FormMessage className="text-red-400 text-[12px]" />
+                        <FormMessage className="text-[12px] text-red-400" />
                       </FormItem>
                     )}
                   />
@@ -271,11 +321,11 @@ export default function Register() {
                           <PasswordInput
                             placeholder="Repeat password"
                             disabled={loading}
-                            className="h-10 text-[14px] text-white placeholder:text-white/20 bg-white/5 border-white/10"
+                            className="h-10 border-white/10 bg-white/5 text-[14px] text-white placeholder:text-white/20"
                             {...field}
                           />
                         </FormControl>
-                        <FormMessage className="text-red-400 text-[12px]" />
+                        <FormMessage className="text-[12px] text-red-400" />
                       </FormItem>
                     )}
                   />
@@ -284,12 +334,12 @@ export default function Register() {
                     <button
                       type="submit"
                       disabled={loading}
-                      className="w-full h-10 rounded-xl text-[14px] font-semibold transition-opacity hover:opacity-85 active:opacity-75 disabled:opacity-50 cursor-pointer flex items-center justify-center gap-2"
+                      className="flex h-10 w-full cursor-pointer items-center justify-center gap-2 rounded-xl text-[14px] font-semibold transition-opacity hover:opacity-85 active:opacity-75 disabled:opacity-50"
                       style={{ background: ACCENT, color: BG }}
                     >
                       {loading ? (
                         <>
-                          <span className="w-3.5 h-3.5 border-2 border-current border-t-transparent rounded-full animate-spin" />
+                          <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-current border-t-transparent" />
                           Creating account…
                         </>
                       ) : (
@@ -308,7 +358,7 @@ export default function Register() {
                 Already have an account?{" "}
                 <Link
                   href="/login"
-                  className="text-white/60 font-medium hover:text-white transition-colors"
+                  className="font-medium text-white/60 transition-colors hover:text-white"
                 >
                   Sign in
                 </Link>

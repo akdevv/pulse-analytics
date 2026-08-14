@@ -1,16 +1,16 @@
-import type { Metadata } from "next"
-import type { ReactNode } from "react"
+import type { Metadata } from "next";
+import type { ReactNode } from "react";
 
-import "./globals.css"
-import { Toaster } from "@/components/ui/sonner"
-import { AuthProvider } from "@/contexts/auth.context"
-import { Providers } from "./providers"
+import "./globals.css";
+import { Toaster } from "@/components/ui/sonner";
+import { AuthProvider } from "@/contexts/auth.context";
+import { Providers } from "./providers";
 
 export const metadata: Metadata = {
   title: "Pulse Analytics",
   description:
     "Pulse Analytics is a platform for tracking and analyzing your data.",
-}
+};
 
 export default function RootLayout({
   children,
@@ -26,5 +26,5 @@ export default function RootLayout({
         </Providers>
       </body>
     </html>
-  )
+  );
 }

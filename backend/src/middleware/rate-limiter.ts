@@ -25,13 +25,17 @@ const gate = (limiter: RequestHandler): RequestHandler =>
   env.RATE_LIMIT_ENABLED ? limiter : _noopMiddleware;
 
 export const authRateLimit: RequestHandler = gate(
-  make(rateLimitConfig.auth.windowMs, rateLimitConfig.auth.maxAttempts, "rl:auth:"),
+  make(
+    rateLimitConfig.auth.windowMs,
+    rateLimitConfig.auth.maxAttempts,
+    "rl:auth:"
+  )
 );
 
 export const refreshRateLimit: RequestHandler = gate(
   make(
     rateLimitConfig.refresh.windowMs,
     rateLimitConfig.refresh.maxAttempts,
-    "rl:refresh:",
-  ),
+    "rl:refresh:"
+  )
 );

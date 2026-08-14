@@ -1,5 +1,5 @@
-import { useQuery } from "@tanstack/react-query"
-import { useEffect, useRef, useState } from "react"
+import { useQuery } from "@tanstack/react-query";
+import { useEffect, useRef, useState } from "react";
 import {
   getOverview,
   getTimeseries,
@@ -10,12 +10,12 @@ import {
   getRealtime,
   getRawEvents,
   runRawQuery,
-} from "@/lib/api/analytics.api"
-import { getAccessToken } from "@/lib/api/client"
+} from "@/lib/api/analytics.api";
+import { getAccessToken } from "@/lib/api/client";
 import type {
   DateRangeParams,
   RealtimeStats,
-} from "@/lib/types/analytics.types"
+} from "@/lib/types/analytics.types";
 
 export function useOverview(siteId: string, params: DateRangeParams) {
   return useQuery({
@@ -23,7 +23,7 @@ export function useOverview(siteId: string, params: DateRangeParams) {
     queryFn: () => getOverview(siteId, params),
     staleTime: 60_000,
     enabled: !!siteId,
-  })
+  });
 }
 
 export function useTimeseries(siteId: string, params: DateRangeParams) {
@@ -32,7 +32,7 @@ export function useTimeseries(siteId: string, params: DateRangeParams) {
     queryFn: () => getTimeseries(siteId, params),
     staleTime: 60_000,
     enabled: !!siteId,
-  })
+  });
 }
 
 export function useTopPages(siteId: string, params: DateRangeParams) {
@@ -41,7 +41,7 @@ export function useTopPages(siteId: string, params: DateRangeParams) {
     queryFn: () => getTopPages(siteId, params),
     staleTime: 60_000,
     enabled: !!siteId,
-  })
+  });
 }
 
 export function useReferrers(siteId: string, params: DateRangeParams) {
@@ -50,7 +50,7 @@ export function useReferrers(siteId: string, params: DateRangeParams) {
     queryFn: () => getReferrers(siteId, params),
     staleTime: 60_000,
     enabled: !!siteId,
-  })
+  });
 }
 
 export function useDevices(siteId: string, params: DateRangeParams) {
@@ -59,7 +59,7 @@ export function useDevices(siteId: string, params: DateRangeParams) {
     queryFn: () => getDevices(siteId, params),
     staleTime: 60_000,
     enabled: !!siteId,
-  })
+  });
 }
 
 export function useGeo(siteId: string, params: DateRangeParams) {
@@ -68,7 +68,7 @@ export function useGeo(siteId: string, params: DateRangeParams) {
     queryFn: () => getGeo(siteId, params),
     staleTime: 60_000,
     enabled: !!siteId,
-  })
+  });
 }
 
 export function useRealtime(siteId: string) {
@@ -78,26 +78,26 @@ export function useRealtime(siteId: string) {
     refetchInterval: 30_000,
     staleTime: 0,
     enabled: !!siteId,
-  })
+  });
 }
 
 export function useRealtimeStream(siteId: string) {
-  const [data, setData] = useState<RealtimeStats | null>(null)
-  const [isLoading, setIsLoading] = useState(true)
-  const [error, setError] = useState<Error | null>(null)
-  const abortRef = useRef<AbortController | null>(null)
+  const [data, setData] = useState<RealtimeStats | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<Error | null>(null);
+  const abortRef = useRef<AbortController | null>(null);
 
   useEffect(() => {
-    if (!siteId) return
+    if (!siteId) return;
 
-    let retryTimeout: ReturnType<typeof setTimeout>
+    let retryTimeout: ReturnType<typeof setTimeout>;
 
     async function connect() {
-      abortRef.current = new AbortController()
-      const { signal } = abortRef.current
+      abortRef.current = new AbortController();
+      const { signal } = abortRef.current;
 
       try {
-        const token = getAccessToken()
+        const token = getAccessToken();
         const res = await fetch(
           `${process.env.NEXT_PUBLIC_API_URL}/analytics/${siteId}/realtime/stream`,
           {
@@ -107,32 +107,32 @@ export function useRealtimeStream(siteId: string) {
               Accept: "text/event-stream",
             },
           }
-        )
+        );
 
         if (!res.ok || !res.body) {
-          throw new Error(`HTTP ${res.status}`)
+          throw new Error(`HTTP ${res.status}`);
         }
 
-        const reader = res.body.getReader()
-        const decoder = new TextDecoder()
-        let buf = ""
+        const reader = res.body.getReader();
+        const decoder = new TextDecoder();
+        let buf = "";
 
         while (true) {
-          const { done, value } = await reader.read()
-          if (done) break
+          const { done, value } = await reader.read();
+          if (done) break;
 
-          buf += decoder.decode(value, { stream: true })
-          const lines = buf.split("\n")
-          buf = lines.pop() ?? ""
+          buf += decoder.decode(value, { stream: true });
+          const lines = buf.split("\n");
+          buf = lines.pop() ?? "";
 
           for (const line of lines) {
-            if (!line.startsWith("data: ")) continue
+            if (!line.startsWith("data: ")) continue;
             try {
-              const parsed = JSON.parse(line.slice(6))
+              const parsed = JSON.parse(line.slice(6));
               if (parsed.status === "success") {
-                setData(parsed.data as RealtimeStats)
-                setIsLoading(false)
-                setError(null)
+                setData(parsed.data as RealtimeStats);
+                setIsLoading(false);
+                setError(null);
               }
             } catch {
               // malformed SSE frame — skip
@@ -140,23 +140,23 @@ export function useRealtimeStream(siteId: string) {
           }
         }
       } catch (err) {
-        if ((err as Error).name === "AbortError") return
-        setError(err as Error)
-        setIsLoading(false)
+        if ((err as Error).name === "AbortError") return;
+        setError(err as Error);
+        setIsLoading(false);
         // reconnect after 5s on error
-        retryTimeout = setTimeout(connect, 5000)
+        retryTimeout = setTimeout(connect, 5000);
       }
     }
 
-    connect()
+    connect();
 
     return () => {
-      abortRef.current?.abort()
-      clearTimeout(retryTimeout)
-    }
-  }, [siteId])
+      abortRef.current?.abort();
+      clearTimeout(retryTimeout);
+    };
+  }, [siteId]);
 
-  return { data, isLoading, error }
+  return { data, isLoading, error };
 }
 
 export function useRawEvents(siteId: string) {
@@ -166,7 +166,7 @@ export function useRawEvents(siteId: string) {
     refetchInterval: 30_000,
     staleTime: 0,
     enabled: !!siteId,
-  })
+  });
 }
 
 export function useRawQuery(siteId: string, query: string) {
@@ -175,5 +175,5 @@ export function useRawQuery(siteId: string, query: string) {
     queryFn: () => runRawQuery(siteId, query),
     enabled: false,
     staleTime: 0,
-  })
+  });
 }

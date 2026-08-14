@@ -1,13 +1,19 @@
 import Link from "next/link";
 import { ACCENT, ACCENT_SOFT, DISPLAY, Reveal } from "./shared";
 
-const SKILLS = ["Queues", "Hyper-tables", "Backpressure", "Sub-5ms p90", "0 downtime"];
+const SKILLS = [
+  "Queues",
+  "Hyper-tables",
+  "Backpressure",
+  "Sub-5ms p90",
+  "0 downtime",
+];
 
 export function CTA() {
   return (
     <section
       id="pricing"
-      className="relative py-24 overflow-hidden"
+      className="relative overflow-hidden py-24"
       style={{ background: "var(--pa-bg)" }}
     >
       <Reveal className="relative mx-auto max-w-5xl px-6">
@@ -32,7 +38,7 @@ export function CTA() {
           {/* ambient corner glow */}
           <div
             aria-hidden
-            className="absolute -right-20 -top-24 h-[360px] w-[360px] rounded-full blur-[110px] pointer-events-none"
+            className="pointer-events-none absolute -top-24 -right-20 h-[360px] w-[360px] rounded-full blur-[110px]"
             style={{ background: ACCENT, opacity: 0.12 }}
           />
           {/* dot grid */}
@@ -49,7 +55,7 @@ export function CTA() {
             {/* left — pitch */}
             <div>
               <div
-                className="inline-flex items-center gap-2 rounded-full border px-3 py-1 mb-7"
+                className="mb-7 inline-flex items-center gap-2 rounded-full border px-3 py-1"
                 style={{
                   borderColor:
                     "color-mix(in oklab, " + ACCENT + " 30%, transparent)",
@@ -61,13 +67,13 @@ export function CTA() {
                   <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-70" />
                   <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-emerald-400" />
                 </span>
-                <span className="text-[11px] font-mono uppercase tracking-[0.2em] text-white/70">
+                <span className="font-mono text-[11px] tracking-[0.2em] text-white/70 uppercase">
                   Available · June 2026
                 </span>
               </div>
 
               <h2
-                className="text-[44px] sm:text-[60px] text-white mb-5 leading-[0.95] tracking-[-0.03em]"
+                className="mb-5 text-[44px] leading-[0.95] tracking-[-0.03em] text-white sm:text-[60px]"
                 style={DISPLAY}
               >
                 Find this
@@ -75,7 +81,7 @@ export function CTA() {
                 <span className="text-white/40">impressive?</span>
               </h2>
 
-              <p className="text-[16px] text-white/55 mb-8 max-w-md leading-relaxed">
+              <p className="mb-8 max-w-md text-[16px] leading-relaxed text-white/55">
                 Available for senior backend and platform roles. I like queues,
                 hyper-tables, and code that stays up at 3&nbsp;AM.
               </p>
@@ -84,7 +90,7 @@ export function CTA() {
                 {SKILLS.map((s) => (
                   <span
                     key={s}
-                    className="rounded-full border border-white/10 bg-white/[0.03] px-2.5 py-1 text-[11px] font-mono text-white/60"
+                    className="rounded-full border border-white/10 bg-white/[0.03] px-2.5 py-1 font-mono text-[11px] text-white/60"
                   >
                     {s}
                   </span>
@@ -94,7 +100,7 @@ export function CTA() {
 
             {/* right — action card */}
             <div
-              className="rounded-2xl border border-white/10 p-6 flex flex-col gap-3"
+              className="flex flex-col gap-3 rounded-2xl border border-white/10 p-6"
               style={{
                 background: "oklch(0.165 0.004 285)",
                 boxShadow: "inset 0 1px 0 rgba(255,255,255,0.04)",
@@ -128,7 +134,7 @@ export function CTA() {
                 href="https://github.com"
                 target="_blank"
                 rel="noreferrer"
-                className="group inline-flex items-center justify-center gap-2 rounded-full px-6 py-3.5 text-[14px] text-white/75 border border-white/12 bg-white/[0.02] transition-[color,border-color,background-color,transform] duration-150 ease-[var(--ease-out)] hover:text-white hover:border-white/25 hover:bg-white/[0.04] active:scale-[0.97]"
+                className="group inline-flex items-center justify-center gap-2 rounded-full border border-white/12 bg-white/[0.02] px-6 py-3.5 text-[14px] text-white/75 transition-[color,border-color,background-color,transform] duration-150 ease-[var(--ease-out)] hover:border-white/25 hover:bg-white/[0.04] hover:text-white active:scale-[0.97]"
               >
                 <svg
                   width="14"
@@ -145,7 +151,7 @@ export function CTA() {
               <div className="mt-1 flex items-center justify-center gap-2 text-white/25">
                 {["MIT", "2 weekends", "0 investors"].map((t, i, arr) => (
                   <span key={t} className="flex items-center gap-2">
-                    <span className="text-[10px] font-mono uppercase tracking-[0.16em]">
+                    <span className="font-mono text-[10px] tracking-[0.16em] uppercase">
                       {t}
                     </span>
                     {i < arr.length - 1 && (
