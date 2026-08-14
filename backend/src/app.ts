@@ -9,11 +9,11 @@ import { requestId } from "@/middleware/request-id.ts";
 import env from "@/config/env.ts";
 
 // Routes
-// import analyticsRoutes from "@/modules/analytics/analytics.routes.ts";
+import analyticsRoutes from "@/modules/analytics/analytics.routes.ts";
 import authRoutes from "@/modules/auth/auth.routes.ts";
 import healthRoutes from "@/modules/health/health.routes.ts";
-// import siteRoutes from "@/modules/site/site.routes.ts";
-// import trackRoutes from "@/modules/ingestion/track.routes.ts";
+import siteRoutes from "@/modules/site/site.routes.ts";
+import trackRoutes from "@/modules/ingestion/track.routes.ts";
 
 const app: Express = express();
 const jsonReplacer = (_key: string, value: unknown) =>
@@ -42,21 +42,14 @@ app.use(express.urlencoded({ extended: true }));
 app.set("trust proxy", 1);
 app.set("json replacer", jsonReplacer);
 
-app.get("/", (_req, res) => {
-  res.json({
-    status: "success",
-    message: "Pulse Analytics API",
-  });
-});
-
 const apiRoute = express.Router();
 
 // Routes
-// apiRoute.use("/analytics", restrictedCors, analyticsRoutes);
+apiRoute.use("/analytics", restrictedCors, analyticsRoutes);
 apiRoute.use("/auth", restrictedCors, authRoutes);
 apiRoute.use("/health", healthRoutes);
-// apiRoute.use("/sites", restrictedCors, siteRoutes);
-// apiRoute.use("/track", openCors, trackRoutes);
+apiRoute.use("/sites", restrictedCors, siteRoutes);
+apiRoute.use("/track", openCors, trackRoutes);
 
 // Mount API routes
 app.use(`/api/${config.apiVersion}`, apiRoute);
