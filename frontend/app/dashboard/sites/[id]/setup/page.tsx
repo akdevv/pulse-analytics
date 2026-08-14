@@ -29,14 +29,13 @@ function getCurlCommand(trackingId: string, domain: string) {
   --data-urlencode "ul=en-US"`;
 }
 
+// pulse.js appends /api/v1/track itself, so data-host is the API origin
+// without the /api/v1 suffix that NEXT_PUBLIC_API_URL carries.
+const apiOrigin = new URL(process.env.NEXT_PUBLIC_API_URL!).origin;
+
 function getSnippet(trackingId: string) {
   return `<!-- Pulse Analytics -->
-<script src="https://api.pulse.com/pulse-sdk.js?trackingId=${trackingId}"></script>
-<script>
-  window.pulse = {
-    trackingId: "${trackingId}"
-  };
-</script>`;
+<script src="${apiOrigin}/pulse.js" data-tid="${trackingId}" data-host="${apiOrigin}"></script>`;
 }
 
 function CopyButton({ text }: { text: string }) {
