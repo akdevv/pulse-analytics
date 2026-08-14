@@ -4,14 +4,17 @@ Where the rebuild stands and what to do next, in order.
 
 ## Where we are
 
-Backend and frontend both run end to end locally.
+Backend, frontend and SDK all run locally.
 
 - **Backend** — auth, sites, ingestion, analytics, worker, health checks. All routes mounted.
 - **Frontend** — landing, login/register, dashboard, per-site analytics, site setup flow. Functional, not good yet.
+- **SDK** — ported from the previous implementation. `pulse.js` served from the API host, verified end to end.
 - **Infra** — TimescaleDB + Redis in docker, both migration systems run, GeoIP loaded.
-- **Tests** — 15 unit test files. No integration, load, or frontend tests.
+- **Tests** — 15 unit test files, Artillery load configs copied over. No integration or frontend tests.
 
-The gap: everything works *except* a real website can't actually send events yet.
+The full pipeline works: a real page sends events and the dashboard shows them.
+
+Next real gap: the frontend looks rough, and nothing has been proven under load.
 
 ---
 
@@ -21,28 +24,28 @@ Small, do them whenever they get annoying.
 
 - [x] ~~Fix `pnpm typecheck`~~ — `track.service.test.ts` mock was missing `ep`/`ts`; they run through `.transform()`, so the inferred type needs them present even when undefined.
 - [ ] Add `db:migrate` and `db:seed` scripts to `backend/package.json` — the README tells people to run `pnpm db:migrate` and it doesn't exist.
-- [ ] Add a `docs/` folder or fix the README links — it points at `docs/plan.md`, `docs/ingestion-api-architecture.md` and `docs/screen-hero.png`, none of which exist.
+- [ ] Add the `load:*` scripts to `backend/package.json` — the yml files are here but there's no way to run them.
+- [ ] Fix the README links — it points at `docs/plan.md`, `docs/ingestion-api-architecture.md` and `docs/screen-hero.png`. We're not keeping a `docs/` folder, so the links should go.
 
-## 1. Build the SDK
+## 1. Build the SDK — done
 
-**The real blocker.** `sdk/` doesn't exist in the rebuild.
+Ported from the previous implementation rather than rewritten.
 
-The site setup page hands users this snippet:
+- [x] Pageview tracking on load
+- [x] SPA route-change detection (`history.pushState` patch + `popstate`)
+- [x] Custom events — `Pulse.trackEvent(name, props)`
+- [x] `usePulse` React hook
+- [x] tsup build, dual entry (vanilla + react), zero dependencies
+- [x] Serving — `pulse.js` lives in `backend/public/`, served from the API host with open CORS
+- [x] Setup page snippet fixed — it pointed at a nonexistent `api.pulse.com/pulse-sdk.js` and passed the tracking ID as a query param the script never read. Now uses `data-tid`/`data-host`.
+- [x] **Verified end to end** — scratch HTML page → `/track` → queue → worker → `events` → dashboard. Pageviews, SPA route changes and back-button navigation all land, with `visitorId`/`sessionId` set.
 
-```html
-<script src="https://api.pulse.com/pulse-sdk.js?trackingId=..."></script>
-```
+Two things that came out of the verification:
 
-Nothing serves that file. Until it exists the only way events reach `/track` is curl — the product doesn't work for an actual user.
+- Fixed stale dashboard numbers. Both continuous aggregates were created `materialized_only = true`, so queries returned only pre-computed rows and the refresh job runs hourly — new events were invisible for up to an hour while the realtime widget (which reads raw `events`) showed them immediately. `0007_realtime_aggregates.sql` turns on real-time aggregation.
+- `helmet()` sets `script-src 'self'` on everything the API serves, so inline scripts on any page served from `backend/public/` are blocked. Worth knowing when writing another test page.
 
-- [ ] Pageview tracking on load
-- [ ] SPA route-change detection (patch `history.pushState`, listen for `popstate`)
-- [ ] Custom events — `Pulse.track(name, props)`
-- [ ] `usePulse` React hook
-- [ ] Build with tsup, dual entry (vanilla + react), zero dependencies
-- [ ] Decide how it's served — bundled into the backend as a static file is simplest, npm/CDN later
-
-Verify the whole loop yourself: script on a scratch HTML page → row in `events` → dashboard chart moves.
+Notes: `sdk/` uses npm, not pnpm, unlike the rest of the repo. Customer sites with a strict CSP will need the API host allowlisted in `script-src` and `connect-src` — worth documenting on the setup page.
 
 ## 2. Frontend UI/UX pass
 
@@ -77,9 +80,10 @@ Everything provable on your own machine before paying for infrastructure.
 - [ ] Analytics — endpoints return the right shape against seeded data
 - [ ] Test database — second docker compose service on another port, migrated and dropped per run
 
-**Load tests, local** — `backend/tests/load/` is empty.
+**Load tests, local** — the Artillery configs are copied in (`ingestion` light/medium/heavy/hard, `auth`, `analytics`, plus `seed-load-test.mjs`). None have been run yet.
 
-- [ ] Artillery script hitting `/track`
+- [x] ~~Artillery scripts hitting `/track`~~ — copied from the previous implementation
+- [ ] Wire up the `load:*` npm scripts, then actually run them
 - [ ] Measure p95 latency, queue depth, error rate
 - [ ] Find where your laptop breaks and write the number down — it's the baseline the AWS run gets compared against
 - [ ] Tune what's cheap to tune: batch size, worker concurrency, connection pool
@@ -105,6 +109,7 @@ The headline number. Only meaningful on real infrastructure, sustained — 30 mi
 - [ ] Track throughout: p50/p95/p99, error rate, queue depth, DB write lag, CPU/memory
 - [ ] Confirm the queue drains after the run — backlog that never clears means the worker is the ceiling
 - [ ] Record what broke first and what you changed
+- [ ] Drop the aggregate `schedule_interval` from 1 hour first — real-time aggregation live-computes everything since the last refresh, which at 10k RPS is ~36M rows per query
 
 Capture the graphs while it runs. You can't reconstruct them afterwards, and they're the case study.
 
@@ -127,6 +132,8 @@ Worth doing only after everything above. The hard part isn't generating SQL, it'
 
 ## Order
 
-1 → 2 → 3 → 4 → 5 → 6 → 7.
+~~1~~ → 2 → 3 → 4 → 5 → 6 → 7.
 
-The SDK first because nothing else is real without it. UI second because the case study needs screenshots. Hooks before the test work so the tests stay green. Everything provable locally before AWS costs money.
+**Next up: verify the SDK loop end to end, then the frontend UI/UX pass.**
+
+UI before the test work because the case study needs screenshots. Hooks before testing so the tests stay green. Everything provable locally before AWS costs money.
