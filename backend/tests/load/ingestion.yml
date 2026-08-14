@@ -1,0 +1,64 @@
+# Artillery load test: ingestion /track (holistic)
+#
+# Run:    pnpm load:ingestion
+# Prereq: pnpm load:seed  (generates data/users.csv)
+#
+# Target is read from load-test.env → TARGET env var.
+# Phases: warm (10 RPS) → ramp (10→100 RPS) → sustained (100 RPS)
+# Thresholds: p99 < 200ms, error rate < 0.5%
+#
+# Event mix: 70% PAGEVIEW · 20% CLICK · 10% CUSTOM
+# Each VU gets a random IP so every request gets its own rate-limit bucket.
+
+config:
+  target: "{{ $processEnvironment.TARGET }}"
+  payload:
+    path: "./data/users.csv"
+    fields:
+      - email
+      - password
+      - siteId
+      - trackingId
+    order: random
+  phases:
+    - name: warm
+      duration: 30
+      arrivalRate: 10
+    - name: ramp
+      duration: 60
+      arrivalRate: 10
+      rampTo: 100
+    - name: sustained
+      duration: 60
+      arrivalRate: 100
+  ensure:
+    thresholds:
+      - http.response_time.p99: 200
+    conditions:
+      - expression: "(http.codes.5xx / http.requests) < 0.005"
+        strict: false
+
+scenarios:
+  - name: "Track PAGEVIEW"
+    weight: 7
+    flow:
+      - post:
+          url: "/api/v1/track?v=1&tid={{ trackingId }}&t=PAGEVIEW&cid={{ $uuid }}&sid={{ $uuid }}&dl=https%3A%2F%2Fexample.com%2Fproducts%2F{{ $randomInt(1,500) }}&dt=Product%20Page&dr=https%3A%2F%2Fwww.google.com&sr=1920x1080&vp=1024x768&ul=en-US"
+          headers:
+            X-Forwarded-For: "{{ $randomInt(1,254) }}.{{ $randomInt(1,254) }}.{{ $randomInt(1,254) }}.{{ $randomInt(1,254) }}"
+
+  - name: "Track CLICK"
+    weight: 2
+    flow:
+      - post:
+          url: "/api/v1/track?v=1&tid={{ trackingId }}&t=CLICK&cid={{ $uuid }}&sid={{ $uuid }}&dl=https%3A%2F%2Fexample.com%2F&en=button_click&ep=%7B%22label%22%3A%22signup%22%7D"
+          headers:
+            X-Forwarded-For: "{{ $randomInt(1,254) }}.{{ $randomInt(1,254) }}.{{ $randomInt(1,254) }}.{{ $randomInt(1,254) }}"
+
+  - name: "Track CUSTOM"
+    weight: 1
+    flow:
+      - post:
+          url: "/api/v1/track?v=1&tid={{ trackingId }}&t=CUSTOM&cid={{ $uuid }}&sid={{ $uuid }}&dl=https%3A%2F%2Fexample.com%2Fcheckout&en=purchase&ep=%7B%22value%22%3A49.99%7D"
+          headers:
+            X-Forwarded-For: "{{ $randomInt(1,254) }}.{{ $randomInt(1,254) }}.{{ $randomInt(1,254) }}.{{ $randomInt(1,254) }}"

@@ -1,0 +1,57 @@
+# Artillery load test: ingestion /track — Medium
+# Run: npx artillery run tests/load/ingestion-medium.yml
+# Prereq: data/users.csv must exist (pnpm load:seed)
+# Target: 400 RPS for 60s → p99 < 500ms, error rate < 0.1%
+
+config:
+  target: "http://localhost:8000"
+  payload:
+    path: "./data/users.csv"
+    fields:
+      - email
+      - password
+      - siteId
+      - trackingId
+    order: random
+  phases:
+    - name: "warmup"
+      duration: 30
+      arrivalRate: 100
+    - name: "ramp"
+      duration: 30
+      arrivalRate: 100
+      rampTo: 400
+    - name: "medium"
+      duration: 60
+      arrivalRate: 400
+  ensure:
+    thresholds:
+      - http.response_time.p99: 500
+    conditions:
+      - expression: "(http.codes.5xx / http.requests) < 0.001"
+        strict: false
+
+scenarios:
+  - name: "Track PAGEVIEW"
+    weight: 7
+    flow:
+      - post:
+          url: "/api/v1/track?v=1&tid={{ trackingId }}&t=PAGEVIEW&cid={{ $uuid }}&sid={{ $uuid }}&dl=https%3A%2F%2Fexample.com%2Fproducts%2F{{ $randomInt(1,500) }}&dt=Product%20Page&dr=https%3A%2F%2Fwww.google.com&sr=1920x1080&vp=1024x768&ul=en-US"
+          headers:
+            X-Forwarded-For: "{{ $randomInt(1,254) }}.{{ $randomInt(1,254) }}.{{ $randomInt(1,254) }}.{{ $randomInt(1,254) }}"
+
+  - name: "Track CLICK"
+    weight: 2
+    flow:
+      - post:
+          url: "/api/v1/track?v=1&tid={{ trackingId }}&t=CLICK&cid={{ $uuid }}&sid={{ $uuid }}&dl=https%3A%2F%2Fexample.com%2F&en=button_click&ep=%7B%22label%22%3A%22signup%22%7D"
+          headers:
+            X-Forwarded-For: "{{ $randomInt(1,254) }}.{{ $randomInt(1,254) }}.{{ $randomInt(1,254) }}.{{ $randomInt(1,254) }}"
+
+  - name: "Track CUSTOM"
+    weight: 1
+    flow:
+      - post:
+          url: "/api/v1/track?v=1&tid={{ trackingId }}&t=CUSTOM&cid={{ $uuid }}&sid={{ $uuid }}&dl=https%3A%2F%2Fexample.com%2Fcheckout&en=purchase&ep=%7B%22value%22%3A49.99%7D"
+          headers:
+            X-Forwarded-For: "{{ $randomInt(1,254) }}.{{ $randomInt(1,254) }}.{{ $randomInt(1,254) }}.{{ $randomInt(1,254) }}"

@@ -1,0 +1,85 @@
+# Artillery load test: analytics endpoints
+#
+# Run:    pnpm load:analytics
+# Prereq: pnpm load:seed  (generates data/users.csv)
+#
+# Target is read from load-test.env → TARGET env var.
+# Each VU: login → overview → timeseries → pages → referrers → devices
+# Thresholds: p99 < 500ms, 0 auth errors
+
+config:
+  target: "{{ $processEnvironment.TARGET }}"
+  payload:
+    path: "./data/users.csv"
+    fields:
+      - email
+      - password
+      - siteId
+      - trackingId
+    order: random
+  phases:
+    - name: warm
+      duration: 15
+      arrivalRate: 5
+    - name: ramp
+      duration: 30
+      arrivalRate: 5
+      rampTo: 20
+    - name: sustained
+      duration: 60
+      arrivalRate: 20
+  ensure:
+    thresholds:
+      - http.response_time.p99: 500
+    conditions:
+      - expression: "http.codes.401 == 0"
+        strict: false
+
+scenarios:
+  - name: "Auth → analytics read"
+    flow:
+      - post:
+          url: "/api/v1/auth/login"
+          json:
+            email: "{{ email }}"
+            password: "{{ password }}"
+          capture:
+            - json: "$.data.accessToken"
+              as: accessToken
+          expect:
+            - statusCode: 200
+
+      - get:
+          url: "/api/v1/analytics/{{ siteId }}/overview"
+          headers:
+            Authorization: "Bearer {{ accessToken }}"
+          expect:
+            - statusCode: 200
+
+      - get:
+          url: "/api/v1/analytics/{{ siteId }}/timeseries"
+          headers:
+            Authorization: "Bearer {{ accessToken }}"
+          expect:
+            - statusCode: 200
+
+      - get:
+          url: "/api/v1/analytics/{{ siteId }}/pages"
+          headers:
+            Authorization: "Bearer {{ accessToken }}"
+          expect:
+            - statusCode: 200
+
+      - get:
+          url: "/api/v1/analytics/{{ siteId }}/referrers"
+          headers:
+            Authorization: "Bearer {{ accessToken }}"
+          expect:
+            - statusCode: 200
+
+      - get:
+          url: "/api/v1/analytics/{{ siteId }}/devices"
+          headers:
+            Authorization: "Bearer {{ accessToken }}"
+          expect:
+            - statusCode: 200
