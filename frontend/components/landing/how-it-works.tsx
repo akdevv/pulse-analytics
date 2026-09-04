@@ -1,10 +1,5 @@
-import {
-  ACCENT,
-  DISPLAY,
-  Reveal,
-  SectionEyebrow,
-  SectionHeading,
-} from "./shared";
+import { ACCENT, DISPLAY, POWDER } from "./tokens";
+import { Reveal, SectionHeading } from "./shared";
 import { highlight, type Lang } from "./highlight";
 
 const STEPS: {
@@ -96,11 +91,11 @@ async function CodePanel({
   const html = await highlight(code, lang);
   return (
     <div
-      className="relative overflow-hidden rounded-2xl border border-white/8"
+      className="relative overflow-hidden rounded-2xl border border-ink/8"
       style={{
-        background: "oklch(0.115 0.003 285)",
+        background: "oklch(0.1560 0 0)",
         boxShadow:
-          "0 0 0 1px rgba(255,255,255,0.03), 0 40px 80px -20px rgba(0,0,0,0.75), 0 0 60px oklch(0.6429 0.1675 45.988 / 0.06)",
+          "0 0 0 1px rgba(229,227,210,0.03), 0 40px 80px -20px rgba(0,0,0,0.75), 0 0 60px oklch(0.6832 0.2107 38.6427 / 0.06)",
       }}
     >
       {/* accent hairline top */}
@@ -115,19 +110,19 @@ async function CodePanel({
 
       {/* title bar */}
       <div
-        className="relative flex items-center border-b border-white/6 px-4 py-3"
-        style={{ background: "oklch(0.13 0.003 285)" }}
+        className="relative flex items-center border-b border-ink/6 px-4 py-3"
+        style={{ background: "oklch(0.1750 0 0)" }}
       >
         {/* traffic lights */}
         <div className="flex shrink-0 items-center gap-1.5">
-          <span className="h-3 w-3 rounded-full bg-[#ff5f57]" />
-          <span className="h-3 w-3 rounded-full bg-[#febc2e]" />
-          <span className="h-3 w-3 rounded-full bg-[#28c840]" />
+          <span className="h-3 w-3 rounded-full bg-ink/15" />
+          <span className="h-3 w-3 rounded-full bg-ink/15" />
+          <span className="h-3 w-3 rounded-full bg-ink/15" />
         </div>
 
         {/* centered filename */}
         <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
-          <span className="flex items-center gap-1.5 font-mono text-[12px] text-white/55">
+          <span className="flex items-center gap-1.5 font-mono text-[12px] text-ink/55">
             <svg
               width="12"
               height="12"
@@ -135,7 +130,7 @@ async function CodePanel({
               fill="none"
               stroke="currentColor"
               strokeWidth="1.75"
-              className="text-white/35"
+              className="text-ink/60"
             >
               <path
                 strokeLinecap="round"
@@ -149,8 +144,11 @@ async function CodePanel({
 
         {/* lang badge right */}
         <span
-          className="ml-auto rounded px-2 py-0.5 font-mono text-[10px] tracking-[0.18em] text-white/50 uppercase"
-          style={{ background: "rgba(255,255,255,0.05)" }}
+          className="ml-auto rounded px-2 py-0.5 font-mono text-[10px] tracking-[0.18em] uppercase"
+          style={{
+            background: "color-mix(in oklab, " + POWDER + " 12%, transparent)",
+            color: POWDER,
+          }}
         >
           {LANG_LABEL[lang]}
         </span>
@@ -169,14 +167,13 @@ export function HowItWorks() {
   return (
     <section
       id="how-it-works"
-      className="relative overflow-hidden py-40"
-      style={{ background: "var(--pa-bg)" }}
+      className="pa-alt relative overflow-hidden py-28 md:py-40"
     >
       <div
         aria-hidden
         className="absolute inset-0 opacity-[0.025]"
         style={{
-          backgroundImage: `radial-gradient(circle at 1px 1px, white 1px, transparent 0)`,
+          backgroundImage: `radial-gradient(circle at 1px 1px, #E5E3D2 1px, transparent 0)`,
           backgroundSize: "32px 32px",
           maskImage:
             "radial-gradient(ellipse 60% 50% at 50% 50%, black 30%, transparent 80%)",
@@ -185,12 +182,11 @@ export function HowItWorks() {
 
       <div className="relative mx-auto max-w-6xl px-6">
         <Reveal className="mb-28 flex max-w-3xl flex-col items-start gap-6">
-          <SectionEyebrow>Architecture</SectionEyebrow>
           <SectionHeading
             line1="The pipeline, roughly"
             line2="three moving parts."
           />
-          <p className="max-w-lg text-[15px] leading-relaxed text-white/50">
+          <p className="max-w-lg text-[15px] leading-relaxed text-ink/60">
             Collect hot, process async, persist for time. Every piece picked
             because it refuses to blink under load.
           </p>
@@ -211,22 +207,22 @@ export function HowItWorks() {
                 >
                   <div className="flex items-center gap-3">
                     <span
-                      className="rounded px-2 py-0.5 font-mono text-[11px] text-black tabular-nums"
+                      className="rounded px-2 py-0.5 font-mono text-[11px] text-charcoal tabular-nums"
                       style={{ background: ACCENT }}
                     >
                       {step.n}
                     </span>
-                    <span className="font-mono text-[11px] tracking-[0.22em] text-white/50 uppercase">
+                    <span className="font-mono text-[11px] tracking-[0.22em] text-ink/60 uppercase">
                       {step.eyebrow}
                     </span>
                   </div>
                   <h3
-                    className="text-[32px] leading-[1.05] tracking-[-0.02em] text-white md:text-[40px]"
+                    className="text-[32px] leading-[1.05] tracking-[-0.02em] text-ink md:text-[40px]"
                     style={DISPLAY}
                   >
                     {step.title}
                   </h3>
-                  <p className="max-w-md text-[15px] leading-relaxed text-white/55">
+                  <p className="max-w-md text-[15px] leading-relaxed text-ink/55">
                     {step.description}
                   </p>
                 </div>

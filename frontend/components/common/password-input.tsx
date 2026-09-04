@@ -5,7 +5,7 @@ import { LuEye, LuEyeClosed } from "react-icons/lu";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 
-export interface PasswordInputProps extends React.InputHTMLAttributes<HTMLInputElement> {}
+export type PasswordInputProps = React.InputHTMLAttributes<HTMLInputElement>;
 
 const PasswordInput = React.forwardRef<HTMLInputElement, PasswordInputProps>(
   ({ className, ...props }, ref) => {
@@ -22,8 +22,9 @@ const PasswordInput = React.forwardRef<HTMLInputElement, PasswordInputProps>(
         <button
           type="button"
           onClick={() => setShowPassword(!showPassword)}
-          className="absolute top-1/2 right-3 -translate-y-1/2 cursor-pointer text-muted-foreground transition-colors hover:text-foreground"
-          tabIndex={-1}
+          aria-label={showPassword ? "Hide password" : "Show password"}
+          aria-pressed={showPassword}
+          className="absolute top-1/2 right-2 grid size-7 -translate-y-1/2 cursor-pointer place-items-center rounded-md text-muted-foreground transition-[color,background-color] duration-150 ease-[var(--ease-out)] hover:bg-foreground/[0.07] hover:text-foreground"
         >
           {showPassword ? (
             <LuEye className="h-4 w-4" />

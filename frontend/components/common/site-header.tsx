@@ -23,12 +23,14 @@ function buildDashboardCrumbs(pathname: string): Crumb[] {
   const withoutQuery = pathname.split("?")[0];
   const segments = withoutQuery.split("/").filter(Boolean);
 
-  const dashboardIndex = segments.indexOf("dashboard");
-  if (dashboardIndex === -1) {
+  const rootIndex = segments.findIndex(
+    (s) => s === "dashboard" || s === "design"
+  );
+  if (rootIndex === -1) {
     return [];
   }
 
-  const relevant = segments.slice(dashboardIndex);
+  const relevant = segments.slice(rootIndex);
 
   const crumbs: Crumb[] = [];
   let href = "";

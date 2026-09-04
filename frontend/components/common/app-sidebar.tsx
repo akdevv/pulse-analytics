@@ -21,16 +21,16 @@ import {
 } from "@/components/ui/sidebar";
 import { useAuth } from "@/contexts/auth.context";
 
-// Menu items.
+// Menu items. Paths are relative to the section root (/dashboard or /design).
 const items = [
   {
     title: "Sites",
-    url: "/dashboard/sites",
+    url: "/sites",
     icon: PiGlobeSimpleBold,
   },
   {
     title: "Account",
-    url: "/dashboard/account",
+    url: "/account",
     icon: RiUserSmileLine,
   },
 ];
@@ -39,6 +39,7 @@ export function AppSidebar() {
   const router = useRouter();
   const pathname = usePathname();
   const { logout } = useAuth();
+  const base = pathname?.startsWith("/design") ? "/design" : "/dashboard";
 
   const handleLogout = async () => {
     await logout();
@@ -50,7 +51,7 @@ export function AppSidebar() {
       <SidebarContent className="flex flex-col gap-0">
         <SidebarHeader className="p-4 text-lg font-semibold">
           <Link
-            href="/dashboard/sites"
+            href={`${base}/sites`}
             className="flex items-center gap-2 transition-opacity hover:opacity-80"
           >
             <MdLocalActivity className="size-5 text-secondary" />
@@ -61,11 +62,12 @@ export function AppSidebar() {
           <SidebarGroupContent>
             <SidebarMenu>
               {items.map((item) => {
-                const isActive = pathname === item.url;
+                const url = `${base}${item.url}`;
+                const isActive = pathname === url;
                 return (
                   <SidebarMenuItem key={item.title}>
                     <SidebarMenuButton asChild isActive={isActive}>
-                      <Link href={item.url}>
+                      <Link href={url}>
                         <item.icon className="size-5" />
                         <span>{item.title}</span>
                       </Link>

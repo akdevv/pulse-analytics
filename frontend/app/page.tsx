@@ -10,7 +10,7 @@ import { Footer } from "@/components/landing/footer";
 
 export default function Home() {
   return (
-    <main className="min-h-screen" style={{ background: "var(--pa-bg)" }}>
+    <main className="min-h-screen bg-charcoal">
       <Nav />
       <Hero />
       <Ticker />
