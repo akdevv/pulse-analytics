@@ -23,14 +23,14 @@ export default function AuthLayout({
       style={{ background: BG }}
     >
       <div className="relative flex min-h-dvh flex-col lg:min-h-0">
-        <div className="mx-auto flex w-full max-w-[344px] flex-1 flex-col px-6 pt-9 pb-6 sm:pt-10">
+        <div className="mx-auto flex w-full max-w-86 flex-1 flex-col px-6 pt-9 pb-6 sm:pt-10">
           <header>
             <Link
               href="/"
               className="group inline-flex items-center gap-2.5 rounded-full"
             >
               <PulseLogo size={26} />
-              <span className="text-[15px] font-semibold tracking-[-0.02em] text-ink transition-opacity duration-150 ease-[var(--ease-out)] group-hover:opacity-80">
+              <span className="text-[15px] font-semibold tracking-[-0.02em] text-ink transition-opacity duration-150 ease-out group-hover:opacity-80">
                 Pulse Analytics
               </span>
             </Link>
