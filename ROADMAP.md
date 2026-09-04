@@ -189,11 +189,30 @@ Four things running: the API, the worker, Postgres **with the TimescaleDB extens
 | **Hetzner CX22** | ~$5/mo | Boring, reliable, generous. What I'd pick if Oracle's ARM capacity won't cooperate. |
 | **Render / Railway free tiers** | $0–5 | Render's free web services sleep and take ~50 s to wake, and background workers aren't free — the worker is half this system. Railway's free allowance is a credit, not a tier. Both are poor fits here. |
 
-**Recommendation:** Oracle Always Free, with Hetzner as the fallback if capacity blocks you. Frontend on Vercel free. Demo subdomain off `akdevv.com`, TLS via Caddy. Target: **$0/month, plus a few dollars of LLM spend.**
+**Recommendation:** Oracle Always Free, with Hetzner as the fallback if capacity blocks you. Frontend on Vercel free. Demo subdomain off `akdevv.com`, TLS via Caddy. Target: **$0/month, all in.**
 
-### The AI query feature
+### The AI query feature — free tier
 
-Per question: roughly 1.5k input tokens of schema prompt plus a few hundred out. On Opus that lands near 1–2 cents a query; caching the stable prompt prefix cuts the input side substantially. A $5 cap covers hundreds of demo queries, which is far more than a portfolio link will ever see. Set the cap on day one — the failure mode isn't per-query cost, it's a loop you didn't notice.
+No paid key. SQL generation against a fixed schema is a narrow task: given the exact column list and two examples, a small free model does it about as well as an expensive one. The interesting engineering here is the sandbox around the generated SQL — read-only role, site-scoped view, validator, statement timeout — and none of that changes with the model behind it.
+
+Pick from, roughly in order:
+
+| Provider | Free allowance | Notes |
+|---|---|---|
+| **Google AI Studio (Gemini)** | Generous daily request cap on the Flash models | Best quality-per-zero-dollars. Free-tier prompts may be used for training — fine for public demo analytics, not for anything private |
+| **Groq** | Daily request and token caps | Open models, very fast. Good fit for a demo where response speed is visible |
+| **Cerebras** | Daily caps | Same shape as Groq, also very fast |
+| **OpenRouter** | `:free` model variants, rate limited | One endpoint, many models. Easiest place to A/B two models |
+| **Cloudflare Workers AI** | Daily neuron allowance | Worth a look if anything else ends up on Cloudflare |
+| **Local via Ollama** | Free forever | A 7B coder model handles this fine, but on a CPU-only demo box a response takes tens of seconds. Fine on a laptop, poor for a live demo |
+
+**Build against the OpenAI-compatible chat-completions shape.** Groq, Cerebras, OpenRouter and Gemini all speak it, so the provider becomes three environment variables — base URL, key, model — and switching when a free tier changes its terms is a config edit, not a rewrite. One `fetch`, not an abstraction layer.
+
+Structured output: ask for JSON, parse it, validate with Zod, retry once on a parse failure. Provider-specific JSON-schema modes are a bonus, not a dependency.
+
+Free tiers are rate limited per day, and the ask box is public, so the per-user rate limit and the question cache stop being cost control and start being availability control. In demo mode, cap it globally and fall back to the pre-recorded example questions when the day's budget is gone.
+
+Verify current limits before building — every allowance in this table moves.
 
 ### The load test burn
 
@@ -214,7 +233,7 @@ So roughly **$0.60–0.70/hr for the whole rig**, meaning the actual 30-minute r
 
 | | |
 |---|---|
-| Demo, monthly | **$0** hosting, ~$1–5 LLM |
+| Demo, monthly | **$0** — free-tier host, free-tier model |
 | Load testing, one-off | **$30–50** budgeted, likely less |
 | Domain | Already owned |
 
