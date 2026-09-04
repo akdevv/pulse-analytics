@@ -7,7 +7,7 @@ export const getOverview = async (siteId: string, params: DateRangeParams) => {
 
 export const getTimeseries = async (
   siteId: string,
-  params: DateRangeParams,
+  params: DateRangeParams
 ) => {
   return api.get(`analytics/${siteId}/timeseries`, { params });
 };

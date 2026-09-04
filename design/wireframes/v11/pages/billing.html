@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Billing — Pulse</title>
+    <link rel="stylesheet" href="../../wireframes.css" />
+  </head>
+  <body data-page="billing">
+    <div class="sheet app">
+      <pulse-sidebar></pulse-sidebar>
+
+      <div class="page stack">
+        <pulse-topbar></pulse-topbar>
+
+        <div class="column stack">
+        <p class="muted">
+          Placeholder — account level, covers every site you own, which is why it
+          sits below the divider in the sidebar and not inside a site.
+        </p>
+
+        <div class="box stack">
+          <span class="label">current plan</span>
+          <div class="row between">
+            <span><strong>Free</strong> <span class="muted">up to 10k events / month</span></span>
+            <span class="btn primary">Upgrade</span>
+          </div>
+          <div class="cmp"><span class="now" style="width: 62%"></span></div>
+          <span class="muted fineprint">6,240 of 10,000 events used this month</span>
+        </div>
+
+        <div class="box alt stack">
+          <span class="label">invoices</span>
+          <div class="tbl">
+            <div class="tr"><span>No invoices yet</span><span></span><span></span></div>
+          </div>
+        </div>
+        </div>
+      </div>
+    </div>
+
+    <script src="../app.js"></script>
+    <script src="../components/sidebar.js"></script>
+    <script src="../components/topbar.js"></script>
+    <script src="../components/statebar.js"></script>
+  </body>
+</html>

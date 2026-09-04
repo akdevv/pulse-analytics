@@ -1,0 +1,125 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Acme Docs — Pulse</title>
+    <link rel="stylesheet" href="../../wireframes.css" />
+  </head>
+  <body>
+    <div class="sheet stack" style="height: 100%; overflow-y: auto">
+      <div class="topbar">
+        <strong>Pulse</strong>
+        <span class="site-switch">Acme Docs ▾</span>
+        <div style="flex: 1"></div>
+        <span class="seg">
+          <a href="dashboard.html">Glance</a>
+          <a class="on" href="dashboard.html">Standard</a>
+          <a href="dashboard.html">Everything</a>
+        </span>
+        <span class="chip">7 days ▾</span>
+      </div>
+
+      <div class="column stack">
+        <!-- glance: this block alone is the whole page at the first density -->
+        <div class="box row between">
+          <span><strong style="font-size: 22px">12.4k</strong> <span class="muted">visitors ▲12%</span></span>
+          <span><strong style="font-size: 22px">32.1k</strong> <span class="muted">views ▲14%</span></span>
+          <span><strong style="font-size: 22px">148</strong> <span class="muted">online now</span></span>
+          <span class="spark" style="width: 140px"></span>
+        </div>
+
+        <div class="box stack">
+          <div class="chart tall">visitors over 7 days</div>
+        </div>
+
+        <div class="grid2">
+          <div class="box alt stack">
+            <strong>Top pages</strong>
+            <div class="tbl">
+              <div class="tr"><span>/</span><span class="num">9,124</span><span class="num">28%</span></div>
+              <div class="tr"><span>/docs/getting-started</span><span class="num">6,402</span><span class="num">20%</span></div>
+              <div class="tr"><span>/pricing</span><span class="num">4,318</span><span class="num">13%</span></div>
+            </div>
+            <span class="muted" style="font-size: 13px">+ 21 more — switch to Everything</span>
+          </div>
+          <div class="box alt stack">
+            <strong>Sources</strong>
+            <div class="tbl">
+              <div class="tr"><span>google.com</span><span class="num">3,910</span><span class="num">31%</span></div>
+              <div class="tr"><span>direct</span><span class="num">2,880</span><span class="num">23%</span></div>
+              <div class="tr"><span>news.ycombinator.com</span><span class="num">1,702</span><span class="num">14%</span></div>
+            </div>
+            <span class="muted" style="font-size: 13px">+ 15 more</span>
+          </div>
+        </div>
+
+        <!-- the states, drawn, because they are most of the real experience -->
+        <div class="grid2">
+          <div class="box dash stack">
+            <span class="label">loading</span>
+            <div class="line w50"></div>
+            <div class="line w75"></div>
+            <div class="line w30"></div>
+            <span class="muted" style="font-size: 13px">
+              Skeletons in the shape of the content. Never a spinner in an empty
+              box.
+            </span>
+          </div>
+
+          <div class="box dash stack">
+            <span class="label">no data for this filter</span>
+            <strong>Nothing matched “country = Norway”</strong>
+            <p class="muted">Widen the range, or clear the filter.</p>
+            <div class="row"><span class="btn">Clear filter</span><span class="btn">Try 30 days</span></div>
+          </div>
+
+          <div class="box dash stack">
+            <span class="label">failed</span>
+            <strong>Couldn't load top pages</strong>
+            <p class="muted">
+              The rest of the page is fine — only this panel failed.
+            </p>
+            <div class="row"><span class="btn">Retry</span></div>
+          </div>
+
+          <div class="box dash stack">
+            <span class="label">stale / reconnecting</span>
+            <strong>Live numbers paused</strong>
+            <p class="muted">
+              Showing values from 40 seconds ago. Reconnecting…
+            </p>
+          </div>
+        </div>
+
+        <div class="box stack">
+          <span class="label">phone — same page, one column</span>
+          <div class="box alt stack" style="max-width: 300px; margin: 0 auto">
+            <div class="row between"><strong>Acme Docs</strong><span class="muted">7d ▾</span></div>
+            <div class="row between"><span><strong>12.4k</strong> <span class="muted">visitors</span></span><span class="muted">▲12%</span></div>
+            <div class="chart short">chart</div>
+            <div class="tbl">
+              <div class="tr" style="grid-template-columns: 1fr 60px"><span>/</span><span class="num">9,124</span></div>
+              <div class="tr" style="grid-template-columns: 1fr 60px"><span>/docs/getting-started</span><span class="num">6,402</span></div>
+            </div>
+            <span class="muted" style="font-size: 13px">Sources · Devices · Countries ▾</span>
+          </div>
+        </div>
+
+        <p class="note">
+          <strong>v10 — one page, three attention budgets.</strong> Glance is
+          three numbers and a sparkline for the person checking between meetings;
+          Standard is the daily view; Everything expands each panel to its full
+          list. Same page and same URL — density is a setting, not a different
+          screen, so nobody has to learn a second layout. The other half of this
+          version is that loading, empty-under-filter, per-panel failure and
+          stale-realtime are drawn here rather than left to implementation, which
+          is where most analytics UIs quietly fall apart.
+        </p>
+      </div>
+    </div>
+
+    <p class="states">v10 · density + states</p>
+    <nav class="vswitch"><a href="../v1/dashboard.html">v1</a><a href="../v2/dashboard.html">v2</a><a href="../v3/dashboard.html">v3</a><a href="../v4/dashboard.html">v4</a><a href="../v5/dashboard.html">v5</a><a href="../v6/dashboard.html">v6</a><a href="../v7/dashboard.html">v7</a><a href="../v8/dashboard.html">v8</a><a href="../v9/dashboard.html">v9</a><a class="on" href="../v10/dashboard.html">v10</a></nav>
+  </body>
+</html>

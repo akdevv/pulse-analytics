@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Analytics — Pulse</title>
+    <link rel="stylesheet" href="../../wireframes.css" />
+  </head>
+  <body data-page="analytics">
+    <div class="sheet app">
+      <pulse-sidebar></pulse-sidebar>
+
+      <div class="page stack">
+        <pulse-topbar></pulse-topbar>
+
+        <div class="column stack">
+          <!-- what scopes the data sits left; the section tabs sit right -->
+          <div class="tabsrow">
+            <span class="row">
+              <span class="livecount muted" data-live></span>
+              <select class="ctl" data-range aria-label="Date range"></select>
+            </span>
+            <site-tabs></site-tabs>
+          </div>
+
+          <!-- the filter strip always stands, so the page can't change height
+               under you as you add and drop filters -->
+          <div class="filterbar" data-filterbar>
+            <span class="filterbar-label">Filters</span>
+            <div class="filters" data-filters></div>
+            <button class="chip add" data-add-filter>+ Add filter</button>
+            <button class="linkbtn" data-clear-filters hidden>Clear all</button>
+          </div>
+
+          <div class="stack" data-analytics>
+            <div class="metrics" data-metrics></div>
+
+            <section class="panel">
+              <header class="panel-head">
+                <strong data-chart-title></strong>
+                <span class="legend">
+                  <i class="legend-now"></i> this period
+                  <i class="legend-prev"></i> previous
+                </span>
+              </header>
+              <div class="panel-body" data-chart></div>
+            </section>
+
+            <div class="grid2" data-cards></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <dialog data-details-dialog>
+      <div class="stack">
+        <div class="row between">
+          <strong data-details-title></strong>
+          <form method="dialog"><button class="btn">Close</button></form>
+        </div>
+        <div class="tbl" data-details-body></div>
+        <span class="muted fineprint">Click a row to filter the page by it.</span>
+      </div>
+    </dialog>
+
+    <script src="../app.js"></script>
+    <script src="../components/sidebar.js"></script>
+    <script src="../components/topbar.js"></script>
+    <script src="../components/tabs.js"></script>
+    <script src="../components/statebar.js"></script>
+  </body>
+</html>

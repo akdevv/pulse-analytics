@@ -10,8 +10,6 @@ Track pageviews and custom events on any site with a tiny SDK, ingest them throu
 ![TypeScript](https://img.shields.io/badge/TypeScript-007ACC?logo=typescript&logoColor=white)
 ![License](https://img.shields.io/badge/License-MIT-green)
 
-![Pulse Analytics](./docs/screen-hero.png)
-
 </div>
 
 ---
@@ -36,7 +34,7 @@ Track pageviews and custom events on any site with a tiny SDK, ingest them throu
                               └─────────────────────────────────────┘
 ```
 
-The hot path is deliberately thin: the ingestion endpoint validates, rate-limits, and enqueues — everything heavy (user-agent parsing, GeoIP lookup, batched DB writes) happens async in the worker. Full design notes in [`docs/ingestion-api-architecture.md`](./docs/ingestion-api-architecture.md).
+The hot path is deliberately thin: the ingestion endpoint validates, rate-limits, and enqueues — everything heavy (user-agent parsing, GeoIP lookup, batched DB writes) happens async in the worker.
 
 ## What's in the repo
 
@@ -45,7 +43,6 @@ The hot path is deliberately thin: the ingestion endpoint validates, rate-limits
 | [`sdk/`](./sdk) | [`@akdevv/pulse`](https://www.npmjs.com/package/@akdevv/pulse) — lightweight JS/TS SDK with a React hook. Published on npm. |
 | [`backend/`](./backend) | Express 5 API + BullMQ worker pipeline. Auth (JWT + refresh tokens), site management, event ingestion, analytics queries. |
 | [`frontend/`](./frontend) | Next.js dashboard — auth, site management, and analytics charts (Recharts + shadcn/ui). |
-| [`docs/`](./docs) | Architecture and build guides written alongside development. |
 
 ## Features
 
@@ -93,7 +90,7 @@ Pulse.init({
 
 ## Status & roadmap
 
-Core pipeline (SDK → ingestion → worker → TimescaleDB → dashboard) works end-to-end locally. Backend is deployed on Railway. Remaining plan (see [`docs/plan.md`](./docs/plan.md)):
+Core pipeline (SDK → ingestion → worker → TimescaleDB → dashboard) works end-to-end locally. Remaining plan (see [`notes/next-steps.md`](./notes/next-steps.md)):
 
 - [ ] Public demo site wired to the live backend
 - [ ] 10k RPS sustained load test (Artillery scripts ready in `backend/tests/load/`)

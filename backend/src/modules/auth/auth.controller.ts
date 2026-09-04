@@ -1,5 +1,4 @@
 import { AppError } from "@/utils/app-error.ts";
-import { asyncHandler } from "@/utils/async-handler.ts";
 import { redis } from "@/config/redis.ts";
 import jwt from "jsonwebtoken";
 import type { Request, Response } from "express";
@@ -12,7 +11,7 @@ import {
 } from "./auth.service.ts";
 
 // POST /auth/register
-export const register = asyncHandler(async (req: Request, res: Response) => {
+export const register = async (req: Request, res: Response) => {
   const { name, email, password } = req.body;
   const result = await registerUser({ name, email, password });
 
@@ -30,10 +29,10 @@ export const register = asyncHandler(async (req: Request, res: Response) => {
       accessToken: result.accessToken,
     },
   });
-});
+};
 
 // POST /auth/login
-export const login = asyncHandler(async (req: Request, res: Response) => {
+export const login = async (req: Request, res: Response) => {
   const { email, password } = req.body;
   const result = await loginUser({ email, password });
 
@@ -51,29 +50,27 @@ export const login = asyncHandler(async (req: Request, res: Response) => {
       accessToken: result.accessToken,
     },
   });
-});
+};
 
 // POST /auth/refresh
-export const refreshToken = asyncHandler(
-  async (req: Request, res: Response) => {
-    const token = req.cookies?.refresh_token;
-    if (!token) {
-      throw AppError.unauthorized();
-    }
-
-    const result = await refreshTokenService(token);
-    return res.status(200).json({
-      status: "success",
-      message: "Refresh token successful!",
-      data: {
-        accessToken: result.accessToken,
-      },
-    });
+export const refreshToken = async (req: Request, res: Response) => {
+  const token = req.cookies?.refresh_token;
+  if (!token) {
+    throw AppError.unauthorized();
   }
-);
+
+  const result = await refreshTokenService(token);
+  return res.status(200).json({
+    status: "success",
+    message: "Refresh token successful!",
+    data: {
+      accessToken: result.accessToken,
+    },
+  });
+};
 
 // POST /auth/logout
-export const logout = asyncHandler(async (req: Request, res: Response) => {
+export const logout = async (req: Request, res: Response) => {
   const now = Math.floor(Date.now() / 1000);
 
   const denylistToken = async (token: string) => {
@@ -102,10 +99,10 @@ export const logout = asyncHandler(async (req: Request, res: Response) => {
     status: "success",
     message: "Logout successful",
   });
-});
+};
 
 // GET /auth/me
-export const getUser = asyncHandler(async (req: Request, res: Response) => {
+export const getUser = async (req: Request, res: Response) => {
   if (!req.user?.userId) {
     throw AppError.unauthorized();
   }
@@ -119,10 +116,10 @@ export const getUser = asyncHandler(async (req: Request, res: Response) => {
     message: "User fetched successfully",
     data: user,
   });
-});
+};
 
 // PATCH /auth/me
-export const updateUser = asyncHandler(async (req: Request, res: Response) => {
+export const updateUser = async (req: Request, res: Response) => {
   if (!req.user?.userId) {
     throw AppError.unauthorized();
   }
@@ -138,4 +135,4 @@ export const updateUser = asyncHandler(async (req: Request, res: Response) => {
     message: "User updated successfully",
     data: result,
   });
-});
+};

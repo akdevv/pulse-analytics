@@ -1,0 +1,99 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Acme Docs — Pulse</title>
+    <link rel="stylesheet" href="../../wireframes.css" />
+  </head>
+  <body>
+    <div class="sheet stack" style="height: 100%; overflow-y: auto">
+      <div class="topbar">
+        <strong>Pulse</strong>
+        <span class="site-switch">Acme Docs ▾</span>
+        <div style="flex: 1"></div>
+        <span class="chip">This week ▾</span>
+        <a href="sites.html">All sites</a>
+      </div>
+
+      <div class="column stack">
+        <!-- the summary a person would write, then the evidence -->
+        <div class="box stack">
+          <p class="answer">
+            <strong>12,480 people visited this week</strong> — 12% more than last
+            week. Most of the extra came from
+            <span class="chip">news.ycombinator.com</span> on Tuesday, and they
+            went almost entirely to <span class="chip">/blog/self-hosting</span>.
+            <span class="muted">148 are on the site right now.</span>
+          </p>
+          <div class="chart">visitors, with Tuesday's spike marked</div>
+        </div>
+
+        <div class="stack" style="gap: 8px">
+          <h2 class="q">Where did they come from?</h2>
+          <p class="answer muted">
+            Search is still the base, but referrals doubled this week.
+          </p>
+          <div class="box alt stack">
+            <div class="tbl">
+              <div class="tr"><span>google.com</span><span class="num">3,910</span><span class="num">▲ 4%</span></div>
+              <div class="tr"><span>news.ycombinator.com</span><span class="num">1,702</span><span class="num">▲ 320%</span></div>
+              <div class="tr"><span>direct</span><span class="num">2,880</span><span class="num">▬ 0%</span></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="stack" style="gap: 8px">
+          <h2 class="q">What did they read?</h2>
+          <p class="answer muted">
+            The docs carry the site; the blog post is this week's exception.
+          </p>
+          <div class="box alt stack">
+            <div class="tbl">
+              <div class="tr"><span>/docs/getting-started</span><span class="num">6,402</span><span class="num">▲ 6%</span></div>
+              <div class="tr"><span>/blog/self-hosting</span><span class="num">2,210</span><span class="num">new</span></div>
+              <div class="tr"><span>/pricing</span><span class="num">4,318</span><span class="num">▲ 11%</span></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="stack" style="gap: 8px">
+          <h2 class="q">Who are they?</h2>
+          <p class="answer muted">
+            Three quarters on desktop — read as: docs get read at work.
+          </p>
+          <div class="grid2">
+            <div class="box stack"><span class="label">devices</span><div class="chart short">bars</div></div>
+            <div class="box stack"><span class="label">countries</span><div class="chart short">bars</div></div>
+          </div>
+        </div>
+
+        <div class="stack" style="gap: 8px">
+          <h2 class="q">Anything worth acting on?</h2>
+          <div class="box stack">
+            <div class="tbl">
+              <div class="tr"><span>/docs/faq — bounce rate 78%, up 20pt</span><span class="num">906</span><span class="num">look →</span></div>
+              <div class="tr"><span>/pricing — visits up, time on page down</span><span class="num">4,318</span><span class="num">look →</span></div>
+            </div>
+            <span class="muted" style="font-size: 13px">
+              Rules we can compute, not machine learning: biggest movers, new
+              pages, dead ends.
+            </span>
+          </div>
+        </div>
+
+        <p class="note">
+          <strong>v7 — the dashboard writes the summary.</strong> Every section
+          leads with a sentence in the user's language, then shows the table that
+          proves it; headings are the questions people actually arrive with. Same
+          data as v1, but nobody has to interpret a chart to get the answer. Risk
+          worth naming: a generated sentence that is wrong is worse than no
+          sentence, so every claim must come from a rule we can state out loud.
+        </p>
+      </div>
+    </div>
+
+    <p class="states">v7 · narrative</p>
+    <nav class="vswitch"><a href="../v1/dashboard.html">v1</a><a href="../v2/dashboard.html">v2</a><a href="../v3/dashboard.html">v3</a><a href="../v4/dashboard.html">v4</a><a href="../v5/dashboard.html">v5</a><a href="../v6/dashboard.html">v6</a><a class="on" href="../v7/dashboard.html">v7</a><a href="../v8/dashboard.html">v8</a><a href="../v9/dashboard.html">v9</a><a href="../v10/dashboard.html">v10</a></nav>
+  </body>
+</html>

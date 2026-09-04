@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Acme Docs — Pulse</title>
+    <link rel="stylesheet" href="../../wireframes.css" />
+  </head>
+  <body>
+    <div class="sheet stack" style="height: 100%; overflow-y: auto">
+      <div class="topbar">
+        <strong>Pulse</strong>
+        <span class="muted">Acme Docs</span>
+        <div style="flex: 1"></div>
+        <span class="site-switch">⌘K — jump to anything</span>
+      </div>
+
+      <div class="column stack">
+        <!-- one answer, big -->
+        <div class="box hero">
+          <span class="label">visitors · last 7 days</span>
+          <span class="huge">12.4k</span>
+          <span class="delta">▲ 12% vs the 7 days before · 148 here right now</span>
+          <div class="chart" style="margin-top: 18px">one line. trend only.</div>
+          <div class="row" style="justify-content: center; margin-top: 14px">
+            <span class="chip">7 days</span>
+            <span class="chip add">30 days</span>
+            <span class="chip add">90 days</span>
+          </div>
+        </div>
+
+        <!-- everything else is folded away -->
+        <details class="fold">
+          <summary>Where they came from <span class="muted">— google, direct, HN…</span></summary>
+          <div class="bars" style="margin-top: 12px">
+            <div class="bar"></div><div class="bar" style="width: 74%"></div>
+            <div class="bar" style="width: 48%"></div>
+          </div>
+        </details>
+
+        <details class="fold" open>
+          <summary>What they read <span class="muted">— top pages</span></summary>
+          <div class="tbl" style="margin-top: 12px">
+            <div class="tr"><span>/docs/getting-started</span><span class="num">6,402</span><span class="num">20%</span></div>
+            <div class="tr"><span>/</span><span class="num">9,124</span><span class="num">28%</span></div>
+            <div class="tr"><span>/pricing</span><span class="num">4,318</span><span class="num">13%</span></div>
+          </div>
+        </details>
+
+        <details class="fold">
+          <summary>Who they are <span class="muted">— devices, browsers, countries</span></summary>
+          <div class="chart short" style="margin-top: 12px">bars</div>
+        </details>
+
+        <details class="fold">
+          <summary>Happening now <span class="muted">— live pages and referrers</span></summary>
+          <div class="feed" style="margin-top: 12px">
+            <div class="ev"><span>now</span><span>/pricing</span><span class="muted">google</span></div>
+            <div class="ev"><span>3s</span><span>/docs/api/events</span><span class="muted">direct</span></div>
+          </div>
+        </details>
+
+        <p class="note">
+          <strong>v3 — one question, then quiet.</strong> The page answers "is
+          traffic up or down" before you read anything else; every breakdown is
+          folded until asked for, and ⌘K replaces navigation entirely. Fewest
+          things on screen of the five. Trade-off: power users click more, and
+          folded sections get forgotten.
+        </p>
+      </div>
+    </div>
+
+    <p class="states">v3 · focus</p>
+    <nav class="vswitch"><a href="../v1/dashboard.html">v1</a><a href="../v2/dashboard.html">v2</a><a class="on" href="../v3/dashboard.html">v3</a><a href="../v4/dashboard.html">v4</a><a href="../v5/dashboard.html">v5</a><a href="../v6/dashboard.html">v6</a><a href="../v7/dashboard.html">v7</a><a href="../v8/dashboard.html">v8</a><a href="../v9/dashboard.html">v9</a><a href="../v10/dashboard.html">v10</a></nav>
+  </body>
+</html>

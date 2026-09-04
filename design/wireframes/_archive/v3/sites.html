@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Sites — Pulse</title>
+    <link rel="stylesheet" href="../../wireframes.css" />
+  </head>
+  <body>
+    <div class="sheet stack" style="height: 100%; overflow-y: auto">
+      <div class="topbar">
+        <strong>Pulse</strong>
+        <div style="flex: 1"></div>
+        <span class="site-switch">⌘K</span>
+      </div>
+
+      <div class="column stack">
+        <!-- the switcher itself, shown open -->
+        <div class="box stack">
+          <div class="box alt" style="padding: 10px 14px">
+            <span class="muted">Type a site, a page, or a command…</span>
+          </div>
+          <div class="tbl">
+            <div class="tr head"><span>sites</span><span></span><span></span></div>
+            <div class="tr"><span>Acme Docs</span><span class="muted">12.4k</span><span class="muted">↵</span></div>
+            <div class="tr"><span>Marketing site</span><span class="muted">—</span><span class="muted">setup</span></div>
+            <div class="tr head"><span>commands</span><span></span><span></span></div>
+            <div class="tr"><span>Add a site</span><span></span><span class="muted">⌘N</span></div>
+            <div class="tr"><span>Last 30 days</span><span></span><span></span></div>
+          </div>
+        </div>
+
+        <p class="note">
+          <strong>v3.</strong> There is no sites page — the palette is the sites
+          page. Fast once learned, invisible to a first-time user, so the empty
+          state still needs a plain button.
+        </p>
+      </div>
+    </div>
+
+    <nav class="vswitch"><a href="../v1/dashboard.html">v1</a><a href="../v2/dashboard.html">v2</a><a class="on" href="../v3/dashboard.html">v3</a><a href="../v4/dashboard.html">v4</a><a href="../v5/dashboard.html">v5</a><a href="../v6/dashboard.html">v6</a><a href="../v7/dashboard.html">v7</a><a href="../v8/dashboard.html">v8</a><a href="../v9/dashboard.html">v9</a><a href="../v10/dashboard.html">v10</a></nav>
+  </body>
+</html>

@@ -1,0 +1,121 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Acme Docs — Pulse</title>
+    <link rel="stylesheet" href="../../wireframes.css" />
+  </head>
+  <body>
+    <div class="sheet stack" style="height: 100%; overflow-y: auto">
+      <div class="topbar">
+        <strong>Pulse</strong>
+        <span class="site-switch">Acme Docs ▾</span>
+        <div style="flex: 1"></div>
+        <span class="chip">Last 7 days</span>
+        <span class="muted">vs</span>
+        <span class="chip">previous 7 days ▾</span>
+      </div>
+
+      <div class="column stack">
+        <div class="box stack">
+          <div class="row between">
+            <strong>What changed</strong>
+            <span class="muted">solid = this period · dashed = previous</span>
+          </div>
+          <div class="chart tall">two lines, previous period behind</div>
+        </div>
+
+        <div class="grid3">
+          <div class="box stack">
+            <span class="label">visitors</span>
+            <strong style="font-size: 22px">12.4k <span class="muted">▲ 12%</span></strong>
+            <div class="cmp"><span class="now"></span><span class="prev"></span></div>
+            <span class="muted" style="font-size: 13px">was 11.1k</span>
+          </div>
+          <div class="box stack">
+            <span class="label">pageviews</span>
+            <strong style="font-size: 22px">32.1k <span class="muted">▲ 14%</span></strong>
+            <div class="cmp"><span class="now"></span><span class="prev"></span></div>
+            <span class="muted" style="font-size: 13px">was 28.2k</span>
+          </div>
+          <div class="box stack">
+            <span class="label">bounce</span>
+            <strong style="font-size: 22px">41% <span class="muted">▼ 3pt</span></strong>
+            <div class="cmp"><span class="now"></span><span class="prev"></span></div>
+            <span class="muted" style="font-size: 13px">was 44%</span>
+          </div>
+        </div>
+
+        <!-- the part no other version has: sorted by movement, not by size -->
+        <div class="box stack">
+          <div class="row between">
+            <strong>Biggest movers</strong>
+            <span class="muted" style="font-size: 13px">sorted by change, not by volume</span>
+          </div>
+          <div class="tbl">
+            <div class="tr head"><span>what</span><span class="num">now</span><span class="num">change</span></div>
+            <div class="tr"><span>news.ycombinator.com</span><span class="num">1,702</span><span class="num">▲ 1,300</span></div>
+            <div class="tr"><span>/blog/self-hosting</span><span class="num">2,210</span><span class="num">new</span></div>
+            <div class="tr"><span>/docs/faq</span><span class="num">906</span><span class="num">▼ 640</span></div>
+            <div class="tr"><span>Safari</span><span class="num">3,110</span><span class="num">▼ 210</span></div>
+            <div class="tr"><span>Germany</span><span class="num">1,180</span><span class="num">▲ 190</span></div>
+          </div>
+          <span class="muted" style="font-size: 13px">
+            Mixed dimensions on purpose — the answer to "what changed" is rarely
+            all in one table.
+          </span>
+        </div>
+
+        <div class="grid2">
+          <div class="box alt stack">
+            <strong>Pages</strong>
+            <div class="tbl">
+              <div class="tr"><span>/</span><span class="num">9,124</span><span class="num">▲ 3%</span></div>
+              <div class="tr"><span>/docs/getting-started</span><span class="num">6,402</span><span class="num">▲ 6%</span></div>
+              <div class="tr"><span>/pricing</span><span class="num">4,318</span><span class="num">▲ 11%</span></div>
+            </div>
+          </div>
+          <div class="box alt stack">
+            <strong>Sources</strong>
+            <div class="tbl">
+              <div class="tr"><span>google.com</span><span class="num">3,910</span><span class="num">▲ 4%</span></div>
+              <div class="tr"><span>direct</span><span class="num">2,880</span><span class="num">▬ 0%</span></div>
+              <div class="tr"><span>github.com</span><span class="num">1,140</span><span class="num">▼ 8%</span></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="box stack">
+          <div class="row between">
+            <strong>When they show up</strong>
+            <span class="muted" style="font-size: 13px">this week vs last</span>
+          </div>
+          <div class="heat">
+            <span class="muted">Mon</span>
+            <i></i><i></i><i class="h2"></i><i class="h3"></i><i class="h4"></i><i class="h4"></i><i class="h3"></i><i class="h3"></i><i class="h2"></i><i></i><i></i><i></i>
+            <span class="muted">Tue</span>
+            <i></i><i class="h2"></i><i class="h3"></i><i class="h4"></i><i class="h4"></i><i class="h4"></i><i class="h4"></i><i class="h3"></i><i class="h2"></i><i class="h2"></i><i></i><i></i>
+            <span class="muted">Wed</span>
+            <i></i><i></i><i class="h2"></i><i class="h3"></i><i class="h3"></i><i class="h3"></i><i class="h2"></i><i class="h2"></i><i></i><i></i><i></i><i></i>
+          </div>
+          <span class="muted" style="font-size: 13px">Tells you when to ship and when to post.</span>
+        </div>
+
+        <p class="note">
+          <strong>v8 — built around comparison.</strong> Every other version
+          answers "what happened"; this one answers "what changed", which is the
+          question people actually open analytics with. Comparison is not a
+          toggle hidden in a menu — it is the page. "Biggest movers" mixes pages,
+          sources, devices and countries in one table sorted by delta, so a
+          spike surfaces even if you would never have thought to open that
+          breakdown. Cost: numbers alone are harder to read here, so this needs
+          the plain totals to stay visible.
+        </p>
+      </div>
+    </div>
+
+    <p class="states">v8 · what changed</p>
+    <nav class="vswitch"><a href="../v1/dashboard.html">v1</a><a href="../v2/dashboard.html">v2</a><a href="../v3/dashboard.html">v3</a><a href="../v4/dashboard.html">v4</a><a href="../v5/dashboard.html">v5</a><a href="../v6/dashboard.html">v6</a><a href="../v7/dashboard.html">v7</a><a class="on" href="../v8/dashboard.html">v8</a><a href="../v9/dashboard.html">v9</a><a href="../v10/dashboard.html">v10</a></nav>
+  </body>
+</html>

@@ -110,7 +110,7 @@ function logRequest(req: Request, meta: Record<string, unknown> = {}): void {
     path: req.path,
     ip: req.ip || undefined,
     userAgent: req.get("user-agent") || undefined,
-    userId: (req as any).user?._id?.toString(),
+    userId: (req as any).user?.userId?.toString(),
     requestId: req.id,
     ...meta,
   };
@@ -129,7 +129,7 @@ function logResponse(
     path: req.path,
     statusCode: res.statusCode,
     responseTime: `${responseTime}ms`,
-    userId: (req as any).user?._id?.toString(),
+    userId: (req as any).user?.userId?.toString(),
     requestId: req.id,
     ...meta,
   };
@@ -151,7 +151,7 @@ function logError(
       method: req.method,
       path: req.path,
       ip: req.ip,
-      userId: (req as any).user?._id?.toString(),
+      userId: (req as any).user?.userId?.toString(),
       requestId: req.id,
     };
   }

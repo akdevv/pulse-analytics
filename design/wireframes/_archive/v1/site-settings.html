@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Settings — Pulse</title>
+    <link rel="stylesheet" href="../../wireframes.css" />
+  </head>
+  <body>
+    <div class="sheet app">
+      <div class="box sidebar stack">
+        <strong>Pulse</strong>
+        <a class="nav-item on" href="sites.html">Sites</a>
+        <a class="nav-item" href="account.html">Account</a>
+        <div style="flex: 1"></div>
+        <span class="nav-item muted">Log out</span>
+      </div>
+
+      <div class="stack">
+        <strong>Acme Docs <span class="muted">docs.acme.dev</span></strong>
+
+        <div class="tabs">
+          <a href="dashboard.html">Analytics</a>
+          <a href="setup.html">Setup</a>
+          <a class="on" href="site-settings.html">Settings</a>
+        </div>
+
+        <div class="box stack" style="max-width: 560px">
+          <strong>Details</strong>
+          <div class="stack" style="gap: 6px">
+            <span class="label">Name</span>
+            <div class="box alt" style="padding: 9px 12px"><div class="line w30" style="margin: 0"></div></div>
+          </div>
+          <div class="stack" style="gap: 6px">
+            <span class="label">Domain</span>
+            <div class="box alt" style="padding: 9px 12px"><div class="line w50" style="margin: 0"></div></div>
+          </div>
+          <div class="row end"><span class="btn primary">Save</span></div>
+        </div>
+
+        <div class="box alt stack" style="max-width: 560px">
+          <strong>Tracking key</strong>
+          <div class="box" style="padding: 9px 12px; background: #f4f4f0">
+            <div class="line w75" style="margin: 0"></div>
+          </div>
+          <div class="row between">
+            <span class="muted" style="font-size: 12px">
+              Regenerating breaks the snippet already on your site.
+            </span>
+            <span class="btn">Regenerate</span>
+          </div>
+        </div>
+
+        <div class="box stack" style="max-width: 560px; border-style: dashed">
+          <strong>Danger zone</strong>
+          <p class="muted">Deleting removes the site and every event with it.</p>
+          <div class="row end"><span class="btn">Delete site</span></div>
+        </div>
+
+        <p class="note">
+          Plan / rate limit tier lives here too, read-only until billing exists.
+        </p>
+      </div>
+    </div>
+  <nav class="vswitch"><a class="on" href="../v1/dashboard.html">v1</a><a href="../v2/dashboard.html">v2</a><a href="../v3/dashboard.html">v3</a><a href="../v4/dashboard.html">v4</a><a href="../v5/dashboard.html">v5</a><a href="../v6/dashboard.html">v6</a><a href="../v7/dashboard.html">v7</a><a href="../v8/dashboard.html">v8</a><a href="../v9/dashboard.html">v9</a><a href="../v10/dashboard.html">v10</a></nav>
+  </body>
+</html>

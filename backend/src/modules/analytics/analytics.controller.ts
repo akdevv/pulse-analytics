@@ -1,4 +1,3 @@
-import { asyncHandler } from "@/utils/async-handler.ts";
 import type { Request, Response } from "express";
 import { AnalyticsQuerySchema } from "./analytics.types.ts";
 import * as AnalyticsService from "./analytics.service.ts";
@@ -14,8 +13,8 @@ const parseQuery = (req: Request) => {
 };
 
 // GET /:siteId/overview
-export const getOverview = asyncHandler(async (req: Request, res: Response) => {
-  const { siteId } = req.params;
+export const getOverview = async (req: Request, res: Response) => {
+  const siteId = req.params.siteId as string;
   if (!siteId) throw AppError.validation("Site ID is required");
 
   const userId = req.user!.userId;
@@ -35,38 +34,36 @@ export const getOverview = asyncHandler(async (req: Request, res: Response) => {
     message: "Fetched analytics events",
     data: result,
   });
-});
+};
 
 // GET /:siteId/timeseries
-export const getTimeseries = asyncHandler(
-  async (req: Request, res: Response) => {
-    const { siteId } = req.params;
-    if (!siteId) throw AppError.validation("Site ID is required");
+export const getTimeseries = async (req: Request, res: Response) => {
+  const siteId = req.params.siteId as string;
+  if (!siteId) throw AppError.validation("Site ID is required");
 
-    const userId = req.user!.userId;
+  const userId = req.user!.userId;
 
-    const { error, data } = parseQuery(req);
-    if (error) return res.status(400).json({ error });
+  const { error, data } = parseQuery(req);
+  if (error) return res.status(400).json({ error });
 
-    const result = await AnalyticsService.getTimeseries(
-      siteId,
-      userId,
-      data!.from,
-      data!.to,
-      data!.interval
-    );
+  const result = await AnalyticsService.getTimeseries(
+    siteId,
+    userId,
+    data!.from,
+    data!.to,
+    data!.interval
+  );
 
-    return res.status(200).json({
-      status: "success",
-      message: "Fetched analytics events",
-      data: result,
-    });
-  }
-);
+  return res.status(200).json({
+    status: "success",
+    message: "Fetched analytics events",
+    data: result,
+  });
+};
 
 // GET /:siteId/pages
-export const getTopPages = asyncHandler(async (req: Request, res: Response) => {
-  const { siteId } = req.params;
+export const getTopPages = async (req: Request, res: Response) => {
+  const siteId = req.params.siteId as string;
   if (!siteId) throw AppError.validation("Site ID is required");
 
   const userId = req.user!.userId;
@@ -87,38 +84,36 @@ export const getTopPages = asyncHandler(async (req: Request, res: Response) => {
     message: "Fetched top pages",
     data: result,
   });
-});
+};
 
 // GET /:siteId/referrers
-export const getReferrers = asyncHandler(
-  async (req: Request, res: Response) => {
-    const { siteId } = req.params;
-    if (!siteId) throw AppError.validation("Site ID is required");
+export const getReferrers = async (req: Request, res: Response) => {
+  const siteId = req.params.siteId as string;
+  if (!siteId) throw AppError.validation("Site ID is required");
 
-    const userId = req.user!.userId;
+  const userId = req.user!.userId;
 
-    const { error, data } = parseQuery(req);
-    if (error) return res.status(400).json({ error });
+  const { error, data } = parseQuery(req);
+  if (error) return res.status(400).json({ error });
 
-    const result = await AnalyticsService.getReferrers(
-      siteId,
-      userId,
-      data!.from,
-      data!.to,
-      data!.limit
-    );
+  const result = await AnalyticsService.getReferrers(
+    siteId,
+    userId,
+    data!.from,
+    data!.to,
+    data!.limit
+  );
 
-    return res.status(200).json({
-      status: "success",
-      message: "Fetched referrers",
-      data: result,
-    });
-  }
-);
+  return res.status(200).json({
+    status: "success",
+    message: "Fetched referrers",
+    data: result,
+  });
+};
 
 // GET /:siteId/devices
-export const getDevices = asyncHandler(async (req: Request, res: Response) => {
-  const { siteId } = req.params;
+export const getDevices = async (req: Request, res: Response) => {
+  const siteId = req.params.siteId as string;
   if (!siteId) throw AppError.validation("Site ID is required");
 
   const userId = req.user!.userId;
@@ -138,11 +133,11 @@ export const getDevices = asyncHandler(async (req: Request, res: Response) => {
     message: "Fetched devices",
     data: result,
   });
-});
+};
 
 // GET /:siteId/geo
-export const getGeo = asyncHandler(async (req: Request, res: Response) => {
-  const { siteId } = req.params;
+export const getGeo = async (req: Request, res: Response) => {
+  const siteId = req.params.siteId as string;
   if (!siteId) throw AppError.validation("Site ID is required");
 
   const userId = req.user!.userId;
@@ -162,11 +157,11 @@ export const getGeo = asyncHandler(async (req: Request, res: Response) => {
     message: "Fetched geo",
     data: result,
   });
-});
+};
 
 // GET /:siteId/realtime
-export const getRealtime = asyncHandler(async (req: Request, res: Response) => {
-  const { siteId } = req.params;
+export const getRealtime = async (req: Request, res: Response) => {
+  const siteId = req.params.siteId as string;
   if (!siteId) throw AppError.validation("Site ID is required");
 
   const userId = req.user!.userId;
@@ -178,62 +173,58 @@ export const getRealtime = asyncHandler(async (req: Request, res: Response) => {
     message: "Fetched realtime",
     data: result,
   });
-});
+};
 
 // GET /:siteId/realtime/stream  (SSE)
-export const streamRealtime = asyncHandler(
-  async (req: Request, res: Response) => {
-    const { siteId } = req.params;
-    if (!siteId) throw AppError.validation("Site ID is required");
+export const streamRealtime = async (req: Request, res: Response) => {
+  const siteId = req.params.siteId as string;
+  if (!siteId) throw AppError.validation("Site ID is required");
 
-    const userId = req.user!.userId;
+  const userId = req.user!.userId;
 
-    // Verify ownership before flushing headers (can throw — asyncHandler catches it)
-    await AnalyticsService.verifySiteOwnership(siteId, userId);
+  // Verify ownership before flushing headers (can throw — Express 5 forwards it)
+  await AnalyticsService.verifySiteOwnership(siteId, userId);
 
-    res.setHeader("Content-Type", "text/event-stream");
-    res.setHeader("Cache-Control", "no-cache");
-    res.setHeader("Connection", "keep-alive");
-    res.setHeader("X-Accel-Buffering", "no");
-    res.flushHeaders();
+  res.setHeader("Content-Type", "text/event-stream");
+  res.setHeader("Cache-Control", "no-cache");
+  res.setHeader("Connection", "keep-alive");
+  res.setHeader("X-Accel-Buffering", "no");
+  res.flushHeaders();
 
-    const send = (payload: unknown) => {
-      res.write(`data: ${JSON.stringify(payload)}\n\n`);
-    };
+  const send = (payload: unknown) => {
+    res.write(`data: ${JSON.stringify(payload)}\n\n`);
+  };
 
-    const push = async () => {
-      try {
-        const result = await AnalyticsRepository.getRealtime(siteId);
-        send({ status: "success", data: result });
-      } catch {
-        send({ status: "error", message: "Failed to fetch realtime data" });
-      }
-    };
+  const push = async () => {
+    try {
+      const result = await AnalyticsRepository.getRealtime(siteId);
+      send({ status: "success", data: result });
+    } catch {
+      send({ status: "error", message: "Failed to fetch realtime data" });
+    }
+  };
 
-    await push();
-    const interval = setInterval(push, 5000);
+  await push();
+  const interval = setInterval(push, 5000);
 
-    req.on("close", () => {
-      clearInterval(interval);
-      res.end();
-    });
-  }
-);
+  req.on("close", () => {
+    clearInterval(interval);
+    res.end();
+  });
+};
 
 // GET /:siteId/raw
-export const getRawEvents = asyncHandler(
-  async (req: Request, res: Response) => {
-    const { siteId } = req.params;
-    if (!siteId) throw AppError.validation("Site ID is required");
+export const getRawEvents = async (req: Request, res: Response) => {
+  const siteId = req.params.siteId as string;
+  if (!siteId) throw AppError.validation("Site ID is required");
 
-    const userId = req.user!.userId;
+  const userId = req.user!.userId;
 
-    const result = await AnalyticsService.getRawEvents(siteId, userId);
+  const result = await AnalyticsService.getRawEvents(siteId, userId);
 
-    return res.status(200).json({
-      status: "success",
-      message: "Fetched raw events",
-      data: { siteId, result },
-    });
-  }
-);
+  return res.status(200).json({
+    status: "success",
+    message: "Fetched raw events",
+    data: { siteId, result },
+  });
+};

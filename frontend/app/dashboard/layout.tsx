@@ -32,12 +32,12 @@ export default function DashboardLayout({
 
   return (
     <SidebarProvider>
-      <div className="flex w-screen h-screen bg-sidebar">
+      <div className="flex h-screen w-screen bg-sidebar">
         <AppSidebar />
         <div className="flex-1 p-2">
-          <div className="bg-background rounded-xl h-full flex flex-col">
+          <div className="flex h-full flex-col rounded-xl bg-background">
             <SiteHeader />
-            <main className="flex flex-1 p-0 md:p-3 overflow-y-auto hide-scrollbar">
+            <main className="hide-scrollbar flex flex-1 overflow-y-auto p-0 md:p-3">
               {children}
             </main>
           </div>

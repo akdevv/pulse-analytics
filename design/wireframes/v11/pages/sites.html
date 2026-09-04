@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Sites — Pulse</title>
+    <link rel="stylesheet" href="../../wireframes.css" />
+  </head>
+  <body data-page="sites">
+    <div class="sheet app">
+      <pulse-sidebar></pulse-sidebar>
+
+      <div class="page stack">
+        <pulse-topbar></pulse-topbar>
+
+        <div class="column stack">
+          <div class="toolbar">
+            <label class="search">
+              <svg viewBox="0 0 20 20" aria-hidden="true">
+                <circle cx="9" cy="9" r="5.5" /><path d="M13 13l4 4" />
+              </svg>
+              <input class="ctl" type="search" data-search placeholder="Search sites" aria-label="Search sites" />
+            </label>
+
+            <div class="viewtoggle" role="group" aria-label="View">
+              <button data-view="grid" aria-label="Card view" title="Card view">
+                <svg viewBox="0 0 20 20" aria-hidden="true">
+                  <rect x="3" y="3" width="6" height="6" rx="1.5" /><rect x="11" y="3" width="6" height="6" rx="1.5" />
+                  <rect x="3" y="11" width="6" height="6" rx="1.5" /><rect x="11" y="11" width="6" height="6" rx="1.5" />
+                </svg>
+              </button>
+              <button data-view="list" aria-label="Compact view" title="Compact view">
+                <svg viewBox="0 0 20 20" aria-hidden="true">
+                  <path d="M3 5h14M3 10h14M3 15h14" />
+                </svg>
+              </button>
+            </div>
+
+            <button class="btn primary" data-open-new>+ New site</button>
+          </div>
+
+          <div data-sites></div>
+        </div>
+      </div>
+    </div>
+
+    <dialog data-new-site>
+      <form class="modal stack">
+        <div class="modal-head">
+          <strong>Add a site</strong>
+          <p class="muted">We'll give you a snippet to paste once it's created.</p>
+        </div>
+
+        <label class="field">
+          <span class="label">Name</span>
+          <input class="ctl" name="name" placeholder="Acme Docs" required />
+          <span class="hint">What you'll call it inside Pulse.</span>
+        </label>
+
+        <label class="field">
+          <span class="label">Domain</span>
+          <input class="ctl" name="domain" placeholder="docs.acme.dev" required />
+          <span class="hint">No https:// and no trailing slash.</span>
+        </label>
+
+        <span class="err"></span>
+
+        <div class="modal-foot">
+          <button type="button" class="btn" data-cancel>Cancel</button>
+          <button class="btn primary">Create site</button>
+        </div>
+      </form>
+    </dialog>
+
+    <script src="../app.js"></script>
+    <script src="../components/sidebar.js"></script>
+    <script src="../components/topbar.js"></script>
+    <script src="../components/tabs.js"></script>
+    <script src="../components/statebar.js"></script>
+  </body>
+</html>

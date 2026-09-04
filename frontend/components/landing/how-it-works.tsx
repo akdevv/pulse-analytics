@@ -1,4 +1,5 @@
-import { ACCENT, DISPLAY, Reveal, SectionEyebrow, SectionHeading } from "./shared";
+import { ACCENT, DISPLAY, POWDER } from "./tokens";
+import { Reveal, SectionHeading } from "./shared";
 import { highlight, type Lang } from "./highlight";
 
 const STEPS: {
@@ -90,11 +91,11 @@ async function CodePanel({
   const html = await highlight(code, lang);
   return (
     <div
-      className="relative rounded-2xl border border-white/8 overflow-hidden"
+      className="relative overflow-hidden rounded-2xl border border-ink/8"
       style={{
-        background: "oklch(0.115 0.003 285)",
+        background: "oklch(0.1560 0 0)",
         boxShadow:
-          "0 0 0 1px rgba(255,255,255,0.03), 0 40px 80px -20px rgba(0,0,0,0.75), 0 0 60px oklch(0.6429 0.1675 45.988 / 0.06)",
+          "0 0 0 1px rgba(229,227,210,0.03), 0 40px 80px -20px rgba(0,0,0,0.75), 0 0 60px oklch(0.6832 0.2107 38.6427 / 0.06)",
       }}
     >
       {/* accent hairline top */}
@@ -109,19 +110,19 @@ async function CodePanel({
 
       {/* title bar */}
       <div
-        className="relative flex items-center px-4 py-3 border-b border-white/6"
-        style={{ background: "oklch(0.13 0.003 285)" }}
+        className="relative flex items-center border-b border-ink/6 px-4 py-3"
+        style={{ background: "oklch(0.1750 0 0)" }}
       >
         {/* traffic lights */}
-        <div className="flex items-center gap-1.5 shrink-0">
-          <span className="w-3 h-3 rounded-full bg-[#ff5f57]" />
-          <span className="w-3 h-3 rounded-full bg-[#febc2e]" />
-          <span className="w-3 h-3 rounded-full bg-[#28c840]" />
+        <div className="flex shrink-0 items-center gap-1.5">
+          <span className="h-3 w-3 rounded-full bg-ink/15" />
+          <span className="h-3 w-3 rounded-full bg-ink/15" />
+          <span className="h-3 w-3 rounded-full bg-ink/15" />
         </div>
 
         {/* centered filename */}
-        <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-          <span className="flex items-center gap-1.5 text-[12px] font-mono text-white/55">
+        <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
+          <span className="flex items-center gap-1.5 font-mono text-[12px] text-ink/55">
             <svg
               width="12"
               height="12"
@@ -129,7 +130,7 @@ async function CodePanel({
               fill="none"
               stroke="currentColor"
               strokeWidth="1.75"
-              className="text-white/35"
+              className="text-ink/60"
             >
               <path
                 strokeLinecap="round"
@@ -143,8 +144,11 @@ async function CodePanel({
 
         {/* lang badge right */}
         <span
-          className="ml-auto text-[10px] font-mono uppercase tracking-[0.18em] px-2 py-0.5 rounded text-white/50"
-          style={{ background: "rgba(255,255,255,0.05)" }}
+          className="ml-auto rounded px-2 py-0.5 font-mono text-[10px] tracking-[0.18em] uppercase"
+          style={{
+            background: "color-mix(in oklab, " + POWDER + " 12%, transparent)",
+            color: POWDER,
+          }}
         >
           {LANG_LABEL[lang]}
         </span>
@@ -152,7 +156,7 @@ async function CodePanel({
 
       {/* code */}
       <div
-        className="code-panel-body overflow-x-auto p-6 [&>pre]:bg-transparent! [&>pre]:p-0! [&>pre]:text-[12.5px] [&>pre]:leading-[1.8] [&>pre]:font-mono"
+        className="code-panel-body overflow-x-auto p-6 [&>pre]:bg-transparent! [&>pre]:p-0! [&>pre]:font-mono [&>pre]:text-[12.5px] [&>pre]:leading-[1.8]"
         dangerouslySetInnerHTML={{ __html: html }}
       />
     </div>
@@ -163,14 +167,13 @@ export function HowItWorks() {
   return (
     <section
       id="how-it-works"
-      className="relative py-40 overflow-hidden"
-      style={{ background: "var(--pa-bg)" }}
+      className="pa-alt relative overflow-hidden py-28 md:py-40"
     >
       <div
         aria-hidden
         className="absolute inset-0 opacity-[0.025]"
         style={{
-          backgroundImage: `radial-gradient(circle at 1px 1px, white 1px, transparent 0)`,
+          backgroundImage: `radial-gradient(circle at 1px 1px, #E5E3D2 1px, transparent 0)`,
           backgroundSize: "32px 32px",
           maskImage:
             "radial-gradient(ellipse 60% 50% at 50% 50%, black 30%, transparent 80%)",
@@ -178,13 +181,12 @@ export function HowItWorks() {
       />
 
       <div className="relative mx-auto max-w-6xl px-6">
-        <Reveal className="flex flex-col items-start gap-6 mb-28 max-w-3xl">
-          <SectionEyebrow>Architecture</SectionEyebrow>
+        <Reveal className="mb-28 flex max-w-3xl flex-col items-start gap-6">
           <SectionHeading
             line1="The pipeline, roughly"
             line2="three moving parts."
           />
-          <p className="text-[15px] text-white/50 leading-relaxed max-w-lg">
+          <p className="max-w-lg text-[15px] leading-relaxed text-ink/60">
             Collect hot, process async, persist for time. Every piece picked
             because it refuses to blink under load.
           </p>
@@ -196,7 +198,7 @@ export function HowItWorks() {
             return (
               <Reveal
                 key={step.n}
-                className="grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-16 items-center"
+                className="grid grid-cols-1 items-center gap-10 lg:grid-cols-2 lg:gap-16"
               >
                 <div
                   className={`flex flex-col gap-5 ${
@@ -205,22 +207,22 @@ export function HowItWorks() {
                 >
                   <div className="flex items-center gap-3">
                     <span
-                      className="font-mono text-[11px] tabular-nums text-black px-2 py-0.5 rounded"
+                      className="rounded px-2 py-0.5 font-mono text-[11px] text-charcoal tabular-nums"
                       style={{ background: ACCENT }}
                     >
                       {step.n}
                     </span>
-                    <span className="text-[11px] font-mono uppercase tracking-[0.22em] text-white/50">
+                    <span className="font-mono text-[11px] tracking-[0.22em] text-ink/60 uppercase">
                       {step.eyebrow}
                     </span>
                   </div>
                   <h3
-                    className="text-[32px] md:text-[40px] text-white leading-[1.05] tracking-[-0.02em]"
+                    className="text-[32px] leading-[1.05] tracking-[-0.02em] text-ink md:text-[40px]"
                     style={DISPLAY}
                   >
                     {step.title}
                   </h3>
-                  <p className="text-[15px] text-white/55 leading-relaxed max-w-md">
+                  <p className="max-w-md text-[15px] leading-relaxed text-ink/55">
                     {step.description}
                   </p>
                 </div>

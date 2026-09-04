@@ -1,0 +1,160 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Settings — Pulse</title>
+    <link rel="stylesheet" href="../../wireframes.css" />
+  </head>
+  <body data-page="settings">
+    <div class="sheet app">
+      <pulse-sidebar></pulse-sidebar>
+
+      <div class="page stack">
+        <pulse-topbar></pulse-topbar>
+
+        <div class="column stack">
+          <div class="tabsrow"><site-tabs></site-tabs></div>
+
+          <form class="panel" data-site-form>
+            <header class="panel-head"><strong>Details</strong></header>
+            <div class="panel-body stack">
+              <label class="field">
+                <span class="label">Name</span>
+                <input class="ctl" name="name" required />
+                <span class="hint">Only ever shown to you.</span>
+              </label>
+              <label class="field">
+                <span class="label">Domain</span>
+                <input class="ctl" name="domain" required />
+                <span class="hint">Events from other domains are rejected.</span>
+              </label>
+              <span class="err"></span>
+            </div>
+            <!-- save stays disabled until something actually changed -->
+            <div class="panel-foot">
+              <span class="muted dirty-note" data-dirty hidden>Unsaved changes</span>
+              <span class="row">
+                <button type="button" class="btn" data-revert disabled>Revert</button>
+                <button class="btn primary" data-save disabled>Save</button>
+              </span>
+            </div>
+          </form>
+
+          <section class="panel">
+            <header class="panel-head"><strong>Data collection</strong></header>
+            <div class="panel-body optionblock">
+              <label class="opt">
+                <input type="checkbox" data-pref="dnt" />
+                <span>
+                  <strong>Respect Do Not Track</strong>
+                  <span class="muted">Skip visitors whose browser asks not to be measured.</span>
+                </span>
+              </label>
+              <label class="opt">
+                <input type="checkbox" data-pref="excludeSelf" />
+                <span>
+                  <strong>Exclude my own visits</strong>
+                  <span class="muted">Sets a local flag in this browser. Per device.</span>
+                </span>
+              </label>
+              <label class="field">
+                <span class="label">Reporting timezone</span>
+                <select class="ctl" data-pref="tz">
+                  <option>UTC</option>
+                  <option>Europe/Berlin</option>
+                  <option>America/New_York</option>
+                  <option>Asia/Kolkata</option>
+                </select>
+                <span class="hint">Decides where a day starts. Redraws past charts too.</span>
+              </label>
+            </div>
+          </section>
+
+          <section class="panel">
+            <header class="panel-head"><strong>Tracking key</strong></header>
+            <div class="panel-body stack">
+              <div class="keyrow">
+                <code data-key></code>
+                <button class="btn" data-copy-key>Copy</button>
+                <button class="btn" data-regen>Regenerate</button>
+              </div>
+              <p class="muted fineprint">
+                Regenerating stops the snippet already on your site from
+                reporting until you paste the new one. Traffic in that gap is
+                not recorded.
+              </p>
+            </div>
+          </section>
+
+          <section class="panel">
+            <header class="panel-head"><strong>Public dashboard</strong></header>
+            <div class="panel-body stack">
+              <label class="opt">
+                <input type="checkbox" data-pref="publicDash" />
+                <span>
+                  <strong>Anyone with the link can view</strong>
+                  <span class="muted">Read-only. No settings, no other sites.</span>
+                </span>
+              </label>
+              <div class="keyrow" data-share hidden>
+                <code data-share-link></code>
+                <button class="btn" data-copy-share>Copy link</button>
+              </div>
+            </div>
+          </section>
+
+          <section class="panel danger">
+            <header class="panel-head"><strong>Delete this site</strong></header>
+            <div class="panel-body row between">
+              <p class="muted fineprint">
+                Removes the site and every event stored for it. Reports, filters
+                and saved ranges go with it. This cannot be undone.
+              </p>
+              <button class="btn danger" data-delete>Delete site</button>
+            </div>
+          </section>
+        </div>
+      </div>
+    </div>
+
+    <dialog data-regen-dialog>
+      <div class="modal stack">
+        <div class="modal-head">
+          <strong>Issue a new tracking key?</strong>
+          <p class="muted">
+            The snippet on your site stops reporting until you paste the new
+            one. Nothing that happens in between is recorded.
+          </p>
+        </div>
+        <div class="modal-foot">
+          <button class="btn" data-cancel>Keep current key</button>
+          <button class="btn primary" data-confirm>Regenerate</button>
+        </div>
+      </div>
+    </dialog>
+
+    <dialog data-delete-dialog>
+      <div class="modal stack">
+        <div class="modal-head">
+          <strong>Delete this site?</strong>
+          <p class="muted">Every event ever recorded for it goes too.</p>
+        </div>
+        <label class="field">
+          <span class="label">Type <strong data-domain-echo></strong> to confirm</span>
+          <input class="ctl" autocomplete="off" />
+        </label>
+        <div class="modal-foot">
+          <button class="btn" data-cancel>Cancel</button>
+          <button class="btn primary danger" data-confirm>Delete site</button>
+        </div>
+      </div>
+    </dialog>
+
+    <script src="../app.js"></script>
+    <script src="../components/sidebar.js"></script>
+    <script src="../components/topbar.js"></script>
+    <script src="../components/tabs.js"></script>
+    <script src="../components/statebar.js"></script>
+  </body>
+</html>
