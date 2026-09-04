@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Sites — Pulse</title>
+    <link rel="stylesheet" href="../../wireframes.css" />
+  </head>
+  <body data-page="sites-loading">
+    <div class="sheet app">
+      <pulse-sidebar></pulse-sidebar>
+
+      <div class="page stack">
+        <pulse-topbar></pulse-topbar>
+
+        <div class="column stack">
+          <!-- controls render immediately but sit disabled: the page shouldn't
+               reflow once the sites land -->
+          <div class="toolbar">
+            <label class="search">
+              <svg viewBox="0 0 20 20" aria-hidden="true">
+                <circle cx="9" cy="9" r="5.5" /><path d="M13 13l4 4" />
+              </svg>
+              <input class="ctl" type="search" placeholder="Search sites" aria-label="Search sites" disabled />
+            </label>
+
+            <div class="viewtoggle" role="group" aria-label="View">
+              <button class="on" disabled aria-label="Card view">
+                <svg viewBox="0 0 20 20" aria-hidden="true">
+                  <rect x="3" y="3" width="6" height="6" rx="1.5" /><rect x="11" y="3" width="6" height="6" rx="1.5" />
+                  <rect x="3" y="11" width="6" height="6" rx="1.5" /><rect x="11" y="11" width="6" height="6" rx="1.5" />
+                </svg>
+              </button>
+              <button disabled aria-label="Compact view">
+                <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M3 5h14M3 10h14M3 15h14" /></svg>
+              </button>
+            </div>
+
+            <button class="btn primary" disabled>+ New site</button>
+          </div>
+
+          <div class="sitegrid" aria-busy="true" aria-label="Loading sites">
+            <div class="sitecard skel">
+              <div class="sitecard-head"><span class="fav"></span><span class="stack" style="gap:6px;flex:1"><i class="line w75"></i><i class="line w50"></i></span></div>
+              <div class="skel-chart"></div>
+              <div class="sitecard-foot"><i class="line w30"></i></div>
+            </div>
+            <div class="sitecard skel">
+              <div class="sitecard-head"><span class="fav"></span><span class="stack" style="gap:6px;flex:1"><i class="line w50"></i><i class="line w75"></i></span></div>
+              <div class="skel-chart"></div>
+              <div class="sitecard-foot"><i class="line w30"></i></div>
+            </div>
+            <div class="sitecard skel">
+              <div class="sitecard-head"><span class="fav"></span><span class="stack" style="gap:6px;flex:1"><i class="line w75"></i><i class="line w30"></i></span></div>
+              <div class="skel-chart"></div>
+              <div class="sitecard-foot"><i class="line w30"></i></div>
+            </div>
+            <div class="sitecard skel">
+              <div class="sitecard-head"><span class="fav"></span><span class="stack" style="gap:6px;flex:1"><i class="line w50"></i><i class="line w50"></i></span></div>
+              <div class="skel-chart"></div>
+              <div class="sitecard-foot"><i class="line w30"></i></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script src="../components/sidebar.js"></script>
+    <script src="../components/topbar.js"></script>
+    <script src="../components/statebar.js"></script>
+  </body>
+</html>

@@ -1,0 +1,121 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Acme Docs — Pulse</title>
+    <link rel="stylesheet" href="../../wireframes.css" />
+  </head>
+  <body>
+    <div class="sheet app">
+      <div class="box sidebar stack">
+        <strong>Pulse</strong>
+        <a class="nav-item on" href="sites.html">Sites</a>
+        <a class="nav-item" href="account.html">Account</a>
+        <div style="flex: 1"></div>
+        <span class="nav-item muted">Log out</span>
+      </div>
+
+      <div class="stack">
+        <div class="row between">
+          <strong>Acme Docs <span class="muted">● active · docs.acme.dev</span></strong>
+          <span class="muted">7d ▾ · hourly ▾</span>
+        </div>
+
+        <div class="tabs">
+          <a class="on" href="dashboard.html">Analytics</a>
+          <a href="setup.html">Setup</a>
+          <a href="site-settings.html">Settings</a>
+        </div>
+
+        <!-- realtime -->
+        <div class="box stack">
+          <div class="row between">
+            <strong>● Realtime</strong>
+            <span class="muted" style="font-size: 12px">updates every 5s</span>
+          </div>
+          <div class="grid3">
+            <div class="box alt center"><span class="big">148</span><div class="label">active now</div></div>
+            <div class="box alt center"><span class="big">612</span><div class="label">pageviews</div></div>
+            <div class="box alt center"><span class="big">131</span><div class="label">visitors</div></div>
+          </div>
+          <div class="grid2">
+            <div class="stack" style="gap: 6px">
+              <span class="label">active pages</span>
+              <div class="bars">
+                <div class="bar"></div><div class="bar"></div><div class="bar"></div>
+              </div>
+            </div>
+            <div class="stack" style="gap: 6px">
+              <span class="label">live referrers</span>
+              <div class="bars">
+                <div class="bar"></div><div class="bar"></div><div class="bar"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- totals -->
+        <div class="grid3">
+          <div class="box center"><div class="label">pageviews</div><span class="big">32.1k</span></div>
+          <div class="box center"><div class="label">sessions</div><span class="big">19.6k</span></div>
+          <div class="box center"><div class="label">visitors</div><span class="big">12.4k</span></div>
+        </div>
+
+        <!-- trend -->
+        <div class="box stack">
+          <div class="row between">
+            <strong>Traffic over time</strong>
+            <span class="muted" style="font-size: 12px">pageviews · sessions</span>
+          </div>
+          <div class="chart tall">area chart</div>
+        </div>
+
+        <!-- breakdowns -->
+        <div class="grid2">
+          <div class="box stack">
+            <strong>Top pages</strong>
+            <div class="bars">
+              <div class="bar"></div><div class="bar" style="width: 82%"></div>
+              <div class="bar" style="width: 61%"></div><div class="bar" style="width: 44%"></div>
+              <div class="bar" style="width: 30%"></div>
+            </div>
+          </div>
+          <div class="box alt stack">
+            <strong>Referrers</strong>
+            <div class="bars">
+              <div class="bar"></div><div class="bar" style="width: 78%"></div>
+              <div class="bar" style="width: 55%"></div><div class="bar" style="width: 39%"></div>
+              <div class="bar" style="width: 22%"></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="grid2">
+          <div class="box alt stack">
+            <div class="row between">
+              <strong>Devices</strong>
+              <span class="muted" style="font-size: 12px">browser | os | device</span>
+            </div>
+            <div class="chart">donut or bars</div>
+          </div>
+          <div class="box stack">
+            <strong>Countries</strong>
+            <div class="bars">
+              <div class="bar"></div><div class="bar" style="width: 70%"></div>
+              <div class="bar" style="width: 52%"></div><div class="bar" style="width: 33%"></div>
+            </div>
+          </div>
+        </div>
+
+        <p class="note">
+          Open question: does realtime stay pinned at the top, or move to its own
+          tab so the range picker owns the page?
+        </p>
+      </div>
+    </div>
+
+    <p class="states">states: <a href="dashboard-empty.html">no data yet</a></p>
+  <nav class="vswitch"><a class="on" href="../v1/dashboard.html">v1</a><a href="../v2/dashboard.html">v2</a><a href="../v3/dashboard.html">v3</a><a href="../v4/dashboard.html">v4</a><a href="../v5/dashboard.html">v5</a><a href="../v6/dashboard.html">v6</a><a href="../v7/dashboard.html">v7</a><a href="../v8/dashboard.html">v8</a><a href="../v9/dashboard.html">v9</a><a href="../v10/dashboard.html">v10</a></nav>
+  </body>
+</html>

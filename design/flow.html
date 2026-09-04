@@ -1,0 +1,145 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Pulse Analytics — User Flow</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <main class="page flow-page">
+      <header class="head">
+        <p class="eyebrow">Pulse Analytics</p>
+        <h1>User flow</h1>
+        <p class="sub">
+          Every screen a user can reach, in the order they reach it. Expand a
+          step to see what lives on that page.
+        </p>
+      </header>
+
+      <!-- Flow diagram -->
+      <section class="flow" aria-label="User flow diagram">
+        <div class="node node--start node--done">Landing page</div>
+        <div class="arrow"></div>
+
+        <div class="branch">
+          <div class="node node--done">Register</div>
+          <div class="node node--done">Log in</div>
+        </div>
+        <div class="arrow"></div>
+
+        <div class="node">Sites list</div>
+        <div class="arrow" data-label="no sites yet"></div>
+
+        <div class="node">Create site</div>
+        <div class="arrow"></div>
+
+        <div class="node">Setup — install snippet</div>
+        <div class="arrow" data-label="first event received"></div>
+
+        <div class="node node--main">Site dashboard</div>
+        <div class="arrow"></div>
+
+        <div class="branch">
+          <div class="node">Site settings</div>
+          <div class="node">Account</div>
+        </div>
+      </section>
+
+      <!-- Page specs -->
+      <section class="specs" aria-label="Page details">
+        <details>
+          <summary>Landing page <span class="tag tag--done">designed</span></summary>
+          <ul>
+            <li>What it is, who it is for, one screenshot of the dashboard.</li>
+            <li>Primary action: <em>Start tracking</em> → register.</li>
+            <li>Secondary: log in (for people who already have an account).</li>
+            <li>No data, no auth. Static.</li>
+          </ul>
+        </details>
+
+        <details>
+          <summary>Authenticate <span class="tag tag--done">designed</span></summary>
+          <ul>
+            <li>Register: name, email, password → <code>POST /auth/register</code>.</li>
+            <li>Login: email, password → <code>POST /auth/login</code>.</li>
+            <li>
+              Session restores on every page load via refresh cookie →
+              <code>POST /auth/refresh</code> then <code>GET /auth/me</code>.
+            </li>
+            <li>Errors shown inline per field; rate limited on the server.</li>
+            <li>After success → sites list.</li>
+          </ul>
+        </details>
+
+        <details>
+          <summary>Sites list <span class="tag">home after login</span></summary>
+          <ul>
+            <li>Card per site: name, domain, active/inactive, quick stat.</li>
+            <li>Empty state is the important one: one big <em>Create site</em>.</li>
+            <li>Action: create site. Click a card → that site's dashboard.</li>
+            <li>Data: <code>GET /sites</code>.</li>
+          </ul>
+        </details>
+
+        <details>
+          <summary>Create site <span class="tag">form</span></summary>
+          <ul>
+            <li>Two fields: name, domain. Nothing else.</li>
+            <li><code>POST /sites</code> → returns a tracking ID.</li>
+            <li>Straight into setup — never dump the user back on a list.</li>
+          </ul>
+        </details>
+
+        <details>
+          <summary>Setup <span class="tag">install</span></summary>
+          <ul>
+            <li>Copy-paste script snippet with the site's tracking ID.</li>
+            <li>Copy button; snippet is the hero of the page.</li>
+            <li>
+              Live waiting state: "listening for your first event" → flips to
+              success when one arrives.
+            </li>
+            <li>Reachable later as a tab on the site, not only at creation.</li>
+          </ul>
+        </details>
+
+        <details open>
+          <summary>Site dashboard <span class="tag">the main page</span></summary>
+          <ul>
+            <li>Header: site name, domain, active badge. Tabs: Analytics · Setup · Settings.</li>
+            <li>Range picker: 7d / 30d / 90d, hourly or daily.</li>
+            <li>
+              Realtime strip — active now, pageviews, visitors, active pages,
+              live referrers (<code>/analytics/:id/realtime/stream</code>).
+            </li>
+            <li>Totals: pageviews, sessions, unique visitors (<code>/overview</code>).</li>
+            <li>Traffic over time, area chart (<code>/timeseries</code>).</li>
+            <li>Top pages and top referrers, side by side.</li>
+            <li>Devices (browser / OS / device) and countries.</li>
+            <li>States each block needs: loading skeleton, empty, error.</li>
+          </ul>
+        </details>
+
+        <details>
+          <summary>Site settings <span class="tag">per site</span></summary>
+          <ul>
+            <li>Edit name and domain (<code>PUT /sites/:id</code>).</li>
+            <li>Tracking ID shown; regenerate key (<code>POST /sites/:id/regen-key</code>) — warns that the old snippet stops working.</li>
+            <li>Plan / rate limit tier, read-only for now.</li>
+            <li>Danger zone: delete site, typed confirmation.</li>
+          </ul>
+        </details>
+
+        <details>
+          <summary>Account <span class="tag">per user</span></summary>
+          <ul>
+            <li>Name and email (<code>PATCH /auth/me</code>).</li>
+            <li>Change password.</li>
+            <li>Log out.</li>
+          </ul>
+        </details>
+      </section>
+    </main>
+  </body>
+</html>

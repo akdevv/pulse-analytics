@@ -1,0 +1,107 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Sites — Pulse</title>
+    <link rel="stylesheet" href="../../wireframes.css" />
+  </head>
+  <body data-page="sites-empty">
+    <div class="sheet app">
+      <pulse-sidebar></pulse-sidebar>
+
+      <div class="page stack">
+        <pulse-topbar></pulse-topbar>
+
+        <div class="column stack">
+          <!-- no search, no view toggle: nothing to search or switch between -->
+          <div class="empty">
+            <div class="empty-copy">
+              <strong class="empty-title">Track your first site</strong>
+              <p class="muted">
+                Give us a domain and we'll hand you a one-line snippet. Numbers
+                start arriving the moment somebody visits — no daily batch, no
+                cookie banner.
+              </p>
+              <div class="row empty-actions">
+                <button class="btn primary" data-open-new>+ New site</button>
+                <a class="btn" href="docs.html">Read the docs</a>
+              </div>
+            </div>
+
+            <!-- a sketch of what they get, so the ask has a payoff attached -->
+            <div class="empty-preview" aria-hidden="true">
+              <div class="empty-preview-head">
+                <span class="fav">A</span>
+                <span class="sitecard-name"><strong>your-site.com</strong><span class="muted">in about a minute</span></span>
+                <span class="pill live"><i></i>148</span>
+              </div>
+              <div class="empty-preview-nums">
+                <span><strong>12.4k</strong><i>visitors</i></span>
+                <span><strong>32.1k</strong><i>views</i></span>
+                <span><strong>41%</strong><i>bounce</i></span>
+              </div>
+              <div class="chart">your traffic, here</div>
+            </div>
+          </div>
+
+          <ol class="empty-steps">
+            <li>
+              <span class="step-num">1</span>
+              <strong>Add the site</strong>
+              <p class="muted">Name and domain. Two fields, nothing else to decide.</p>
+            </li>
+            <li>
+              <span class="step-num">2</span>
+              <strong>Paste one line</strong>
+              <p class="muted">A script tag before <code>&lt;/head&gt;</code>. Works on any stack.</p>
+            </li>
+            <li>
+              <span class="step-num">3</span>
+              <strong>Watch it land</strong>
+              <p class="muted">The first visit shows up live while you're still on the page.</p>
+            </li>
+          </ol>
+
+          <p class="empty-foot muted">
+            Moving from somewhere else? <a href="docs.html">Import your history</a>
+            or <a href="docs.html">run Pulse on your own domain</a>.
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <dialog data-new-site>
+      <form class="modal stack">
+        <div class="modal-head">
+          <strong>Add a site</strong>
+          <p class="muted">We'll give you a snippet to paste once it's created.</p>
+        </div>
+
+        <label class="field">
+          <span class="label">Name</span>
+          <input class="ctl" name="name" placeholder="Acme Docs" required />
+          <span class="hint">What you'll call it inside Pulse.</span>
+        </label>
+
+        <label class="field">
+          <span class="label">Domain</span>
+          <input class="ctl" name="domain" placeholder="docs.acme.dev" required />
+          <span class="hint">No https:// and no trailing slash.</span>
+        </label>
+
+        <span class="err"></span>
+
+        <div class="modal-foot">
+          <button type="button" class="btn" data-cancel>Cancel</button>
+          <button class="btn primary">Create site</button>
+        </div>
+      </form>
+    </dialog>
+
+    <script src="../app.js"></script>
+    <script src="../components/sidebar.js"></script>
+    <script src="../components/topbar.js"></script>
+    <script src="../components/statebar.js"></script>
+  </body>
+</html>

@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Account — Pulse</title>
+    <link rel="stylesheet" href="../../wireframes.css" />
+  </head>
+  <body data-page="account">
+    <div class="sheet app">
+      <pulse-sidebar></pulse-sidebar>
+
+      <div class="page stack">
+        <pulse-topbar></pulse-topbar>
+
+        <div class="column stack">
+
+        <form class="box stack" data-profile>
+          <span class="label">Profile</span>
+          <label class="stack" style="gap: 4px">
+            <span class="muted fineprint">Name</span>
+            <input class="ctl" name="name" required />
+          </label>
+          <label class="stack" style="gap: 4px">
+            <span class="muted fineprint">Email</span>
+            <input class="ctl" name="email" type="email" required />
+          </label>
+          <span class="err"></span>
+          <div class="row end"><button class="btn primary">Save</button></div>
+        </form>
+
+        <form class="box alt stack" data-password>
+          <span class="label">Password</span>
+          <label class="stack" style="gap: 4px">
+            <span class="muted fineprint">Current password</span>
+            <input class="ctl" name="current" type="password" required />
+          </label>
+          <label class="stack" style="gap: 4px">
+            <span class="muted fineprint">New password</span>
+            <input class="ctl" name="next" type="password" required />
+          </label>
+          <label class="stack" style="gap: 4px">
+            <span class="muted fineprint">New password again</span>
+            <input class="ctl" name="repeat" type="password" required />
+          </label>
+          <span class="err"></span>
+          <div class="row end"><button class="btn primary">Change password</button></div>
+        </form>
+
+        <div class="box dash row between">
+          <span class="muted fineprint">
+            Prototype only — resets the sites and profile stored in this browser.
+          </span>
+          <button class="btn" data-reset>Reset prototype data</button>
+        </div>
+        </div>
+      </div>
+    </div>
+
+    <script src="../app.js"></script>
+    <script src="../components/sidebar.js"></script>
+    <script src="../components/topbar.js"></script>
+    <script src="../components/statebar.js"></script>
+  </body>
+</html>

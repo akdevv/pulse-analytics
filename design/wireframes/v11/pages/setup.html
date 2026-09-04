@@ -1,0 +1,96 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Setup — Pulse</title>
+    <link rel="stylesheet" href="../../wireframes.css" />
+  </head>
+  <body data-page="setup">
+    <div class="sheet app">
+      <pulse-sidebar></pulse-sidebar>
+
+      <div class="page stack">
+        <pulse-topbar></pulse-topbar>
+
+        <div class="column stack">
+          <div class="tabsrow"><site-tabs></site-tabs></div>
+
+          <!-- verification first: it is the only question this page answers -->
+          <section class="panel verify" data-verify>
+            <div class="panel-body verify-body">
+              <span class="verify-mark" data-verify-mark>◌</span>
+              <span class="verify-text">
+                <strong data-verify-title>Checking…</strong>
+                <span class="muted" data-verify-note></span>
+              </span>
+              <span class="row verify-actions">
+                <button class="btn" data-check>Check now</button>
+                <a class="btn primary" data-analytics-link href="analytics.html" hidden>View analytics</a>
+              </span>
+            </div>
+          </section>
+
+          <section class="panel">
+            <header class="panel-head">
+              <strong>Install</strong>
+              <div class="segmented" data-methods>
+                <button class="on" data-method="script">Script tag</button>
+                <button data-method="npm">npm</button>
+                <button data-method="next">Next.js</button>
+                <button data-method="wp">WordPress</button>
+              </div>
+            </header>
+
+            <div class="panel-body stack">
+              <p class="muted snippet-where" data-method-note></p>
+              <pre class="codeblock"><code data-snippet></code></pre>
+              <div class="row between">
+                <span class="muted fineprint">
+                  Tracking key <code data-key></code>
+                </span>
+                <button class="btn" data-copy>Copy</button>
+              </div>
+            </div>
+
+            <div class="panel-body optionblock" data-options>
+              <span class="label">Options — these rewrite the snippet above</span>
+              <label class="opt">
+                <input type="checkbox" data-opt="hash" />
+                <span>
+                  <strong>Track hash routes</strong>
+                  <span class="muted">For apps that navigate with <code>#/path</code>.</span>
+                </span>
+              </label>
+              <label class="opt">
+                <input type="checkbox" data-opt="outbound" />
+                <span>
+                  <strong>Track outbound links</strong>
+                  <span class="muted">Counts clicks that leave your domain.</span>
+                </span>
+              </label>
+              <label class="opt">
+                <input type="checkbox" data-opt="local" />
+                <span>
+                  <strong>Count localhost</strong>
+                  <span class="muted">Off by default so your own dev traffic stays out.</span>
+                </span>
+              </label>
+            </div>
+          </section>
+
+          <p class="muted fineprint">
+            Using a tag manager, a proxy, or a framework that isn't listed?
+            <a href="docs.html">Every install method →</a>
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <script src="../app.js"></script>
+    <script src="../components/sidebar.js"></script>
+    <script src="../components/topbar.js"></script>
+    <script src="../components/tabs.js"></script>
+    <script src="../components/statebar.js"></script>
+  </body>
+</html>

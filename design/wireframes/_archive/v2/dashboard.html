@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Acme Docs — Pulse</title>
+    <link rel="stylesheet" href="../../wireframes.css" />
+  </head>
+  <body>
+    <div class="sheet stack" style="height: 100%; overflow-y: auto">
+      <!-- no sidebar: site switcher lives in the bar -->
+      <div class="topbar">
+        <strong>Pulse</strong>
+        <span class="site-switch">Acme Docs ▾</span>
+        <a class="on" href="dashboard.html">Analytics</a>
+        <a href="sites.html">Setup</a>
+        <a href="sites.html">Settings</a>
+        <div style="flex: 1"></div>
+        <span class="muted">Last 7 days ▾</span>
+        <a href="sites.html">Account</a>
+      </div>
+
+      <div class="column stack">
+        <!-- realtime reduced to one line you never have to scroll past -->
+        <div class="box row between" style="padding: 10px 16px">
+          <span><strong>● 148 online</strong> <span class="muted">right now</span></span>
+          <span class="muted">/docs/getting-started · /pricing · /</span>
+          <span class="muted" style="font-size: 12px">expand ▾</span>
+        </div>
+
+        <div class="box stack">
+          <div class="row between">
+            <strong>32.1k pageviews</strong>
+            <span class="muted">▲ 12% vs previous 7 days</span>
+          </div>
+          <div class="chart tall">area chart — the page starts here</div>
+          <div class="row">
+            <span class="muted">19.6k sessions</span>
+            <span class="muted">12.4k visitors</span>
+            <span class="muted">2m 14s avg</span>
+          </div>
+        </div>
+
+        <div class="box alt stack">
+          <strong>Top pages</strong>
+          <div class="tbl">
+            <div class="tr head"><span>page</span><span class="num">views</span><span class="num">share</span></div>
+            <div class="tr"><span>/docs/getting-started</span><span class="num">6,402</span><span class="num">20%</span></div>
+            <div class="tr"><span>/</span><span class="num">9,124</span><span class="num">28%</span></div>
+            <div class="tr"><span>/pricing</span><span class="num">4,318</span><span class="num">13%</span></div>
+          </div>
+          <span class="muted" style="font-size: 13px">Show all 24 →</span>
+        </div>
+
+        <div class="box alt stack">
+          <strong>Referrers</strong>
+          <div class="tbl">
+            <div class="tr head"><span>source</span><span class="num">views</span><span class="num">share</span></div>
+            <div class="tr"><span>google.com</span><span class="num">7,841</span><span class="num">24%</span></div>
+            <div class="tr"><span>direct</span><span class="num">6,120</span><span class="num">19%</span></div>
+            <div class="tr"><span>news.ycombinator.com</span><span class="num">3,402</span><span class="num">10%</span></div>
+          </div>
+          <span class="muted" style="font-size: 13px">Show all 18 →</span>
+        </div>
+
+        <div class="grid2">
+          <div class="box stack">
+            <strong>Devices</strong>
+            <div class="chart short">bars</div>
+          </div>
+          <div class="box stack">
+            <strong>Countries</strong>
+            <div class="chart short">bars</div>
+          </div>
+        </div>
+
+        <p class="note">
+          <strong>v2 — one column, no sidebar.</strong> Nothing sits beside the
+          content, so the chart can be wide and the eye has one path down the
+          page. Site switching moves into the top bar. Realtime shrinks to a
+          single line because most visits are not about "right now". Trade-off:
+          switching sites costs one extra click.
+        </p>
+      </div>
+    </div>
+
+    <p class="states">v2 · one column</p>
+    <nav class="vswitch"><a href="../v1/dashboard.html">v1</a><a class="on" href="../v2/dashboard.html">v2</a><a href="../v3/dashboard.html">v3</a><a href="../v4/dashboard.html">v4</a><a href="../v5/dashboard.html">v5</a><a href="../v6/dashboard.html">v6</a><a href="../v7/dashboard.html">v7</a><a href="../v8/dashboard.html">v8</a><a href="../v9/dashboard.html">v9</a><a href="../v10/dashboard.html">v10</a></nav>
+  </body>
+</html>

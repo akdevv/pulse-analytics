@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Acme Docs — Pulse</title>
+    <link rel="stylesheet" href="../../wireframes.css" />
+  </head>
+  <body>
+    <div class="sheet app">
+      <div class="box sidebar stack">
+        <strong>Pulse</strong>
+        <span class="label">sites</span>
+        <a class="nav-item on" href="dashboard.html">Acme Docs</a>
+        <a class="nav-item" href="sites.html">Marketing site</a>
+        <a class="nav-item muted" href="sites.html">+ Add site</a>
+        <div style="flex: 1"></div>
+        <a class="nav-item" href="sites.html">Account</a>
+      </div>
+
+      <div class="stack">
+        <div class="row between">
+          <strong>Acme Docs <span class="muted">docs.acme.dev</span></strong>
+          <span class="muted">7d ▾ · compare ▾</span>
+        </div>
+
+        <!-- filters are the whole idea -->
+        <div class="row">
+          <span class="chip">page = /docs/* ✕</span>
+          <span class="chip">country = India ✕</span>
+          <span class="chip add">+ filter</span>
+          <span class="muted" style="font-size: 13px">3,102 of 32.1k views</span>
+        </div>
+
+        <div class="box stack">
+          <div class="row between">
+            <strong>3,102 pageviews</strong>
+            <span class="muted">filtered · ▲ 4%</span>
+          </div>
+          <div class="chart">area chart, redraws on every filter</div>
+        </div>
+
+        <!-- one panel, tabbed, instead of six boxes -->
+        <div class="box alt stack" style="flex: 1">
+          <div class="tabs">
+            <a class="on" href="dashboard.html">Pages</a>
+            <a href="dashboard.html">Referrers</a>
+            <a href="dashboard.html">Devices</a>
+            <a href="dashboard.html">Countries</a>
+            <a href="dashboard.html">Events</a>
+          </div>
+          <div class="tbl">
+            <div class="tr head"><span>page</span><span class="num">views</span><span class="num">visitors</span></div>
+            <div class="tr"><span>/docs/getting-started</span><span class="num">6,402</span><span class="num">3,910</span></div>
+            <div class="tr"><span>/docs/api/events</span><span class="num">3,157</span><span class="num">2,004</span></div>
+            <div class="tr"><span>/docs/sdk/javascript</span><span class="num">1,874</span><span class="num">1,210</span></div>
+            <div class="tr"><span>/docs/faq</span><span class="num">906</span><span class="num">701</span></div>
+            <div class="tr"><span>/docs/self-hosting</span><span class="num">612</span><span class="num">488</span></div>
+          </div>
+          <span class="muted" style="font-size: 13px">Click a row to filter by it.</span>
+        </div>
+
+        <p class="note">
+          <strong>v4 — explorer.</strong> One chart, one table, and clicking any
+          row narrows everything above it. Six separate boxes become five tabs,
+          so the page never scrolls. Best for digging into a question; heavier
+          than the others for a ten-second glance. Sidebar lists sites directly,
+          so switching site is one click.
+        </p>
+      </div>
+    </div>
+
+    <p class="states">v4 · explorer</p>
+    <nav class="vswitch"><a href="../v1/dashboard.html">v1</a><a href="../v2/dashboard.html">v2</a><a href="../v3/dashboard.html">v3</a><a class="on" href="../v4/dashboard.html">v4</a><a href="../v5/dashboard.html">v5</a><a href="../v6/dashboard.html">v6</a><a href="../v7/dashboard.html">v7</a><a href="../v8/dashboard.html">v8</a><a href="../v9/dashboard.html">v9</a><a href="../v10/dashboard.html">v10</a></nav>
+  </body>
+</html>

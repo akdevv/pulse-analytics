@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Analytics — Pulse</title>
+    <link rel="stylesheet" href="../../wireframes.css" />
+  </head>
+  <body data-page="analytics-loading">
+    <div class="sheet app">
+      <pulse-sidebar></pulse-sidebar>
+
+      <div class="page stack">
+        <pulse-topbar></pulse-topbar>
+
+        <div class="column stack">
+          <!-- controls are live immediately; only the data is pending, so the
+               layout never jumps when it arrives -->
+          <div class="tabsrow">
+            <span class="row">
+              <select class="ctl" aria-label="Date range" disabled>
+                <option>Last 7 days</option>
+              </select>
+            </span>
+            <site-tabs></site-tabs>
+          </div>
+
+          <div class="filterbar">
+            <span class="filterbar-label">Filters</span>
+            <div class="filters"><span class="filter-hint">None yet</span></div>
+            <button class="chip add" disabled>+ Add filter</button>
+          </div>
+
+          <div class="stack" aria-busy="true" aria-label="Loading analytics">
+            <div class="metrics">
+              <div class="metric skel"><span class="line w50"></span><span class="line w75"></span></div>
+              <div class="metric skel"><span class="line w50"></span><span class="line w75"></span></div>
+              <div class="metric skel"><span class="line w50"></span><span class="line w75"></span></div>
+              <div class="metric skel"><span class="line w50"></span><span class="line w75"></span></div>
+              <div class="metric skel"><span class="line w50"></span><span class="line w75"></span></div>
+            </div>
+
+            <section class="panel">
+              <header class="panel-head"><span class="line w30"></span></header>
+              <div class="panel-body"><div class="skel-chart" style="height: 220px"></div></div>
+            </section>
+
+            <div class="grid2">
+              <section class="panel">
+                <header class="panel-head"><span class="line w30"></span></header>
+                <div class="tbl">
+                  <div class="tr skel"><span class="line w75"></span><span class="line w30"></span></div>
+                  <div class="tr skel"><span class="line w50"></span><span class="line w30"></span></div>
+                  <div class="tr skel"><span class="line w75"></span><span class="line w30"></span></div>
+                  <div class="tr skel"><span class="line w50"></span><span class="line w30"></span></div>
+                </div>
+              </section>
+              <section class="panel">
+                <header class="panel-head"><span class="line w30"></span></header>
+                <div class="tbl">
+                  <div class="tr skel"><span class="line w50"></span><span class="line w30"></span></div>
+                  <div class="tr skel"><span class="line w75"></span><span class="line w30"></span></div>
+                  <div class="tr skel"><span class="line w50"></span><span class="line w30"></span></div>
+                  <div class="tr skel"><span class="line w75"></span><span class="line w30"></span></div>
+                </div>
+              </section>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script src="../components/sidebar.js"></script>
+    <script src="../components/topbar.js"></script>
+    <script src="../components/tabs.js"></script>
+    <script src="../components/statebar.js"></script>
+  </body>
+</html>
