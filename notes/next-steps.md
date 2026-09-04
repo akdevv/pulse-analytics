@@ -14,7 +14,7 @@ Backend, frontend and SDK all run locally.
 
 The full pipeline works: a real page sends events and the dashboard shows them.
 
-Next real gap: the frontend looks rough, and nothing has been proven under load.
+Next real gap: no AI query feature, nothing proven under load, and the frontend is rough.
 
 ---
 
@@ -23,9 +23,9 @@ Next real gap: the frontend looks rough, and nothing has been proven under load.
 Small, do them whenever they get annoying.
 
 - [x] ~~Fix `pnpm typecheck`~~ — `track.service.test.ts` mock was missing `ep`/`ts`; they run through `.transform()`, so the inferred type needs them present even when undefined.
-- [ ] Add `db:migrate` and `db:seed` scripts to `backend/package.json` — the README tells people to run `pnpm db:migrate` and it doesn't exist.
-- [ ] Add the `load:*` scripts to `backend/package.json` — the yml files are here but there's no way to run them.
-- [ ] Fix the README links — it points at `docs/plan.md`, `docs/ingestion-api-architecture.md` and `docs/screen-hero.png`. We're not keeping a `docs/` folder, so the links should go.
+- [x] ~~Add `db:migrate` and `db:seed` scripts to `backend/package.json`~~ — `db:migrate` runs prisma deploy + `db/migrate.ts`, same as `dev.sh`.
+- [x] ~~Add the `load:*` scripts to `backend/package.json`~~ — `load:light|medium|heavy|hard|auth|analytics`, each writes JSON to `tests/load/reports/`. Needs artillery on PATH.
+- [x] ~~Fix the README links~~ — dead `docs/` links and the Railway claim removed; roadmap now points at this file.
 
 ## 1. Build the SDK — done
 
@@ -47,17 +47,17 @@ Two things that came out of the verification:
 
 Notes: `sdk/` uses npm, not pnpm, unlike the rest of the repo. Customer sites with a strict CSP will need the API host allowlisted in `script-src` and `connect-src` — worth documenting on the setup page.
 
-## 2. Frontend UI/UX pass
+## 2. AI SQL queries
 
-Currently barely functional. Now that the data flow works, make it something worth showing.
+The differentiator. User asks a question in English, we generate SQL, run it read-only, render the answer.
 
-- [ ] Pick the visual direction first (spacing, type scale, color) and apply it everywhere — piecemeal tweaks won't fix "feels cheap"
-- [ ] Loading states — skeletons instead of layout jumps
-- [ ] Empty states — new site with no events should teach, not show a blank chart
-- [ ] Error states — failed queries currently just vanish
-- [ ] Chart polish — axis formatting, tooltips, sensible number/date rendering
-- [ ] Mobile — the dashboard is desktop-only right now
-- [ ] Onboarding flow — new user → site created → snippet installed → first event, without confusion
+- [ ] Read-only Postgres role — `SELECT` on `events`/`sites` only, `statement_timeout`, its own connection pool
+- [ ] Schema prompt — hand the model the columns it may touch, not the whole DB
+- [ ] Guardrails before execute — single `SELECT`, no CTE writes/DDL/DML, forced `site_id` filter for the caller's site, forced `LIMIT`
+- [ ] `POST /api/v1/sites/:id/ask` — question in, `{sql, rows, explanation}` out
+- [ ] Frontend — ask box on the site dashboard, table result, chart when the shape is time series, show the generated SQL
+- [ ] Cost control — rate limit per user, cache identical questions
+- [ ] Tests — the validator is the security boundary, so it gets real tests (injection attempts, cross-site reads, write statements)
 
 ## 3. Git hooks
 
@@ -122,18 +122,24 @@ Once the number is real, write it up. This is the part that makes the project wo
 - [ ] What broke, what you tuned, what the ceiling was
 - [ ] Cost per million events
 
-## Optional, later
+## 8. Frontend UI/UX polish (last)
 
-**Natural language queries** — user asks a question, you generate SQL, run it, render the result in the format they want.
+Deliberately last. Everything else is either the product working or the number that makes the project worth showing; polish is the coat of paint on top.
 
-Worth doing only after everything above. The hard part isn't generating SQL, it's making sure generated SQL can't read another user's data or table-scan the whole hypertable — read-only role, forced `siteId` filter, statement timeout, validate before execute.
+- [ ] Pick the visual direction first (spacing, type scale, color) and apply it everywhere — piecemeal tweaks won't fix "feels cheap"
+- [ ] Loading states — skeletons instead of layout jumps
+- [ ] Empty states — new site with no events should teach, not show a blank chart
+- [ ] Error states — failed queries currently just vanish
+- [ ] Chart polish — axis formatting, tooltips, sensible number/date rendering
+- [ ] Mobile — the dashboard is desktop-only right now
+- [ ] Onboarding flow — new user → site created → snippet installed → first event, without confusion
 
 ---
 
 ## Order
 
-~~1~~ → 2 → 3 → 4 → 5 → 6 → 7.
+~~0~~ → ~~1~~ → 2 → 3 → 4 → 5 → 6 → 7 → 8.
 
-**Next up: verify the SDK loop end to end, then the frontend UI/UX pass.**
+**Next up: AI SQL queries.**
 
-UI before the test work because the case study needs screenshots. Hooks before testing so the tests stay green. Everything provable locally before AWS costs money.
+AI queries first because they're the feature nothing else has. Hooks before testing so the tests stay green. Everything provable locally before AWS costs money. UI polish last — it's the only item that doesn't block anything downstream.
