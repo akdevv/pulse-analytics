@@ -82,20 +82,20 @@ export default function AccountPage() {
       {/* Header */}
       <div className="min-w-0">
         <h1 className="text-xl font-semibold tracking-tight">Account</h1>
-        <p className="text-muted-foreground truncate text-sm">
+        <p className="truncate text-sm text-muted-foreground">
           Manage your profile and password.
         </p>
       </div>
 
       {/* Profile */}
       <Card className="py-0">
-        <CardHeader className="px-5 pt-5 pb-4 border-b">
+        <CardHeader className="border-b px-5 pt-5 pb-4">
           <CardTitle className="text-sm font-semibold">Profile</CardTitle>
           <CardDescription className="text-xs">
             Update your name and email address.
           </CardDescription>
         </CardHeader>
-        <CardContent className="px-5 py-5 space-y-5">
+        <CardContent className="space-y-5 px-5 py-5">
           <div className="space-y-2">
             <Label htmlFor="name" className="text-xs font-medium">
               Name
@@ -135,14 +135,14 @@ export default function AccountPage() {
 
       {/* Password */}
       <Card className="py-0">
-        <CardHeader className="px-5 pt-5 pb-4 border-b">
+        <CardHeader className="border-b px-5 pt-5 pb-4">
           <CardTitle className="text-sm font-semibold">Password</CardTitle>
           <CardDescription className="text-xs">
             Must be at least 8 characters, with an uppercase letter and a
             number.
           </CardDescription>
         </CardHeader>
-        <CardContent className="px-5 py-5 space-y-5">
+        <CardContent className="space-y-5 px-5 py-5">
           <div className="space-y-2">
             <Label htmlFor="password" className="text-xs font-medium">
               New Password
@@ -181,7 +181,7 @@ export default function AccountPage() {
 
       {/* Details */}
       <Card className="py-0">
-        <CardHeader className="px-5 pt-5 pb-4 border-b">
+        <CardHeader className="border-b px-5 pt-5 pb-4">
           <CardTitle className="text-sm font-semibold">
             Account Details
           </CardTitle>
@@ -189,13 +189,13 @@ export default function AccountPage() {
             Read-only information about this account.
           </CardDescription>
         </CardHeader>
-        <CardContent className="px-5 py-5 space-y-4">
+        <CardContent className="space-y-4 px-5 py-5">
           <div className="space-y-1">
-            <p className="text-muted-foreground text-xs">User ID</p>
+            <p className="text-xs text-muted-foreground">User ID</p>
             <code className="font-mono text-xs break-all">{user.id}</code>
           </div>
           <div className="space-y-1">
-            <p className="text-muted-foreground text-xs">Status</p>
+            <p className="text-xs text-muted-foreground">Status</p>
             <p className="flex items-center gap-1.5 text-sm">
               {user.isVerified ? (
                 <>
@@ -209,7 +209,7 @@ export default function AccountPage() {
           </div>
           {user.lastLoginAt && (
             <div className="space-y-1">
-              <p className="text-muted-foreground text-xs">Last Login</p>
+              <p className="text-xs text-muted-foreground">Last Login</p>
               <p className="text-sm">
                 {new Date(user.lastLoginAt).toLocaleString()}
               </p>

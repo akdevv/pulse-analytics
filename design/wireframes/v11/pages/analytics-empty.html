@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Analytics — Pulse</title>
+    <link rel="stylesheet" href="../../wireframes.css" />
+  </head>
+  <body data-page="analytics-empty">
+    <div class="sheet app">
+      <pulse-sidebar></pulse-sidebar>
+
+      <div class="page stack">
+        <pulse-topbar></pulse-topbar>
+
+        <div class="column stack">
+          <!-- tabs stay, controls don't: there is no range to pick over no data -->
+          <div class="tabsrow"><site-tabs></site-tabs></div>
+
+          <div class="empty">
+            <div class="empty-copy">
+              <strong class="empty-title">Nothing has arrived yet</strong>
+              <p class="muted">
+                The snippet hasn't reported a single event from this domain. We
+                could draw a chart of zeros, but it wouldn't tell you anything —
+                so here's what to check instead.
+              </p>
+              <div class="row empty-actions">
+                <a class="btn primary" href="setup.html">Open setup</a>
+                <a class="btn" href="docs.html">Troubleshooting</a>
+              </div>
+            </div>
+
+            <ul class="checklist">
+              <li>
+                <span class="step-num">?</span>
+                <span>
+                  <strong>Is the snippet on the page?</strong>
+                  <p class="muted">View source and search for <code>cdn.pulse.dev</code>.</p>
+                </span>
+              </li>
+              <li>
+                <span class="step-num">?</span>
+                <span>
+                  <strong>Is it deployed, not just local?</strong>
+                  <p class="muted">Events from localhost are ignored by default.</p>
+                </span>
+              </li>
+              <li>
+                <span class="step-num">?</span>
+                <span>
+                  <strong>Does the domain match?</strong>
+                  <p class="muted">This site is registered as <code>docs.acme.dev</code>.</p>
+                </span>
+              </li>
+            </ul>
+          </div>
+
+          <div class="box dash row between waiting-strip">
+            <span>
+              <strong>Still listening…</strong>
+              <span class="muted">this page turns itself into the dashboard the moment an event lands.</span>
+            </span>
+            <span class="pill">checking every 5s</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script src="../app.js"></script>
+    <script src="../components/sidebar.js"></script>
+    <script src="../components/topbar.js"></script>
+    <script src="../components/tabs.js"></script>
+    <script src="../components/statebar.js"></script>
+  </body>
+</html>

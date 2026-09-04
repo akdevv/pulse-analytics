@@ -1,0 +1,103 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Acme Docs — Pulse</title>
+    <link rel="stylesheet" href="../../wireframes.css" />
+  </head>
+  <body>
+    <div class="sheet app" style="grid-template-columns: 230px minmax(0, 1fr)">
+      <!-- the rail is saved questions, not page links -->
+      <div class="box sidebar stack">
+        <div class="row between">
+          <strong>Acme Docs</strong>
+          <span class="muted">▾</span>
+        </div>
+
+        <span class="label">views</span>
+        <div class="rail">
+          <a class="on" href="dashboard.html">Everything</a>
+          <a href="dashboard.html">Docs readers</a>
+          <a href="dashboard.html">From search</a>
+          <a href="dashboard.html">Mobile only</a>
+          <a href="dashboard.html">Launch week</a>
+          <a class="muted" href="dashboard.html">+ Save current view</a>
+        </div>
+
+        <span class="label" style="margin-top: 10px">watching</span>
+        <div class="rail">
+          <a href="dashboard.html">/pricing</a>
+          <a href="dashboard.html">signup goal</a>
+        </div>
+
+        <div style="flex: 1"></div>
+        <a class="nav-item" href="sites.html">All sites</a>
+        <a class="nav-item" href="sites.html">Account</a>
+      </div>
+
+      <div class="stack">
+        <div class="row between">
+          <span class="row">
+            <strong>Docs readers</strong>
+            <span class="chip">page = /docs/* ✕</span>
+            <span class="chip">returning ✕</span>
+            <span class="chip add">+ filter</span>
+          </span>
+          <span class="chip">30 days ▾</span>
+        </div>
+
+        <div class="box stack">
+          <div class="row between">
+            <span><strong>4,910 visitors</strong> <span class="muted">of 12.4k · 40% of traffic</span></span>
+            <span class="muted">▲ 6% vs previous 30 days</span>
+          </div>
+          <div class="chart">this segment, against the site total as a faint line</div>
+        </div>
+
+        <!-- dense rows with their own trend: agency / power-user density -->
+        <div class="box alt stack" style="flex: 1">
+          <div class="tabs">
+            <a class="on" href="dashboard.html">Pages</a>
+            <a href="dashboard.html">Sources</a>
+            <a href="dashboard.html">Devices</a>
+            <a href="dashboard.html">Countries</a>
+          </div>
+          <div class="tbl">
+            <div class="tr head"><span>page</span><span class="num">visitors</span><span class="num">30d trend</span></div>
+            <div class="tr"><span>/docs/getting-started</span><span class="num">3,910</span><span class="spark"></span></div>
+            <div class="tr"><span>/docs/api/events</span><span class="num">2,004</span><span class="spark"></span></div>
+            <div class="tr"><span>/docs/sdk/javascript</span><span class="num">1,210</span><span class="spark"></span></div>
+            <div class="tr"><span>/docs/faq</span><span class="num">701</span><span class="spark"></span></div>
+            <div class="tr"><span>/docs/self-hosting</span><span class="num">488</span><span class="spark"></span></div>
+            <div class="tr"><span>/docs/pricing-faq</span><span class="num">302</span><span class="spark"></span></div>
+          </div>
+        </div>
+
+        <div class="row between">
+          <span class="muted" style="font-size: 13px">
+            Any view can be shared as a link, mailed weekly, or pinned to the rail.
+          </span>
+          <span class="row">
+            <span class="btn">Share view</span>
+            <span class="btn">Email weekly</span>
+          </span>
+        </div>
+
+        <p class="note">
+          <strong>v9 — segments are the navigation.</strong> The rail holds saved
+          questions ("docs readers", "from search", "launch week") instead of
+          page links, so the work you did last time is one click away rather than
+          five filters away. Every row carries its own 30-day trend, which is the
+          density an agency or a solo operator with ten sites actually wants.
+          This is the only version where the dashboard is a workspace you build
+          up over time. Cost: it needs a good default view, or day one looks
+          empty and confusing.
+        </p>
+      </div>
+    </div>
+
+    <p class="states">v9 · segments</p>
+    <nav class="vswitch"><a href="../v1/dashboard.html">v1</a><a href="../v2/dashboard.html">v2</a><a href="../v3/dashboard.html">v3</a><a href="../v4/dashboard.html">v4</a><a href="../v5/dashboard.html">v5</a><a href="../v6/dashboard.html">v6</a><a href="../v7/dashboard.html">v7</a><a href="../v8/dashboard.html">v8</a><a class="on" href="../v9/dashboard.html">v9</a><a href="../v10/dashboard.html">v10</a></nav>
+  </body>
+</html>

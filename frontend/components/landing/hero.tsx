@@ -1,87 +1,62 @@
 import Link from "next/link";
-import {
-  ACCENT,
-  ACCENT_SOFT,
-  AnimatedCounter,
-  DISPLAY,
-  GhostButton,
-  PrimaryButton,
-  Reveal,
-} from "./shared";
+import { ACCENT, ACCENT_SOFT, DISPLAY } from "./tokens";
+import { GhostButton, PrimaryButton, Reveal } from "./shared";
 import { DashboardMockup } from "./dashboard-mockup";
-
-const STATS = [
-  { value: 1, suffix: "M+", label: "Users, allegedly" },
-  { value: 10, suffix: "k RPS", label: "Before it sweats" },
-  { value: 5, suffix: "ms p90", label: "Ingestion latency" },
-];
 
 export function Hero() {
   return (
-    <section className="relative isolate overflow-hidden pt-40 pb-16">
-      {/* base wash */}
-      <div
-        aria-hidden
-        className="absolute inset-0"
-        style={{ background: "var(--pa-bg)" }}
-      />
+    <section className="relative isolate overflow-hidden pt-32 pb-6 md:pt-40">
+      <div aria-hidden className="absolute inset-0 bg-charcoal" />
 
-      {/* aurora mesh — drifting amber light */}
+      {/* One spotlight from above, not a field of blobs — the panel below
+          is lit by it, so the light has a source and a subject. */}
       <div aria-hidden className="absolute inset-0 overflow-hidden">
         <div
-          className="pa-aurora absolute left-1/2 top-[-10%] h-[620px] w-[820px] -translate-x-1/2 rounded-full blur-[120px]"
+          className="pa-aurora absolute top-[-22%] left-1/2 h-[760px] w-[1100px] -translate-x-1/2 blur-[130px]"
           style={{
-            background: `radial-gradient(circle at center, ${ACCENT} 0%, transparent 62%)`,
-            opacity: 0.22,
+            background: `radial-gradient(ellipse 44% 58% at 50% 0%, ${ACCENT} 0%, transparent 68%)`,
+            opacity: 0.26,
           }}
         />
         <div
-          className="pa-aurora-slow absolute right-[8%] top-[6%] h-[420px] w-[420px] rounded-full blur-[120px]"
-          style={{
-            background: `radial-gradient(circle at center, ${ACCENT_SOFT} 0%, transparent 60%)`,
-            opacity: 0.14,
-          }}
-        />
-        <div
-          className="pa-aurora absolute left-[4%] top-[24%] h-[360px] w-[360px] rounded-full blur-[120px]"
+          className="pa-aurora-slow absolute top-[42%] left-1/2 h-[420px] w-[900px] -translate-x-1/2 blur-[140px]"
           style={{
             background:
-              "radial-gradient(circle at center, oklch(0.6 0.13 250) 0%, transparent 60%)",
-            opacity: 0.1,
+              "radial-gradient(ellipse 50% 60% at 50% 50%, oklch(0.70 0.06 205) 0%, transparent 65%)",
+            opacity: 0.09,
           }}
         />
       </div>
 
-      {/* fine grid with radial mask */}
       <div
         aria-hidden
         className="absolute inset-0 opacity-[0.04]"
         style={{
-          backgroundImage: `linear-gradient(rgba(255,255,255,1) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,1) 1px, transparent 1px)`,
+          backgroundImage: `linear-gradient(rgba(229,227,210,1) 1px, transparent 1px), linear-gradient(90deg, rgba(229,227,210,1) 1px, transparent 1px)`,
           backgroundSize: "72px 72px",
           maskImage:
-            "radial-gradient(ellipse 70% 55% at 50% 38%, black 25%, transparent 78%)",
+            "radial-gradient(ellipse 70% 55% at 50% 30%, black 20%, transparent 76%)",
         }}
       />
 
-      {/* vignette to settle the base into black footer/sections */}
       <div
         aria-hidden
         className="absolute inset-0"
         style={{
           background:
-            "radial-gradient(ellipse 100% 70% at 50% 20%, transparent 40%, var(--pa-bg) 88%)",
+            "radial-gradient(ellipse 100% 70% at 50% 14%, transparent 42%, var(--pa-bg) 90%)",
         }}
       />
 
-      <div className="relative z-10 mx-auto max-w-4xl px-6 text-center">
+      {/* ── The claim ── */}
+      <div className="relative z-10 mx-auto max-w-3xl px-6 text-center">
         <Reveal>
           <Link
             href="/changelog"
-            className="group inline-flex items-center gap-2.5 rounded-full border border-white/10 bg-white/[0.03] px-3 py-1 text-[12px] text-white/65 backdrop-blur-sm transition-colors duration-150 ease-[var(--ease-out)] hover:border-white/20 hover:text-white mb-10"
+            className="group mb-9 inline-flex items-center gap-2.5 rounded-full border border-ink/10 bg-ink/[0.03] px-3 py-1 text-[12px] text-ink/70 backdrop-blur-sm transition-colors duration-150 ease-[var(--ease-out)] hover:border-ink/25 hover:text-ink"
           >
             <span
-              className="rounded-full px-1.5 py-0.5 text-[10px] font-mono uppercase tracking-wider text-black"
+              className="rounded-full px-1.5 py-0.5 font-mono text-[10px] tracking-wider text-charcoal uppercase"
               style={{ background: ACCENT }}
             >
               v0.1
@@ -94,7 +69,8 @@ export function Hero() {
               fill="none"
               stroke="currentColor"
               strokeWidth="2"
-              className="text-white/40 transition-transform duration-200 ease-[var(--ease-out)] group-hover:translate-x-0.5"
+              className="text-ink/55 transition-transform duration-200 ease-[var(--ease-out)] group-hover:translate-x-0.5"
+              aria-hidden
             >
               <path d="M9 6l6 6-6 6" strokeLinecap="round" strokeLinejoin="round" />
             </svg>
@@ -103,17 +79,16 @@ export function Hero() {
 
         <Reveal delay={60}>
           <h1
-            className="text-[64px] sm:text-[84px] md:text-[108px] text-white leading-[0.92] tracking-[-0.03em] mb-8"
-            style={DISPLAY}
+            className="text-[46px] leading-[0.93] tracking-[-0.038em] text-balance text-ink sm:text-[64px] md:text-[80px]"
+            style={{ ...DISPLAY, fontWeight: 600 }}
           >
-            Event analytics,
-            <br />
-            <span style={{ color: ACCENT_SOFT }}>at ridiculous scale.</span>
+            Event analytics, at{" "}
+            <span style={{ color: ACCENT_SOFT }}>ridiculous scale.</span>
           </h1>
         </Reveal>
 
         <Reveal delay={120}>
-          <p className="text-[17px] text-white/55 mb-12 max-w-xl mx-auto leading-relaxed">
+          <p className="mx-auto mt-7 max-w-lg text-[16.5px] leading-relaxed text-ink/70">
             A weekend that turned into a project. Node, Redis, RabbitMQ,
             TimescaleDB — ten thousand events a second at sub-five ms. No
             roadmap. No investors. Just vibes and hyper-tables.
@@ -121,41 +96,29 @@ export function Hero() {
         </Reveal>
 
         <Reveal delay={180}>
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-2.5 mb-20">
-            <PrimaryButton href="/signup" className="px-6 py-3">
+          <div className="mt-9 flex flex-col items-stretch justify-center gap-2.5 sm:flex-row sm:items-center">
+            <PrimaryButton href="/signup" className="justify-center px-6 py-3">
               Try the demo
             </PrimaryButton>
-            <GhostButton href="#how-it-works">Read the source</GhostButton>
-          </div>
-        </Reveal>
-
-        <Reveal delay={240}>
-          <div className="flex items-center justify-center gap-10 sm:gap-16 max-w-xl mx-auto">
-            {STATS.map(({ value, suffix, label }) => (
-              <div key={label} className="text-center">
-                <div
-                  className="text-[24px] font-medium text-white/90"
-                  style={DISPLAY}
-                >
-                  <AnimatedCounter end={value} suffix={suffix} />
-                </div>
-                <div className="mt-1 text-[10px] font-mono uppercase tracking-[0.18em] text-white/35">
-                  {label}
-                </div>
-              </div>
-            ))}
+            <GhostButton href="#how-it-works" className="justify-center">
+              See how it works
+            </GhostButton>
           </div>
         </Reveal>
       </div>
 
-      {/* signature pulse line — the brand EKG, drawn across */}
-      <div className="relative z-10 mt-20 mx-auto max-w-6xl px-6">
+      {/* ── The evidence, laid back under the light ── */}
+      <div className="relative z-10 mx-auto mt-20 max-w-7xl px-6">
+        <Reveal delay={240}>
+          <DashboardMockup />
+        </Reveal>
+      </div>
+
+      {/* The EKG closes the section — the last beat of the load sequence,
+          picked up straight out of the panel's dissolving bottom edge. */}
+      <div className="relative z-10 mx-auto -mt-4 max-w-7xl px-6">
         <PulseLine />
       </div>
-
-      <Reveal delay={120} className="relative z-10 mt-10 w-full max-w-6xl mx-auto px-6">
-        <DashboardMockup />
-      </Reveal>
     </section>
   );
 }
@@ -166,7 +129,7 @@ function PulseLine() {
       aria-hidden
       viewBox="0 0 1200 60"
       preserveAspectRatio="none"
-      className="w-full h-[60px]"
+      className="h-[60px] w-full"
     >
       <defs>
         <linearGradient id="pulseFade" x1="0" y1="0" x2="1" y2="0">
@@ -177,16 +140,15 @@ function PulseLine() {
           <stop offset="100%" stopColor={ACCENT} stopOpacity="0" />
         </linearGradient>
       </defs>
-      {/* baseline */}
       <line
         x1="0"
         y1="30"
         x2="1200"
         y2="30"
-        stroke="rgba(255,255,255,0.06)"
+        stroke="rgba(229,227,210,0.06)"
         strokeWidth="1"
+        vectorEffect="non-scaling-stroke"
       />
-      {/* EKG trace */}
       <path
         className="pa-pulse-path"
         style={{ ["--pa-len" as string]: "2400" }}
@@ -196,6 +158,7 @@ function PulseLine() {
         strokeWidth="2"
         strokeLinecap="round"
         strokeLinejoin="round"
+        vectorEffect="non-scaling-stroke"
         filter="drop-shadow(0 0 6px var(--pa-accent-glow))"
       />
     </svg>

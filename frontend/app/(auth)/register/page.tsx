@@ -1,46 +1,89 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import Link from "next/link";
-import { useForm } from "react-hook-form";
+import { useRouter } from "next/navigation";
+import { useState } from "react";
+import { useForm, useWatch } from "react-hook-form";
 import * as z from "zod";
 
-import { ACCENT, BG, LOGO_FONT, PulseLogo, SURFACE } from "@/components/landing/shared";
+import {
+  AUTH_INPUT,
+  AUTH_LABEL,
+  AuthAltLink,
+  AuthCard,
+  AuthSubmit,
+} from "@/components/auth/auth-ui";
 import { PasswordInput } from "@/components/common/password-input";
+import { POWDER } from "@/components/landing/tokens";
 import {
   Form,
   FormControl,
+  FormDescription,
   FormField,
   FormItem,
   FormLabel,
   FormMessage,
+  useFormField,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { useAuth } from "@/contexts/auth.context";
-import { useRouter } from "next/navigation";
-import { useState } from "react";
 
 const PERSONAL_EMAIL_DOMAINS = new Set([
   // Google
-  "gmail.com", "googlemail.com",
+  "gmail.com",
+  "googlemail.com",
   // Microsoft
-  "outlook.com", "hotmail.com", "hotmail.co.uk", "hotmail.fr", "hotmail.de",
-  "live.com", "live.co.uk", "live.fr", "live.de", "msn.com",
+  "outlook.com",
+  "hotmail.com",
+  "hotmail.co.uk",
+  "hotmail.fr",
+  "hotmail.de",
+  "live.com",
+  "live.co.uk",
+  "live.fr",
+  "live.de",
+  "msn.com",
   // Apple
-  "icloud.com", "me.com", "mac.com",
+  "icloud.com",
+  "me.com",
+  "mac.com",
   // Yahoo
-  "yahoo.com", "yahoo.co.uk", "yahoo.fr", "yahoo.de", "yahoo.es",
-  "yahoo.it", "yahoo.co.in", "yahoo.ca", "yahoo.com.au", "yahoo.com.br",
-  "yahoo.com.mx", "yahoo.co.jp", "rocketmail.com", "ymail.com",
+  "yahoo.com",
+  "yahoo.co.uk",
+  "yahoo.fr",
+  "yahoo.de",
+  "yahoo.es",
+  "yahoo.it",
+  "yahoo.co.in",
+  "yahoo.ca",
+  "yahoo.com.au",
+  "yahoo.com.br",
+  "yahoo.com.mx",
+  "yahoo.co.jp",
+  "rocketmail.com",
+  "ymail.com",
   // Privacy-focused
-  "protonmail.com", "protonmail.ch", "proton.me", "pm.me",
-  "tutanota.com", "tutamail.com", "tuta.io",
+  "protonmail.com",
+  "protonmail.ch",
+  "proton.me",
+  "pm.me",
+  "tutanota.com",
+  "tutamail.com",
+  "tuta.io",
   // Other established
-  "aol.com", "aol.co.uk",
-  "mail.com", "email.com",
-  "gmx.com", "gmx.net", "gmx.de", "gmx.at", "gmx.ch",
-  "yandex.com", "yandex.ru",
-  "fastmail.com", "fastmail.fm",
+  "aol.com",
+  "aol.co.uk",
+  "mail.com",
+  "email.com",
+  "gmx.com",
+  "gmx.net",
+  "gmx.de",
+  "gmx.at",
+  "gmx.ch",
+  "yandex.com",
+  "yandex.ru",
+  "fastmail.com",
+  "fastmail.fm",
   "hey.com",
   "zoho.com",
   "inbox.com",
@@ -57,7 +100,10 @@ const registerSchema = z
     name: z.string().min(2, "Name must be at least 2 characters."),
     email: z
       .email("Please enter a valid email address.")
-      .refine(isPersonalEmail, "Please use a personal email (Gmail, Outlook, iCloud, etc.). Work emails aren't supported."),
+      .refine(
+        isPersonalEmail,
+        "Please use a personal email (Gmail, Outlook, iCloud, etc.). Work emails aren't supported."
+      ),
     password: z
       .string()
       .min(8, "Password must be at least 8 characters.")
@@ -72,6 +118,74 @@ const registerSchema = z
     path: ["confirmPassword"],
   });
 
+/* The password has five rules. Listing them as one grey sentence and
+   then rejecting the whole field on submit makes the user guess which
+   one they missed, so each rule reports itself as they type. Same
+   source of truth as the schema above. */
+const PASSWORD_RULES: { label: string; test: (v: string) => boolean }[] = [
+  { label: "8+ characters", test: (v) => v.length >= 8 },
+  { label: "Uppercase", test: (v) => /[A-Z]/.test(v) },
+  { label: "Lowercase", test: (v) => /[a-z]/.test(v) },
+  { label: "Number", test: (v) => /[0-9]/.test(v) },
+  { label: "Special character", test: (v) => /[^A-Za-z0-9]/.test(v) },
+];
+
+function PasswordRules({ value }: { value: string }) {
+  const { formDescriptionId } = useFormField();
+  return (
+    <ul
+      id={formDescriptionId}
+      className="mt-2.5 flex flex-wrap gap-1.5"
+    >
+      {PASSWORD_RULES.map(({ label, test }) => {
+        const met = value.length > 0 && test(value);
+        return (
+          <li
+            key={label}
+            className="inline-flex items-center gap-1.5 rounded-md border px-2 py-[3px] text-[11px] leading-none transition-colors duration-150 ease-[var(--ease-out)]"
+            style={
+              met
+                ? {
+                    borderColor: `color-mix(in oklab, ${POWDER} 30%, transparent)`,
+                    background: `color-mix(in oklab, ${POWDER} 9%, transparent)`,
+                    color: POWDER,
+                  }
+                : {
+                    borderColor: "rgba(229,227,210,0.1)",
+                    color: "rgba(229,227,210,0.38)",
+                  }
+            }
+          >
+            {met ? (
+              <svg
+                width="9"
+                height="9"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="3.5"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                className="shrink-0"
+                aria-hidden
+              >
+                <path d="M4 12.5 9.5 18 20 6.5" />
+              </svg>
+            ) : (
+              <span
+                aria-hidden
+                className="h-[3px] w-[3px] shrink-0 rounded-full bg-current"
+              />
+            )}
+            <span className="sr-only">{met ? "Met:" : "Not met:"}</span>
+            {label}
+          </li>
+        );
+      })}
+    </ul>
+  );
+}
+
 type RegisterFormValues = z.infer<typeof registerSchema>;
 
 export default function Register() {
@@ -84,6 +198,7 @@ export default function Register() {
     resolver: zodResolver(registerSchema),
     defaultValues: { name: "", email: "", password: "", confirmPassword: "" },
   });
+  const password = useWatch({ control: form.control, name: "password" });
 
   async function onSubmit(data: RegisterFormValues) {
     try {
@@ -99,224 +214,117 @@ export default function Register() {
   }
 
   return (
-    <div
-      className="dark min-h-screen flex flex-col relative overflow-hidden"
-      style={{ background: BG }}
+    <AuthCard
+      title="Create account"
+      subtitle="Free, and it stays free. There is nothing to sell you."
+      error={error}
+      footer={
+        <AuthAltLink
+          prompt="Already have an account?"
+          href="/login"
+          label="Sign in"
+        />
+      }
     >
-      {/* Grid texture */}
-      <div
-        className="pointer-events-none absolute inset-0"
-        style={{
-          backgroundImage:
-            "linear-gradient(oklch(1 0 0 / 0.03) 1px, transparent 1px), linear-gradient(90deg, oklch(1 0 0 / 0.03) 1px, transparent 1px)",
-          backgroundSize: "36px 36px",
-        }}
-      />
-
-      {/* Ambient orange glow */}
-      <div
-        className="pointer-events-none absolute inset-0"
-        style={{
-          background: `radial-gradient(ellipse 70% 55% at 50% 48%, ${ACCENT}14 0%, transparent 68%)`,
-        }}
-      />
-
-      {/* Logo — top left */}
-      <div className="relative z-10 p-6">
-        <Link href="/" className="inline-flex items-center gap-2 group">
-          <PulseLogo size={26} />
-          <span
-            className="text-white/80 group-hover:text-white transition-colors text-[15px]"
-            style={LOGO_FONT}
-          >
-            Pulse
-          </span>
-        </Link>
-      </div>
-
-      {/* Centered card */}
-      <div className="relative z-10 flex-1 flex items-center justify-center px-4 pb-10">
-        <div className="w-full max-w-[380px]">
-          <div
-            className="rounded-2xl overflow-hidden animate-fade-in"
-            style={{
-              background: SURFACE,
-              border: "1px solid oklch(0.3 0.005 285)",
-              boxShadow: [
-                `0 0 0 1px ${ACCENT}10`,
-                "0 2px 4px rgba(0,0,0,0.3)",
-                "0 12px 32px -4px rgba(0,0,0,0.5)",
-                "0 32px 64px -8px rgba(0,0,0,0.4)",
-                `0 0 80px -16px ${ACCENT}22`,
-              ].join(", "),
-            }}
-          >
-            {/* Top accent line */}
-            <div
-              style={{
-                height: "1px",
-                background: `linear-gradient(90deg, transparent 8%, ${ACCENT}80 50%, transparent 92%)`,
-              }}
-            />
-
-            <div className="px-8 py-8">
-              {/* Heading */}
-              <div className="mb-8">
-                <h1
-                  className="text-white text-[24px] mb-1.5"
-                  style={{ ...LOGO_FONT, fontWeight: 700 }}
-                >
-                  Create account
-                </h1>
-                <p className="text-[14px] text-white/40 leading-snug">
-                  Get started with Pulse Analytics for free
-                </p>
-              </div>
-
-              {/* Error */}
-              {error && (
-                <div
-                  className="mb-5 rounded-xl px-4 py-3 text-[13px] text-red-300"
-                  style={{
-                    background: "oklch(0.35 0.1 25 / 0.2)",
-                    border: "1px solid oklch(0.5 0.15 25 / 0.3)",
-                  }}
-                >
-                  {error}
-                </div>
-              )}
-
-              {/* Form */}
-              <Form {...form}>
-                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-                  <FormField
-                    control={form.control}
-                    name="name"
-                    render={({ field }) => (
-                      <FormItem className="space-y-1.5">
-                        <FormLabel className="text-[13px] font-medium text-white/55">
-                          Name
-                        </FormLabel>
-                        <FormControl>
-                          <Input
-                            placeholder="John Doe"
-                            disabled={loading}
-                            className="h-10 text-[14px] text-white placeholder:text-white/20 bg-white/5 border-white/10"
-                            {...field}
-                          />
-                        </FormControl>
-                        <FormMessage className="text-red-400 text-[12px]" />
-                      </FormItem>
-                    )}
+      <Form {...form}>
+        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+          <FormField
+            control={form.control}
+            name="name"
+            render={({ field }) => (
+              <FormItem className="space-y-1">
+                <FormLabel className={AUTH_LABEL}>Name</FormLabel>
+                <FormControl>
+                  <Input
+                    autoComplete="name"
+                    placeholder="Ada Lovelace"
+                    disabled={loading}
+                    className={AUTH_INPUT}
+                    {...field}
                   />
+                </FormControl>
+                <FormMessage className="text-[12px]" />
+              </FormItem>
+            )}
+          />
 
-                  <FormField
-                    control={form.control}
-                    name="email"
-                    render={({ field }) => (
-                      <FormItem className="space-y-1.5">
-                        <FormLabel className="text-[13px] font-medium text-white/55">
-                          Email
-                        </FormLabel>
-                        <FormControl>
-                          <Input
-                            type="email"
-                            placeholder="you@example.com"
-                            disabled={loading}
-                            className="h-10 text-[14px] text-white placeholder:text-white/20 bg-white/5 border-white/10"
-                            {...field}
-                          />
-                        </FormControl>
-                        <p className="text-[11px] text-white/25 leading-snug">
-                          Personal email only — Gmail, Outlook, iCloud, etc.
-                        </p>
-                        <FormMessage className="text-red-400 text-[12px]" />
-                      </FormItem>
-                    )}
+          <FormField
+            control={form.control}
+            name="email"
+            render={({ field }) => (
+              <FormItem className="space-y-1">
+                <FormLabel className={AUTH_LABEL}>Email</FormLabel>
+                <FormControl>
+                  <Input
+                    type="email"
+                    inputMode="email"
+                    autoComplete="email"
+                    autoCapitalize="none"
+                    spellCheck={false}
+                    placeholder="you@example.com"
+                    disabled={loading}
+                    className={AUTH_INPUT}
+                    {...field}
                   />
+                </FormControl>
+                {/* FormDescription lands in aria-describedby; the raw <p>
+                    this replaces was never announced. */}
+                <FormDescription className="text-[11px] leading-snug text-ink/35">
+                  Personal email only. Gmail, Outlook, iCloud and the like.
+                </FormDescription>
+                <FormMessage className="text-[12px]" />
+              </FormItem>
+            )}
+          />
 
-                  <FormField
-                    control={form.control}
-                    name="password"
-                    render={({ field }) => (
-                      <FormItem className="space-y-1.5">
-                        <FormLabel className="text-[13px] font-medium text-white/55">
-                          Password
-                        </FormLabel>
-                        <FormControl>
-                          <PasswordInput
-                            placeholder="Min. 8 characters"
-                            disabled={loading}
-                            className="h-10 text-[14px] text-white placeholder:text-white/20 bg-white/5 border-white/10"
-                            {...field}
-                          />
-                        </FormControl>
-                        <p className="text-[11px] text-white/25 leading-snug">
-                          8+ chars · uppercase · lowercase · number · special character
-                        </p>
-                        <FormMessage className="text-red-400 text-[12px]" />
-                      </FormItem>
-                    )}
+          <FormField
+            control={form.control}
+            name="password"
+            render={({ field }) => (
+              <FormItem className="space-y-1">
+                <FormLabel className={AUTH_LABEL}>Password</FormLabel>
+                <FormControl>
+                  <PasswordInput
+                    autoComplete="new-password"
+                    placeholder="Pick something strong"
+                    disabled={loading}
+                    className={AUTH_INPUT}
+                    {...field}
                   />
+                </FormControl>
+                <PasswordRules value={password} />
+                <FormMessage className="text-[12px]" />
+              </FormItem>
+            )}
+          />
 
-                  <FormField
-                    control={form.control}
-                    name="confirmPassword"
-                    render={({ field }) => (
-                      <FormItem className="space-y-1.5">
-                        <FormLabel className="text-[13px] font-medium text-white/55">
-                          Confirm password
-                        </FormLabel>
-                        <FormControl>
-                          <PasswordInput
-                            placeholder="Repeat password"
-                            disabled={loading}
-                            className="h-10 text-[14px] text-white placeholder:text-white/20 bg-white/5 border-white/10"
-                            {...field}
-                          />
-                        </FormControl>
-                        <FormMessage className="text-red-400 text-[12px]" />
-                      </FormItem>
-                    )}
+          <FormField
+            control={form.control}
+            name="confirmPassword"
+            render={({ field }) => (
+              <FormItem className="space-y-1">
+                <FormLabel className={AUTH_LABEL}>Confirm password</FormLabel>
+                <FormControl>
+                  <PasswordInput
+                    autoComplete="new-password"
+                    placeholder="Repeat password"
+                    disabled={loading}
+                    className={AUTH_INPUT}
+                    {...field}
                   />
+                </FormControl>
+                <FormMessage className="text-[12px]" />
+              </FormItem>
+            )}
+          />
 
-                  <div className="pt-1">
-                    <button
-                      type="submit"
-                      disabled={loading}
-                      className="w-full h-10 rounded-xl text-[14px] font-semibold transition-opacity hover:opacity-85 active:opacity-75 disabled:opacity-50 cursor-pointer flex items-center justify-center gap-2"
-                      style={{ background: ACCENT, color: BG }}
-                    >
-                      {loading ? (
-                        <>
-                          <span className="w-3.5 h-3.5 border-2 border-current border-t-transparent rounded-full animate-spin" />
-                          Creating account…
-                        </>
-                      ) : (
-                        "Create account"
-                      )}
-                    </button>
-                  </div>
-                </form>
-              </Form>
-
-              {/* Footer */}
-              <div
-                className="mt-7 pt-6 text-center text-[13px] text-white/30"
-                style={{ borderTop: "1px solid oklch(1 0 0 / 0.07)" }}
-              >
-                Already have an account?{" "}
-                <Link
-                  href="/login"
-                  className="text-white/60 font-medium hover:text-white transition-colors"
-                >
-                  Sign in
-                </Link>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
+          <AuthSubmit
+            loading={loading}
+            idle="Create account"
+            busy="Creating account…"
+          />
+        </form>
+      </Form>
+    </AuthCard>
   );
 }

@@ -48,7 +48,7 @@ export function TopPagesChart({ data, isLoading, error }: Props) {
       ) : (
         <div className="space-y-2.5">
           {data.map((row, i) => (
-            <div key={row.page} className="flex items-center gap-3 group">
+            <div key={row.page} className="group flex items-center gap-3">
               <span className="w-5 shrink-0 text-right text-[11px] font-medium text-muted-foreground/40 tabular-nums">
                 {i + 1}
               </span>
@@ -60,7 +60,7 @@ export function TopPagesChart({ data, isLoading, error }: Props) {
                   >
                     {row.page}
                   </span>
-                  <span className="shrink-0 text-xs font-semibold tabular-nums text-foreground/80">
+                  <span className="shrink-0 text-xs font-semibold text-foreground/80 tabular-nums">
                     {fmt(row.pageviews)}
                   </span>
                 </div>

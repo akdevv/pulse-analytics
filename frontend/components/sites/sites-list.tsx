@@ -25,13 +25,13 @@ export function SitesList() {
 
   if (loading) {
     return (
-      <div className="text-muted-foreground text-sm">Loading sites...</div>
+      <div className="text-sm text-muted-foreground">Loading sites...</div>
     );
   }
 
   if (sites?.length === 0) {
     return (
-      <div className="text-muted-foreground text-sm">
+      <div className="text-sm text-muted-foreground">
         No sites yet.{" "}
         <Link
           href="/dashboard/sites/new"

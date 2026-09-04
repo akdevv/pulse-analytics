@@ -1,4 +1,5 @@
 import "@/config/redis.ts";
+import path from "node:path";
 import cors from "cors";
 import helmet from "helmet";
 import express, { type Express } from "express";
@@ -41,6 +42,14 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.set("trust proxy", 1);
 app.set("json replacer", jsonReplacer);
+
+// Browser SDK — served from the API host so any site can <script src> it.
+// GET only, and the same open CORS as /track since it loads cross-origin.
+app.use(
+  express.static(path.join(import.meta.dirname, "../public"), {
+    setHeaders: (res) => res.setHeader("Access-Control-Allow-Origin", "*"),
+  }),
+);
 
 const apiRoute = express.Router();
 

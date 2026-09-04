@@ -26,7 +26,7 @@ const formSchema = z.object({
     .transform((v) => v.trim().toLowerCase())
     .refine(
       (v) => /^(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z]{2,}$/.test(v),
-      { message: "Enter a valid domain (e.g. example.com)" },
+      { message: "Enter a valid domain (e.g. example.com)" }
     ),
 });
 

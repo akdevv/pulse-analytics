@@ -10,7 +10,4 @@ export default defineConfig({
   target: "node20",
   clean: true,
   sourcemap: true,
-  paths: {
-    "@/*": ["./src/*"],
-  },
 });

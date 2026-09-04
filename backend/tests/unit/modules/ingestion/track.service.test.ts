@@ -27,6 +27,8 @@ const baseParams: TrackQueryParams = {
   tid: "pk-" + "a".repeat(29),
   t: "PAGEVIEW" as any,
   dl: "https://example.com/path?foo=bar",
+  ep: undefined,
+  ts: undefined,
   debug: false,
 };
 

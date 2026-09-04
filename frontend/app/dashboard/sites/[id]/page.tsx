@@ -25,7 +25,7 @@ function computeDateRange(preset: Preset, interval: Interval) {
   const to = new Date();
   const from = new Date(to);
   from.setDate(
-    from.getDate() - (preset === "7d" ? 7 : preset === "30d" ? 30 : 90),
+    from.getDate() - (preset === "7d" ? 7 : preset === "30d" ? 30 : 90)
   );
   return {
     from: from.toISOString(),
@@ -41,23 +41,44 @@ export default function SiteAnalyticsPage() {
   const [interval, setInterval] = useState<Interval>("hour");
   const dateRange = useMemo(
     () => computeDateRange(preset, interval),
-    [preset, interval],
+    [preset, interval]
   );
 
-  const { data: overview, isLoading: overviewLoading, error: overviewError } =
-    useOverview(id, dateRange);
-  const { data: timeseries, isLoading: timeseriesLoading, error: timeseriesError } =
-    useTimeseries(id, dateRange);
-  const { data: pages, isLoading: pagesLoading, error: pagesError } =
-    useTopPages(id, dateRange);
-  const { data: referrers, isLoading: referrersLoading, error: referrersError } =
-    useReferrers(id, dateRange);
-  const { data: devices, isLoading: devicesLoading, error: devicesError } =
-    useDevices(id, dateRange);
-  const { data: geo, isLoading: geoLoading, error: geoError } =
-    useGeo(id, dateRange);
-  const { data: realtime, isLoading: realtimeLoading, error: realtimeError } =
-    useRealtimeStream(id);
+  const {
+    data: overview,
+    isLoading: overviewLoading,
+    error: overviewError,
+  } = useOverview(id, dateRange);
+  const {
+    data: timeseries,
+    isLoading: timeseriesLoading,
+    error: timeseriesError,
+  } = useTimeseries(id, dateRange);
+  const {
+    data: pages,
+    isLoading: pagesLoading,
+    error: pagesError,
+  } = useTopPages(id, dateRange);
+  const {
+    data: referrers,
+    isLoading: referrersLoading,
+    error: referrersError,
+  } = useReferrers(id, dateRange);
+  const {
+    data: devices,
+    isLoading: devicesLoading,
+    error: devicesError,
+  } = useDevices(id, dateRange);
+  const {
+    data: geo,
+    isLoading: geoLoading,
+    error: geoError,
+  } = useGeo(id, dateRange);
+  const {
+    data: realtime,
+    isLoading: realtimeLoading,
+    error: realtimeError,
+  } = useRealtimeStream(id);
 
   return (
     <div className="space-y-5">
@@ -88,7 +109,7 @@ export default function SiteAnalyticsPage() {
         error={timeseriesError}
       />
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+      <div className="grid grid-cols-1 gap-5 lg:grid-cols-2">
         <TopPagesChart
           data={pages?.data}
           isLoading={pagesLoading}
@@ -101,7 +122,7 @@ export default function SiteAnalyticsPage() {
         />
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+      <div className="grid grid-cols-1 gap-5 lg:grid-cols-2">
         <DevicesChart
           data={devices?.data}
           isLoading={devicesLoading}

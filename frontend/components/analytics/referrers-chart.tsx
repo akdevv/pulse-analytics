@@ -60,7 +60,7 @@ export function ReferrersChart({ data, isLoading, error }: Props) {
                   >
                     {row.source || "Direct / None"}
                   </span>
-                  <span className="shrink-0 text-xs font-semibold tabular-nums text-foreground/80">
+                  <span className="shrink-0 text-xs font-semibold text-foreground/80 tabular-nums">
                     {fmt(row.pageviews)}
                   </span>
                 </div>

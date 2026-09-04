@@ -9,26 +9,37 @@ import type { Site } from "@/lib/types/site.types";
 const TABS = [
   { label: "Analytics", href: (id: string) => `/dashboard/sites/${id}` },
   { label: "Setup", href: (id: string) => `/dashboard/sites/${id}/setup` },
-  { label: "Settings", href: (id: string) => `/dashboard/sites/${id}/settings` },
+  {
+    label: "Settings",
+    href: (id: string) => `/dashboard/sites/${id}/settings`,
+  },
 ];
 
-export default function SiteLayout({ children }: { children: React.ReactNode }) {
+export default function SiteLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   const { id } = useParams<{ id: string }>();
   const pathname = usePathname();
   const [site, setSite] = useState<Site | null>(null);
 
   useEffect(() => {
-    getSiteById(id).then(setSite).catch(() => null);
+    getSiteById(id)
+      .then(setSite)
+      .catch(() => null);
   }, [id]);
 
   return (
-    <div className="flex flex-col h-full">
+    <div className="flex h-full flex-col">
       {/* Site header */}
-      <div className="px-1 pt-1 pb-0 shrink-0">
-        <div className="flex items-center gap-2.5 mb-4">
+      <div className="shrink-0 px-1 pt-1 pb-0">
+        <div className="mb-4 flex items-center gap-2.5">
           {site ? (
             <>
-              <h1 className="text-xl font-semibold tracking-tight">{site.name}</h1>
+              <h1 className="text-xl font-semibold tracking-tight">
+                {site.name}
+              </h1>
               <span
                 className={`inline-flex items-center gap-1.5 rounded-full px-2 py-0.5 text-xs font-medium ${
                   site.isActive
@@ -43,7 +54,9 @@ export default function SiteLayout({ children }: { children: React.ReactNode }) 
                 />
                 {site.isActive ? "Active" : "Inactive"}
               </span>
-              <span className="text-sm text-muted-foreground">{site.domain}</span>
+              <span className="text-sm text-muted-foreground">
+                {site.domain}
+              </span>
             </>
           ) : (
             <div className="h-7 w-40 animate-pulse rounded-md bg-muted" />
@@ -67,7 +80,7 @@ export default function SiteLayout({ children }: { children: React.ReactNode }) 
               >
                 {tab.label}
                 {isActive && (
-                  <span className="absolute bottom-0 left-0 right-0 h-0.5 rounded-full bg-foreground" />
+                  <span className="absolute right-0 bottom-0 left-0 h-0.5 rounded-full bg-foreground" />
                 )}
               </Link>
             );
@@ -76,9 +89,7 @@ export default function SiteLayout({ children }: { children: React.ReactNode }) 
       </div>
 
       {/* Tab content */}
-      <div className="flex-1 overflow-y-auto pt-5 px-1 pb-10">
-        {children}
-      </div>
+      <div className="flex-1 overflow-y-auto px-1 pt-5 pb-10">{children}</div>
     </div>
   );
 }

@@ -21,6 +21,13 @@ const rateLimitConfig = {
     windowMs: 15 * 60 * 1000, // 15 minutes
     maxAttempts: 10,
   },
+
+  // /refresh needs a valid signed cookie, so brute force isn't the risk here.
+  // Limit is only to stop a runaway client looping on 401s.
+  refresh: {
+    windowMs: 15 * 60 * 1000,
+    maxAttempts: 100,
+  },
 } as const;
 
 export type Tier = keyof typeof rateLimitConfig.siteLimits;

@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>All sites — Pulse</title>
+    <link rel="stylesheet" href="../../wireframes.css" />
+  </head>
+  <body>
+    <div class="sheet stack" style="height: 100%; overflow-y: auto">
+      <div class="topbar">
+        <strong>Pulse</strong>
+        <span class="site-switch">All sites ▾</span>
+        <div style="flex: 1"></div>
+        <span class="chip">Last 7 days</span>
+        <span class="muted">vs</span>
+        <span class="chip">previous 7 days</span>
+      </div>
+
+      <div class="column stack">
+        <strong>Sites, by movement</strong>
+
+        <div class="box stack">
+          <div class="tbl">
+            <div class="tr head"><span>site</span><span class="num">visitors</span><span class="num">change</span></div>
+            <div class="tr"><span>Acme Docs</span><span class="num">12,480</span><span class="num">▲ 12%</span></div>
+            <div class="tr"><span>Acme Blog</span><span class="num">3,140</span><span class="num">▼ 22%</span></div>
+            <div class="tr"><span>Marketing site</span><span class="num">—</span><span class="num">setup</span></div>
+          </div>
+        </div>
+
+        <p class="note">
+          <strong>v8.</strong> Sorted by change, so the site that fell off a
+          cliff is at the top even when it is the smallest one you own.
+        </p>
+      </div>
+    </div>
+
+    <nav class="vswitch"><a href="../v1/dashboard.html">v1</a><a href="../v2/dashboard.html">v2</a><a href="../v3/dashboard.html">v3</a><a href="../v4/dashboard.html">v4</a><a href="../v5/dashboard.html">v5</a><a href="../v6/dashboard.html">v6</a><a href="../v7/dashboard.html">v7</a><a class="on" href="../v8/dashboard.html">v8</a><a href="../v9/dashboard.html">v9</a><a href="../v10/dashboard.html">v10</a></nav>
+  </body>
+</html>

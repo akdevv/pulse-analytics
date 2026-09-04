@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>All sites — Pulse</title>
+    <link rel="stylesheet" href="../../wireframes.css" />
+  </head>
+  <body>
+    <div class="sheet stack" style="height: 100%; overflow-y: auto">
+      <div class="topbar">
+        <strong>Pulse</strong>
+        <span class="site-switch">All sites ▾</span>
+        <div style="flex: 1"></div>
+        <span class="seg">
+          <a class="on" href="sites.html">Glance</a>
+          <a href="sites.html">Standard</a>
+        </span>
+      </div>
+
+      <div class="column stack">
+        <div class="row between">
+          <strong>All sites</strong>
+          <span class="btn primary">+ New site</span>
+        </div>
+
+        <a class="box row between" href="dashboard.html">
+          <span><strong>Acme Docs</strong></span>
+          <span class="spark"></span>
+          <span>12.4k <span class="muted">▲12%</span></span>
+        </a>
+        <a class="box row between" href="dashboard.html">
+          <span><strong>Acme Blog</strong></span>
+          <span class="spark"></span>
+          <span>3.1k <span class="muted">▼22%</span></span>
+        </a>
+
+        <div class="box dash row between">
+          <span><strong>Marketing site</strong> <span class="muted">waiting for first event</span></span>
+          <span class="btn">Finish setup</span>
+        </div>
+
+        <p class="note">
+          <strong>v10.</strong> A site that has never reported is drawn as an
+          unfinished row, not a zero — the only honest way to show it.
+        </p>
+      </div>
+    </div>
+
+    <nav class="vswitch"><a href="../v1/dashboard.html">v1</a><a href="../v2/dashboard.html">v2</a><a href="../v3/dashboard.html">v3</a><a href="../v4/dashboard.html">v4</a><a href="../v5/dashboard.html">v5</a><a href="../v6/dashboard.html">v6</a><a href="../v7/dashboard.html">v7</a><a href="../v8/dashboard.html">v8</a><a href="../v9/dashboard.html">v9</a><a class="on" href="../v10/dashboard.html">v10</a></nav>
+  </body>
+</html>

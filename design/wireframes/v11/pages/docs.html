@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Docs — Pulse</title>
+    <link rel="stylesheet" href="../../wireframes.css" />
+  </head>
+  <body data-page="docs">
+    <div class="sheet app">
+      <pulse-sidebar></pulse-sidebar>
+
+      <div class="page stack">
+        <pulse-topbar></pulse-topbar>
+
+        <div class="column stack">
+        <p class="muted">
+          Lives outside the app in the real product — one link from the top bar,
+          and contextual links from the places that need it (Setup, tracking key,
+          filters). Sketched here so the link goes somewhere.
+        </p>
+
+        <div class="grid2">
+          <div class="box stack">
+            <strong>Install</strong>
+            <p class="muted">Script tag, npm package, Next.js, WordPress, proxying through your own domain.</p>
+          </div>
+          <div class="box alt stack">
+            <strong>Tracking API</strong>
+            <p class="muted">Event shape, custom events, the /track endpoint, rate limits per tier.</p>
+          </div>
+          <div class="box alt stack">
+            <strong>Metrics</strong>
+            <p class="muted">What counts as a visitor, a visit, a bounce — the definitions people argue about.</p>
+          </div>
+          <div class="box stack">
+            <strong>Privacy</strong>
+            <p class="muted">What's stored, what isn't, why there's no cookie banner.</p>
+          </div>
+        </div>
+        </div>
+      </div>
+    </div>
+
+    <script src="../app.js"></script>
+    <script src="../components/sidebar.js"></script>
+    <script src="../components/topbar.js"></script>
+    <script src="../components/statebar.js"></script>
+  </body>
+</html>

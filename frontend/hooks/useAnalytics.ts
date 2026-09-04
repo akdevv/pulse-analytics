@@ -106,7 +106,7 @@ export function useRealtimeStream(siteId: string) {
               Authorization: `Bearer ${token}`,
               Accept: "text/event-stream",
             },
-          },
+          }
         );
 
         if (!res.ok || !res.body) {

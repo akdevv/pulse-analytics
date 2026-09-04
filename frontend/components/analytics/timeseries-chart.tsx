@@ -81,7 +81,10 @@ export function TimeseriesChart({ data, isLoading, error }: Props) {
         </div>
       ) : (
         <ChartContainer config={chartConfig} className="h-[220px] w-full">
-          <AreaChart data={chartData} margin={{ top: 4, right: 4, left: 0, bottom: 0 }}>
+          <AreaChart
+            data={chartData}
+            margin={{ top: 4, right: 4, left: 0, bottom: 0 }}
+          >
             <defs>
               <linearGradient id="pvGrad" x1="0" y1="0" x2="0" y2="1">
                 <stop offset="5%" stopColor="#f97316" stopOpacity={0.18} />

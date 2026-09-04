@@ -1,5 +1,4 @@
 import { enqueue } from "@/config/queue.ts";
-import { asyncHandler } from "@/utils/async-handler.ts";
 import logger from "@/utils/logger.ts";
 import { extractClientIp } from "@/utils/ip.ts";
 import type { Request, Response } from "express";
@@ -12,7 +11,7 @@ import { TrackQuerySchema } from "./track.types.ts";
 const SLOW_REQUEST_THRESHOLD_MS = 100;
 
 // POST /track
-export const track = asyncHandler(async (req: Request, res: Response) => {
+export const track = async (req: Request, res: Response) => {
   const totalStart = performance.now();
   const timings: Record<string, number> = {};
 
@@ -115,7 +114,7 @@ export const track = asyncHandler(async (req: Request, res: Response) => {
     // Always 204 — never surface internal errors to the tracked page
     res.status(204).send();
   }
-});
+};
 
 function formatTimings(raw: Record<string, number>): Record<string, string> {
   return Object.fromEntries(

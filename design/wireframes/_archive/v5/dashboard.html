@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Acme Docs — Pulse</title>
+    <link rel="stylesheet" href="../../wireframes.css" />
+  </head>
+  <body>
+    <div class="sheet stack" style="height: 100%">
+      <div class="topbar">
+        <strong>Pulse</strong>
+        <span class="site-switch">Acme Docs ▾</span>
+        <a class="on" href="dashboard.html">Live</a>
+        <a href="sites.html">Trends</a>
+        <div style="flex: 1"></div>
+        <span class="muted">● connected</span>
+      </div>
+
+      <!-- two panes, both always visible: now on the left, today on the right -->
+      <div class="app" style="grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr)">
+        <div class="stack">
+          <div class="box hero">
+            <span class="label">on the site right now</span>
+            <span class="huge">148</span>
+            <span class="delta">▲ 22 in the last minute</span>
+          </div>
+
+          <div class="box alt stack" style="flex: 1">
+            <div class="row between">
+              <strong>Live feed</strong>
+              <span class="muted" style="font-size: 12px">newest first</span>
+            </div>
+            <div class="feed">
+              <div class="ev"><span>now</span><span>/pricing</span><span class="muted">google · IN</span></div>
+              <div class="ev"><span>2s</span><span>/docs/getting-started</span><span class="muted">direct · US</span></div>
+              <div class="ev"><span>4s</span><span>/</span><span class="muted">HN · DE</span></div>
+              <div class="ev"><span>7s</span><span>/docs/api/events</span><span class="muted">google · US</span></div>
+              <div class="ev"><span>9s</span><span>/changelog</span><span class="muted">x.com · BR</span></div>
+              <div class="ev"><span>11s</span><span>/pricing</span><span class="muted">direct · UK</span></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="stack">
+          <div class="box stack">
+            <div class="row between">
+              <strong>Today</strong>
+              <span class="muted">vs yesterday ▲ 8%</span>
+            </div>
+            <div class="chart">today by hour</div>
+          </div>
+
+          <div class="box alt stack">
+            <strong>Busiest pages · last hour</strong>
+            <div class="tbl">
+              <div class="tr"><span>/docs/getting-started</span><span class="num">168</span><span class="num">42 now</span></div>
+              <div class="tr"><span>/</span><span class="num">121</span><span class="num">31 now</span></div>
+              <div class="tr"><span>/pricing</span><span class="num">88</span><span class="num">24 now</span></div>
+            </div>
+          </div>
+
+          <div class="box stack">
+            <strong>Coming from · last hour</strong>
+            <div class="tbl">
+              <div class="tr"><span>google.com</span><span class="num">51</span><span></span></div>
+              <div class="tr"><span>direct</span><span class="num">38</span><span></span></div>
+              <div class="tr"><span>news.ycombinator.com</span><span class="num">22</span><span></span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <p class="note">
+        <strong>v5 — live board.</strong> Built for the tab you leave open on a
+        second monitor, or the screen on the wall during a launch. Realtime is
+        the page, not a strip on it; history moves behind the "Trends" tab.
+        Wrong default for someone checking last month's numbers.
+      </p>
+    </div>
+
+    <p class="states">v5 · live</p>
+    <nav class="vswitch"><a href="../v1/dashboard.html">v1</a><a href="../v2/dashboard.html">v2</a><a href="../v3/dashboard.html">v3</a><a href="../v4/dashboard.html">v4</a><a class="on" href="../v5/dashboard.html">v5</a><a href="../v6/dashboard.html">v6</a><a href="../v7/dashboard.html">v7</a><a href="../v8/dashboard.html">v8</a><a href="../v9/dashboard.html">v9</a><a href="../v10/dashboard.html">v10</a></nav>
+  </body>
+</html>

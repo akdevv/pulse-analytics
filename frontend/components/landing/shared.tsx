@@ -2,29 +2,10 @@
 
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
+import { ACCENT, ACCENT_SOFT, DISPLAY } from "./tokens";
 
-/* ── Design tokens ─────────────────────────────────────────── */
-export const ACCENT = "oklch(0.6429 0.1675 45.988)";
-export const ACCENT_SOFT = "oklch(0.78 0.13 55)";
-export const SURFACE_1 = "oklch(0.165 0.004 285)";
-export const SURFACE_2 = "oklch(0.185 0.005 285)";
-/** @deprecated use SURFACE_1 */
-export const SURFACE = SURFACE_1;
-export const BG = "oklch(0.145 0.004 285)";
-
-export const DISPLAY = {
-  fontFamily: "'Bricolage Grotesque', ui-sans-serif, system-ui, sans-serif",
-  fontWeight: 500,
-  letterSpacing: "-0.02em",
-} as const;
-
-export const LOGO_FONT = {
-  fontFamily: "'Bricolage Grotesque', ui-sans-serif, system-ui, sans-serif",
-  fontWeight: 700,
-  letterSpacing: "-0.04em",
-} as const;
-
-/* ── Reveal — scroll-in with stagger, reduced-motion aware ──── */
+/* ── Reveal — scroll-in with stagger. Reduced motion is handled in
+   the stylesheet, which collapses the transition for everyone. ── */
 export function Reveal({
   children,
   delay = 0,
@@ -44,10 +25,6 @@ export function Reveal({
   useEffect(() => {
     const node = ref.current;
     if (!node) return;
-    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
-      setShown(true);
-      return;
-    }
     const observer = new IntersectionObserver(
       ([entry]) => {
         if (entry.isIntersecting) {
@@ -86,11 +63,11 @@ export function PrimaryButton({
   return (
     <Link
       href={href}
-      className={`pa-btn group inline-flex items-center gap-2 rounded-full px-6 py-3 text-[14px] font-medium text-black ${className}`}
+      className={`pa-btn group inline-flex items-center gap-2 rounded-full px-6 py-3 text-[14px] font-medium text-charcoal ${className}`}
       style={{
         background: `linear-gradient(180deg, ${ACCENT_SOFT}, ${ACCENT})`,
         boxShadow:
-          "0 1px 0 0 rgba(255,255,255,0.35) inset, 0 8px 24px -8px var(--pa-accent-glow)",
+          "0 1px 0 0 rgba(229,227,210,0.35) inset, 0 8px 24px -8px var(--pa-accent-glow)",
       }}
     >
       {children}
@@ -114,7 +91,7 @@ export function GhostButton({
     <Link
       href={href}
       {...(external ? { target: "_blank", rel: "noreferrer" } : {})}
-      className={`group inline-flex items-center gap-2 rounded-full px-6 py-3 text-[14px] text-white/75 border border-white/12 bg-white/[0.02] transition-[color,border-color,background-color,transform] duration-150 ease-[var(--ease-out)] hover:text-white hover:border-white/25 hover:bg-white/[0.04] active:scale-[0.97] ${className}`}
+      className={`group inline-flex items-center gap-2 rounded-full border border-ink/12 bg-ink/[0.02] px-6 py-3 text-[14px] text-ink/75 transition-[color,border-color,background-color,transform] duration-150 ease-[var(--ease-out)] hover:border-ink/25 hover:bg-ink/[0.04] hover:text-ink active:scale-[0.97] ${className}`}
     >
       {children}
     </Link>
@@ -191,13 +168,13 @@ export function AnimatedCounter({
 export function PulseLogo({ size = 28 }: { size?: number }) {
   return (
     <div
-      className="relative rounded-[9px] flex items-center justify-center shrink-0"
+      className="relative flex shrink-0 items-center justify-center rounded-[9px]"
       style={{
         width: size,
         height: size,
         background: `linear-gradient(180deg, ${ACCENT_SOFT}, ${ACCENT})`,
         boxShadow:
-          "0 1px 0 0 rgba(255,255,255,0.4) inset, 0 6px 16px -6px var(--pa-accent-glow)",
+          "0 1px 0 0 rgba(229,227,210,0.4) inset, 0 6px 16px -6px var(--pa-accent-glow)",
       }}
     >
       <svg
@@ -209,33 +186,18 @@ export function PulseLogo({ size = 28 }: { size?: number }) {
       >
         <path
           d="M2 12 L5 7 L8 9 L11 4 L14 6"
-          stroke="oklch(0.145 0.004 285)"
+          stroke="oklch(0.2002 0 0)"
           strokeWidth="2"
           strokeLinecap="round"
           strokeLinejoin="round"
         />
-        <circle cx="14" cy="6" r="1.6" fill="oklch(0.145 0.004 285)" />
+        <circle cx="14" cy="6" r="1.6" fill="oklch(0.2002 0 0)" />
       </svg>
     </div>
   );
 }
 
 /* ── Section primitives ────────────────────────────────────── */
-export function SectionEyebrow({ children }: { children: React.ReactNode }) {
-  return (
-    <div className="inline-flex items-center gap-3 text-[11px] font-mono uppercase tracking-[0.24em] text-white/45">
-      <span
-        className="h-1.5 w-1.5 rounded-full"
-        style={{
-          background: ACCENT,
-          boxShadow: "0 0 12px 1px var(--pa-accent-glow)",
-        }}
-      />
-      {children}
-    </div>
-  );
-}
-
 export function SectionHeading({
   line1,
   line2,
@@ -245,14 +207,14 @@ export function SectionHeading({
 }) {
   return (
     <h2
-      className="text-[44px] md:text-[64px] text-white leading-[0.98] tracking-[-0.025em] max-w-3xl"
-      style={DISPLAY}
+      className="max-w-3xl text-[40px] leading-[0.96] tracking-[-0.03em] text-ink sm:text-[52px] md:text-[68px]"
+      style={{ ...DISPLAY, fontWeight: 600 }}
     >
       {line1}
       {line2 && (
         <>
           <br />
-          <span className="text-white/40">{line2}</span>
+          <span className="text-ink/55">{line2}</span>
         </>
       )}
     </h2>

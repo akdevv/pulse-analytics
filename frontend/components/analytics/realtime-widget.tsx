@@ -34,39 +34,39 @@ export function RealtimeWidget({ data, isLoading, error }: Props) {
           <div className="mb-5 grid grid-cols-3 gap-3">
             {/* Active sessions - highlighted */}
             <div className="rounded-lg border border-emerald-500/20 bg-emerald-500/5 p-4">
-              <p className="text-[11px] font-bold uppercase tracking-[0.12em] text-emerald-500/70">
+              <p className="text-[11px] font-bold tracking-[0.12em] text-emerald-500/70 uppercase">
                 Active Now
               </p>
               {isLoading ? (
                 <Skeleton className="mt-2 h-9 w-16 rounded-lg" />
               ) : (
-                <p className="mt-1 text-3xl font-bold leading-none text-emerald-400 tabular-nums">
+                <p className="mt-1 text-3xl leading-none font-bold text-emerald-400 tabular-nums">
                   {(data?.activeSessions ?? 0).toLocaleString()}
                 </p>
               )}
             </div>
 
             <div className="rounded-lg border border-border bg-muted/20 p-4">
-              <p className="text-[11px] font-bold uppercase tracking-[0.12em] text-muted-foreground/60">
+              <p className="text-[11px] font-bold tracking-[0.12em] text-muted-foreground/60 uppercase">
                 Pageviews
               </p>
               {isLoading ? (
                 <Skeleton className="mt-2 h-9 w-16 rounded-lg" />
               ) : (
-                <p className="mt-1 text-3xl font-bold leading-none tabular-nums">
+                <p className="mt-1 text-3xl leading-none font-bold tabular-nums">
                   {(data?.pageviews ?? 0).toLocaleString()}
                 </p>
               )}
             </div>
 
             <div className="rounded-lg border border-border bg-muted/20 p-4">
-              <p className="text-[11px] font-bold uppercase tracking-[0.12em] text-muted-foreground/60">
+              <p className="text-[11px] font-bold tracking-[0.12em] text-muted-foreground/60 uppercase">
                 Visitors
               </p>
               {isLoading ? (
                 <Skeleton className="mt-2 h-9 w-16 rounded-lg" />
               ) : (
-                <p className="mt-1 text-3xl font-bold leading-none tabular-nums">
+                <p className="mt-1 text-3xl leading-none font-bold tabular-nums">
                   {(data?.visitors ?? 0).toLocaleString()}
                 </p>
               )}
@@ -74,10 +74,10 @@ export function RealtimeWidget({ data, isLoading, error }: Props) {
           </div>
 
           {/* Active pages + referrers */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             {/* Active pages */}
             <div>
-              <p className="mb-2.5 text-[11px] font-bold uppercase tracking-[0.12em] text-muted-foreground/60">
+              <p className="mb-2.5 text-[11px] font-bold tracking-[0.12em] text-muted-foreground/60 uppercase">
                 Active Pages
               </p>
               {isLoading ? (
@@ -93,7 +93,7 @@ export function RealtimeWidget({ data, isLoading, error }: Props) {
                   {data.activePages.map((row) => (
                     <div
                       key={row.path}
-                      className="flex items-center justify-between rounded-lg bg-muted/20 px-3 py-2.5 gap-3"
+                      className="flex items-center justify-between gap-3 rounded-lg bg-muted/20 px-3 py-2.5"
                     >
                       <span
                         className="min-w-0 truncate font-mono text-xs text-foreground/70"
@@ -118,7 +118,7 @@ export function RealtimeWidget({ data, isLoading, error }: Props) {
 
             {/* Live referrers */}
             <div>
-              <p className="mb-2.5 text-[11px] font-bold uppercase tracking-[0.12em] text-muted-foreground/60">
+              <p className="mb-2.5 text-[11px] font-bold tracking-[0.12em] text-muted-foreground/60 uppercase">
                 Live Referrers
               </p>
               {isLoading ? (
@@ -134,7 +134,7 @@ export function RealtimeWidget({ data, isLoading, error }: Props) {
                   {data.topReferrers.map((row, i) => (
                     <div
                       key={i}
-                      className="flex items-center justify-between rounded-lg bg-muted/20 px-3 py-2.5 gap-3"
+                      className="flex items-center justify-between gap-3 rounded-lg bg-muted/20 px-3 py-2.5"
                     >
                       <span
                         className="min-w-0 truncate text-xs text-foreground/70"

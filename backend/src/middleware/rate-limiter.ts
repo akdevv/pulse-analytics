@@ -5,20 +5,37 @@ import rateLimit from "express-rate-limit";
 import { type RedisReply, RedisStore } from "rate-limit-redis";
 import type { RequestHandler } from "express";
 
-const _authRateLimit = rateLimit({
-  windowMs: rateLimitConfig.auth.windowMs,
-  max: rateLimitConfig.auth.maxAttempts,
-  standardHeaders: true,
-  legacyHeaders: false,
-  store: new RedisStore({
-    sendCommand: (...args: [string, ...string[]]) =>
-      redis.call(...args) as Promise<RedisReply>,
-  }),
-  message: { status: "error", message: "Too many attempts, try again later" },
-});
+// prefix keeps each limiter in its own redis bucket — otherwise they share a counter
+const make = (windowMs: number, max: number, prefix: string) =>
+  rateLimit({
+    windowMs,
+    max,
+    standardHeaders: true,
+    legacyHeaders: false,
+    store: new RedisStore({
+      prefix,
+      sendCommand: (...args: [string, ...string[]]) =>
+        redis.call(...args) as Promise<RedisReply>,
+    }),
+    message: { status: "error", message: "Too many attempts, try again later" },
+  });
 
 const _noopMiddleware: RequestHandler = (_req, _res, next) => next();
+const gate = (limiter: RequestHandler): RequestHandler =>
+  env.RATE_LIMIT_ENABLED ? limiter : _noopMiddleware;
 
-export const authRateLimit: RequestHandler = env.RATE_LIMIT_ENABLED
-  ? _authRateLimit
-  : _noopMiddleware;
+export const authRateLimit: RequestHandler = gate(
+  make(
+    rateLimitConfig.auth.windowMs,
+    rateLimitConfig.auth.maxAttempts,
+    "rl:auth:"
+  )
+);
+
+export const refreshRateLimit: RequestHandler = gate(
+  make(
+    rateLimitConfig.refresh.windowMs,
+    rateLimitConfig.refresh.maxAttempts,
+    "rl:refresh:"
+  )
+);

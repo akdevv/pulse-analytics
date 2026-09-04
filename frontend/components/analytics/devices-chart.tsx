@@ -62,19 +62,17 @@ export function DevicesChart({ data, isLoading, error }: Props) {
     <div className="rounded-xl border border-border bg-card p-6">
       <div className="mb-5 flex items-center justify-between">
         <h2 className="text-sm font-semibold text-foreground">Technology</h2>
-        <div className="flex items-center rounded-lg border border-border bg-background p-0.5 gap-0.5">
+        <div className="flex items-center gap-0.5 rounded-lg border border-border bg-background p-0.5">
           {TABS.map(({ value, label }) => (
             <button
               key={value}
               onClick={() => setTab(value)}
-              className={`px-2.5 py-1 rounded-md text-xs font-semibold transition-all duration-150 ${
+              className={`rounded-md px-2.5 py-1 text-xs font-semibold transition-all duration-150 ${
                 tab === value
                   ? "bg-accent text-foreground shadow-sm"
-                  : "text-muted-foreground hover:text-foreground hover:bg-accent/40"
+                  : "text-muted-foreground hover:bg-accent/40 hover:text-foreground"
               }`}
-              style={
-                tab === value ? { color: accent } : {}
-              }
+              style={tab === value ? { color: accent } : {}}
             >
               {label}
             </button>
@@ -110,7 +108,7 @@ export function DevicesChart({ data, isLoading, error }: Props) {
                   <span className="truncate text-xs text-foreground/75">
                     {row.label}
                   </span>
-                  <span className="shrink-0 text-xs font-semibold tabular-nums text-foreground/80">
+                  <span className="shrink-0 text-xs font-semibold text-foreground/80 tabular-nums">
                     {fmt(row.value)}
                   </span>
                 </div>

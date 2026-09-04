@@ -48,7 +48,7 @@ export default function SiteSettingsPage() {
   }, [id]);
 
   if (loading) {
-    return <div className="text-muted-foreground text-sm p-1">Loading...</div>;
+    return <div className="p-1 text-sm text-muted-foreground">Loading...</div>;
   }
 
   const handleSave = async () => {
@@ -91,7 +91,7 @@ export default function SiteSettingsPage() {
 
   if (!site) {
     return (
-      <div className="text-muted-foreground text-sm p-1">Site not found.</div>
+      <div className="p-1 text-sm text-muted-foreground">Site not found.</div>
     );
   }
 
@@ -106,19 +106,19 @@ export default function SiteSettingsPage() {
         </Button>
         <div className="min-w-0">
           <h1 className="text-xl font-semibold tracking-tight">Settings</h1>
-          <p className="text-muted-foreground truncate text-sm">{site.name}</p>
+          <p className="truncate text-sm text-muted-foreground">{site.name}</p>
         </div>
       </div>
 
       {/* General */}
       <Card className="py-0">
-        <CardHeader className="px-5 pt-5 pb-4 border-b">
+        <CardHeader className="border-b px-5 pt-5 pb-4">
           <CardTitle className="text-sm font-semibold">General</CardTitle>
           <CardDescription className="text-xs">
             Update your site name and domain.
           </CardDescription>
         </CardHeader>
-        <CardContent className="px-5 py-5 space-y-5">
+        <CardContent className="space-y-5 px-5 py-5">
           <div className="space-y-2">
             <Label htmlFor="name" className="text-xs font-medium">
               Site Name
@@ -142,7 +142,7 @@ export default function SiteSettingsPage() {
               placeholder="example.com"
               className="h-9 text-sm"
             />
-            <p className="text-muted-foreground text-xs">
+            <p className="text-xs text-muted-foreground">
               Enter the domain without https:// (e.g. example.com)
             </p>
           </div>
@@ -156,16 +156,16 @@ export default function SiteSettingsPage() {
 
       {/* Tracking Key */}
       <Card className="py-0">
-        <CardHeader className="px-5 pt-5 pb-4 border-b">
+        <CardHeader className="border-b px-5 pt-5 pb-4">
           <CardTitle className="text-sm font-semibold">Tracking Key</CardTitle>
           <CardDescription className="text-xs">
             Regenerate your tracking key if it has been compromised. Your
             existing snippet will stop working until updated with the new key.
           </CardDescription>
         </CardHeader>
-        <CardContent className="px-5 py-5 space-y-4">
+        <CardContent className="space-y-4 px-5 py-5">
           <div className="flex items-center justify-between gap-3 rounded-lg border bg-muted/50 px-3.5 py-3">
-            <code className="text-xs font-mono text-muted-foreground truncate">
+            <code className="truncate font-mono text-xs text-muted-foreground">
               {site.trackingId}
             </code>
           </div>
@@ -187,8 +187,8 @@ export default function SiteSettingsPage() {
       </Card>
 
       {/* Danger Zone */}
-      <Card className="py-0 border-destructive/30 bg-destructive/2">
-        <CardHeader className="px-5 pt-5 pb-4 border-b border-destructive/20">
+      <Card className="border-destructive/30 bg-destructive/2 py-0">
+        <CardHeader className="border-b border-destructive/20 px-5 pt-5 pb-4">
           <CardTitle className="text-sm font-semibold text-destructive">
             Danger Zone
           </CardTitle>
@@ -200,7 +200,7 @@ export default function SiteSettingsPage() {
           <div className="flex items-center justify-between gap-4">
             <div className="space-y-0.5">
               <p className="text-sm font-medium">Delete this site</p>
-              <p className="text-muted-foreground text-xs">
+              <p className="text-xs text-muted-foreground">
                 Permanently removes the site and all associated analytics data.
                 This cannot be undone.
               </p>
@@ -210,7 +210,7 @@ export default function SiteSettingsPage() {
               size="sm"
               onClick={handleDelete}
               disabled={deleting}
-              className="gap-1.5 shrink-0"
+              className="shrink-0 gap-1.5"
             >
               <GoTrash className="size-3.5" />
               {deleting ? "Deleting..." : "Delete Site"}

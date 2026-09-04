@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Sites — Pulse</title>
+    <link rel="stylesheet" href="../../wireframes.css" />
+  </head>
+  <body>
+    <div class="sheet app">
+      <div class="box sidebar stack">
+        <strong>Pulse</strong>
+        <a class="nav-item on" href="sites.html">Sites</a>
+        <a class="nav-item" href="account.html">Account</a>
+        <div style="flex: 1"></div>
+        <span class="nav-item muted">Log out</span>
+      </div>
+
+      <div class="stack">
+        <div class="row between">
+          <strong>Your sites</strong>
+          <a class="btn primary" href="new-site.html">+ New site</a>
+        </div>
+
+        <div class="grid2">
+          <a class="box stack" href="dashboard.html">
+            <div class="row between">
+              <strong>Acme Docs</strong>
+              <span class="muted">● active</span>
+            </div>
+            <span class="muted">docs.acme.dev</span>
+            <div class="chart short">7 day sparkline</div>
+            <div class="row between">
+              <span>12.4k views</span>
+              <span class="muted">148 online</span>
+            </div>
+          </a>
+
+          <a class="box alt stack" href="setup.html">
+            <div class="row between">
+              <strong>Marketing site</strong>
+              <span class="muted">○ no data</span>
+            </div>
+            <span class="muted">acme.com</span>
+            <div class="chart short">nothing received yet</div>
+            <span class="muted">Finish setup →</span>
+          </a>
+        </div>
+
+        <p class="note">
+          A site that has never received an event points back at setup instead of
+          showing zeros.
+        </p>
+      </div>
+    </div>
+
+    <p class="states">states: <a href="sites-empty.html">empty (new account)</a></p>
+  <nav class="vswitch"><a class="on" href="../v1/dashboard.html">v1</a><a href="../v2/dashboard.html">v2</a><a href="../v3/dashboard.html">v3</a><a href="../v4/dashboard.html">v4</a><a href="../v5/dashboard.html">v5</a><a href="../v6/dashboard.html">v6</a><a href="../v7/dashboard.html">v7</a><a href="../v8/dashboard.html">v8</a><a href="../v9/dashboard.html">v9</a><a href="../v10/dashboard.html">v10</a></nav>
+  </body>
+</html>
