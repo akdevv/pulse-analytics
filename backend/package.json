@@ -14,7 +14,15 @@
     "format": "prettier --write .",
     "test": "vitest run",
     "test:watch": "vitest",
-    "test:coverage": "vitest run --coverage"
+    "test:coverage": "vitest run --coverage",
+    "db:migrate": "prisma migrate deploy && tsx db/migrate.ts",
+    "db:seed": "tsx src/seed/index.ts",
+    "load:light": "mkdir -p tests/load/reports && artillery run tests/load/ingestion-light.yml --output tests/load/reports/ingestion-light.json",
+    "load:medium": "mkdir -p tests/load/reports && artillery run tests/load/ingestion-medium.yml --output tests/load/reports/ingestion-medium.json",
+    "load:heavy": "mkdir -p tests/load/reports && artillery run tests/load/ingestion-heavy.yml --output tests/load/reports/ingestion-heavy.json",
+    "load:hard": "mkdir -p tests/load/reports && artillery run tests/load/ingestion-hard.yml --output tests/load/reports/ingestion-hard.json",
+    "load:auth": "mkdir -p tests/load/reports && artillery run tests/load/auth.yml --output tests/load/reports/auth.json",
+    "load:analytics": "mkdir -p tests/load/reports && artillery run tests/load/analytics.yml --output tests/load/reports/analytics.json"
   },
   "packageManager": "pnpm@10.27.0",
   "dependencies": {
