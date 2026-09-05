@@ -10,7 +10,6 @@ export const health = async (_: Request, res: Response) => {
     redis: "ok" as "ok" | "error",
   };
 
-  // Check DB
   try {
     await prisma.$queryRaw`SELECT 1`;
   } catch (err) {
@@ -21,7 +20,6 @@ export const health = async (_: Request, res: Response) => {
     checks.database = "error";
   }
 
-  // Check redis - ping/pong
   try {
     const pong = await redis.ping();
     if (pong !== "PONG") throw new Error("Unexpected pong response");
@@ -33,7 +31,6 @@ export const health = async (_: Request, res: Response) => {
     checks.redis = "error";
   }
 
-  // Check queue depth
   let queueStats = { waiting: 0, active: 0, failed: 0 };
   try {
     const [waiting, active, failed] = await Promise.all([
@@ -49,12 +46,10 @@ export const health = async (_: Request, res: Response) => {
     );
   }
 
-  // Overall status — degraded if anything is down
   const allOk = Object.values(checks).every((v) => v === "ok");
   const status = allOk ? "ok" : "degraded";
 
-  // Use 200 for ok, 503 for degraded
-  // This matters for load balancers — they check the status code
+  // 503 so a load balancer sees the failure in the status code.
   const httpStatus = allOk ? 200 : 503;
 
   res.status(httpStatus).json({

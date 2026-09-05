@@ -8,16 +8,13 @@ export interface TrackEventPayload {
   trackingId: string;
   eventType: EventType;
 
-  // Page info
   url: string;
   pageTitle?: string;
   referrer?: string;
 
-  // Session & Visitor
   sessionId?: string;
   visitorId?: string;
 
-  // Custom Events
   eventName?: string;
   eventProperties?: Record<string, unknown>;
 
@@ -30,35 +27,27 @@ export interface BaseEvent {
   eventType: EventType;
   eventName: string | null;
 
-  // URL components
   url: string;
   urlHostname: string;
   urlPathname: string;
   urlSearch: string | null;
 
-  // Page info
   pageTitle: string | null;
   referrer: string | null;
 
-  // Session & visitor
   sessionId: string | null;
   visitorId: string | null;
 
-  // Request metadata
-  ipAddress: string | null;
   userAgent: string | null;
 
-  // display
   screenResolution: string | null;
   viewportSize: string | null;
   userLanguage: string | null;
 
-  // Custom data
   eventProperties?: any;
 
-  // Timestamps
-  timestamp: Date; // client-reported or server time
-  receivedAt: Date; // always server time — when we received it
+  timestamp: Date; // client-reported, or server time if absent
+  receivedAt: Date; // always server time
 }
 
 export interface DeviceInfo {
@@ -76,5 +65,7 @@ export interface GeoInfo {
   region: string | null;
 }
 
-export type RawEvent = BaseEvent;
+// The worker needs the IP for geo, then drops it. Leaving it off ParsedEvent,
+// which the repository writes, makes storing one a type error.
+export type RawEvent = BaseEvent & { ipAddress: string | null };
 export type ParsedEvent = BaseEvent & DeviceInfo & GeoInfo;
