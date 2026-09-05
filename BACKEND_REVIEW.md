@@ -129,8 +129,8 @@ path was exercised end to end against a local Timescale before and after.
 - **`ipAddress` is gone from the type chain, not just nulled.** `RawEvent` still
   carries it so the worker can resolve geo, `ParsedEvent` does not, and the
   repository has no field to write. Storing an IP is now a type error rather
-  than a convention. Migration `0009_drop_event_ip.sql` drops the column, which
-  was verified against a real hypertable first.
+  than a convention. The column itself was dropped from the development
+  database by hand; no migration ships for it, since it only ever held NULL.
 - **The health limiter deliberately uses the in-memory store,** the only limiter
   that does. `/health` exists to report a Redis outage, so a Redis-backed store
   would turn an informative 503 into an opaque 500.
