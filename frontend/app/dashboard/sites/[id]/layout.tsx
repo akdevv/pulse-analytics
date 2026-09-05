@@ -8,6 +8,7 @@ import type { Site } from "@/lib/types/site.types";
 
 const TABS = [
   { label: "Analytics", href: (id: string) => `/dashboard/sites/${id}` },
+  { label: "Ask AI", href: (id: string) => `/dashboard/sites/${id}/ask` },
   { label: "Setup", href: (id: string) => `/dashboard/sites/${id}/setup` },
   {
     label: "Settings",

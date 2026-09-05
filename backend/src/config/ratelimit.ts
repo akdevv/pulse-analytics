@@ -22,6 +22,13 @@ const rateLimitConfig = {
     maxAttempts: 10,
   },
 
+  // AI asks. Each ask is one or two free-tier LLM requests, so this limiter is
+  // availability control as much as abuse control.
+  ai: {
+    windowMs: 60 * 60 * 1000, // 1 hour
+    maxAsks: 30,
+  },
+
   // /refresh needs a valid signed cookie, so brute force isn't the risk here.
   // Limit is only to stop a runaway client looping on 401s.
   refresh: {

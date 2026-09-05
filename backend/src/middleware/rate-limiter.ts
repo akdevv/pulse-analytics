@@ -32,6 +32,27 @@ export const authRateLimit: RequestHandler = gate(
   )
 );
 
+// Keyed by user, not IP — a shared office IP shouldn't burn one user's asks,
+// and the route is behind authenticateToken so req.user is always set.
+export const aiRateLimit: RequestHandler = gate(
+  rateLimit({
+    windowMs: rateLimitConfig.ai.windowMs,
+    max: rateLimitConfig.ai.maxAsks,
+    standardHeaders: true,
+    legacyHeaders: false,
+    keyGenerator: (req) => req.user?.userId ?? "anonymous",
+    store: new RedisStore({
+      prefix: "rl:ai:",
+      sendCommand: (...args: [string, ...string[]]) =>
+        redis.call(...args) as Promise<RedisReply>,
+    }),
+    message: {
+      status: "error",
+      message: "Too many questions, try again later",
+    },
+  })
+);
+
 export const refreshRateLimit: RequestHandler = gate(
   make(
     rateLimitConfig.refresh.windowMs,

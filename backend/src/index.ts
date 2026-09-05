@@ -4,6 +4,7 @@ import { config } from "@/config/index.ts";
 import { prisma } from "@/config/prisma.ts";
 import { redis } from "@/config/redis.ts";
 import logger from "@/utils/logger.ts";
+import { closeAiPool } from "@/modules/ai/ai.runner.ts";
 
 async function main() {
   const server = http.createServer(app);
@@ -13,6 +14,7 @@ async function main() {
     server.close(async () => {
       await prisma.$disconnect();
       await redis.quit();
+      await closeAiPool();
       process.exit(0);
     });
   };
