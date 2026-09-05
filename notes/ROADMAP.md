@@ -1,6 +1,6 @@
 # Pulse Analytics roadmap
 
-What's left, in the order it gets done. Day-to-day checklist is `todos.md` (gitignored).
+What's left, in the order it gets done. Day-to-day checklist is `notes/todos.md` (gitignored).
 
 ---
 

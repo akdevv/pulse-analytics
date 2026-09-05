@@ -1,0 +1,66 @@
+# Manual: the box builds its own image, so a deploy means downtime during the
+# rebuild and you pick when. Secrets: DEPLOY_HOST, DEPLOY_USER, DEPLOY_SSH_KEY,
+# DEPLOY_PATH. The box needs its own repo deploy key; .env.prod lives there.
+
+name: backend deploy
+
+on:
+  workflow_dispatch:
+    inputs:
+      ref:
+        description: "Branch or tag to deploy"
+        default: main
+
+concurrency:
+  group: backend-deploy
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Load the ssh key
+        env:
+          DEPLOY_SSH_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
+          DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
+        run: |
+          mkdir -p ~/.ssh && chmod 700 ~/.ssh
+          printf '%s\n' "$DEPLOY_SSH_KEY" > ~/.ssh/id_deploy
+          chmod 600 ~/.ssh/id_deploy
+          ssh-keyscan -H "$DEPLOY_HOST" >> ~/.ssh/known_hosts
+
+      - name: Pull, rebuild, restart
+        env:
+          DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
+          DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
+          DEPLOY_PATH: ${{ secrets.DEPLOY_PATH }}
+          REF: ${{ inputs.ref }}
+        run: |
+          # Passed as remote env so the quoted heredoc expands on the box only.
+          ssh -i ~/.ssh/id_deploy "$DEPLOY_USER@$DEPLOY_HOST" \
+            "DEPLOY_PATH='$DEPLOY_PATH' REF='$REF' bash -euo pipefail" <<'REMOTE'
+          cd "$DEPLOY_PATH/backend"
+          git fetch --prune origin
+          git checkout "$REF"
+          git pull --ff-only
+          # Explicit flags: a non-interactive ssh shell skips the login profile.
+          docker compose -f docker-compose.yml -f docker-compose.prod.yml \
+            --env-file .env.prod up -d --build
+          docker image prune -f
+          REMOTE
+
+      - name: Wait for health
+        env:
+          DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
+          DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
+        run: |
+          ssh -i ~/.ssh/id_deploy "$DEPLOY_USER@$DEPLOY_HOST" bash -euo pipefail <<'REMOTE'
+          for i in $(seq 1 30); do
+            if curl -fsS http://localhost:8000/api/v1/health | grep -q '"status":"ok"'; then
+              echo "healthy"; exit 0
+            fi
+            sleep 5
+          done
+          echo "health check never went green"
+          exit 1
+          REMOTE

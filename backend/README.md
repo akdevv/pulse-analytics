@@ -1,167 +1,132 @@
-# Pulse Analytics — Backend
+# Pulse Analytics backend
 
-API server and event processing pipeline for Pulse Analytics.
+API server and event pipeline.
 
 ## Stack
 
-- **Runtime** — Node.js + TypeScript (via `tsx`)
-- **Framework** — Express 5
-- **Database** — PostgreSQL + TimescaleDB (time-series queries)
-- **ORM** — Prisma
-- **Queue** — BullMQ (backed by Redis)
-- **Cache** — Redis (ioredis)
-- **Auth** — JWT (access + refresh tokens, Redis denylist on logout)
+Node 22 + TypeScript, run through `tsx` (no build step). Express 5, Prisma,
+PostgreSQL with TimescaleDB, BullMQ on Redis, JWT auth with a Redis denylist
+for revoked tokens.
 
 ## Architecture
 
 ```
-Browser → POST /track → Express API → BullMQ Queue → Worker → TimescaleDB
+Browser → POST /track → Express API → BullMQ → Worker → TimescaleDB
 ```
 
-- **API** (`src/index.ts`) — handles HTTP, validates events, enqueues them
-- **Worker** (`src/worker.ts`) — dequeues events, enriches with geo + UA info, batch-inserts into DB
-- **GeoIP** — MaxMind GeoLite2 database for IP → country/city lookup
-- **Rate limiting** — per-site (by plan tier) + per-IP, backed by Redis
+Two processes, deployed separately.
 
-## Getting Started
+`src/index.ts` is the API. It validates events and enqueues them, and that is
+all it does on the hot path, so ingestion stays fast under load.
 
-### Prerequisites
+`src/worker.ts` drains the queue, enriches each event with geo and user-agent
+data, and batch-inserts. It is the only process that reads the GeoIP database.
 
-- Node.js 20+
-- pnpm
-- Docker (for local Postgres + Redis)
-- MaxMind GeoLite2 database at `./data/GeoLite2-City.mmdb`
+Rate limiting is per-site by plan tier and per-IP, both in Redis. It is off in
+development and on everywhere else unless `RATE_LIMIT_ENABLED` says otherwise.
 
-### Setup
+## Setup
+
+Needs Node 22+, pnpm, and Docker.
 
 ```bash
-# Install dependencies
 pnpm install
-
-# Copy env file and fill in values
 cp .env.example .env
-
-# Run migrations
-pnpm exec prisma migrate deploy  # Prisma schema
-pnpm db:migrate                  # TimescaleDB hypertables
-
-# (Optional) Seed with fake data
-pnpm seed
 ```
 
-### Running locally
+Fill in the two token secrets. Every variable is documented in `.env.example`.
+
+GeoIP is optional. Without `data/GeoLite2-City.mmdb` the worker logs one error
+and runs with geo disabled.
+
+## Running locally
 
 ```bash
 pnpm dev
 ```
 
-Starts Postgres + Redis via Docker, then the API and worker together in one terminal.
+Starts Postgres and Redis in Docker, runs both migration systems, then the API
+(cyan, port 8000) and worker (yellow) in one terminal. Killing one kills both.
 
-| Process | Port | Color  |
-| ------- | ---- | ------ |
-| API     | 8000 | cyan   |
-| Worker  | —    | yellow |
-
-If you want to run them separately:
+Separately, if you want them in different terminals:
 
 ```bash
-pnpm infra:up    # start Postgres + Redis only
-pnpm dev:api     # API server with hot reload
-pnpm dev:worker  # event worker
+pnpm infra:up    # Postgres + Redis only
+pnpm dev:api
+pnpm dev:worker
 ```
+
+`pnpm db:seed` fills the database with fake users and sites.
 
 ## Testing
 
-152 unit tests (Vitest) + Artillery load tests for ingestion, auth, and analytics.
+216 unit tests plus an integration suite that skips itself when no Postgres is
+listening, so `pnpm test` works with nothing running.
 
 ```bash
-pnpm test          # run unit tests once
-pnpm test:watch    # watch mode
-pnpm test:coverage # with coverage report
+pnpm test
+pnpm test:watch
+pnpm test:coverage
 ```
 
-See [`tests/README.md`](tests/README.md) for load test setup and full test strategy.
+Artillery configs for ingestion, auth and analytics live in `tests/load/`. See
+[`tests/README.md`](tests/README.md).
 
 ## Scripts
 
-| Command           | Description                             |
-| ----------------- | --------------------------------------- |
-| `pnpm dev`        | Start everything (infra + api + worker) |
-| `pnpm dev:api`    | API server only (hot reload)            |
-| `pnpm dev:worker` | Worker only                             |
-| `pnpm infra:up`   | Start Postgres + Redis in background    |
-| `pnpm infra:down` | Stop Postgres + Redis                   |
-| `pnpm db:migrate` | Run TimescaleDB hypertable migrations   |
-| `pnpm seed`       | Seed DB with fake users and sites       |
-| `pnpm typecheck`  | Run TypeScript type checks              |
-| `pnpm lint`       | Lint the codebase                       |
-| `pnpm format`     | Format with Prettier                    |
+| Command | Description |
+| --- | --- |
+| `pnpm dev` | Infra, migrations, API and worker |
+| `pnpm dev:api` / `pnpm dev:worker` | One process only |
+| `pnpm infra:up` / `pnpm infra:down` | Postgres + Redis |
+| `pnpm db:migrate` | Prisma schema, then TimescaleDB migrations |
+| `pnpm db:seed` | Fake users and sites |
+| `pnpm typecheck` / `pnpm lint` / `pnpm format` | Checks |
+| `pnpm load:*` | Artillery runs (`light`, `medium`, `heavy`, `hard`, `auth`, `analytics`) |
 
-## Environment Variables
+## API
 
-| Variable               | Required | Default                     | Description                            |
-| ---------------------- | -------- | --------------------------- | -------------------------------------- |
-| `PORT`                 | No       | `8000`                      | API server port                        |
-| `NODE_ENV`             | No       | `development`               | `development`, `production`, or `test` |
-| `DATABASE_URL`         | Yes      | —                           | PostgreSQL connection string           |
-| `ACCESS_TOKEN_SECRET`  | Yes      | —                           | JWT access token signing secret        |
-| `REFRESH_TOKEN_SECRET` | Yes      | —                           | JWT refresh token signing secret       |
-| `ACCESS_TOKEN_EXPIRY`  | No       | `15m`                       | Access token TTL                       |
-| `REFRESH_TOKEN_EXPIRY` | No       | `30d`                       | Refresh token TTL                      |
-| `REDIS_HOST`           | No       | `localhost`                 | Redis host                             |
-| `REDIS_PORT`           | No       | `6379`                      | Redis port                             |
-| `REDIS_PASSWORD`       | No       | —                           | Redis password (if auth enabled)       |
-| `GEOIP_DB_PATH`        | No       | `./data/GeoLite2-City.mmdb` | Path to MaxMind GeoLite2 DB            |
-| `FRONTEND_URL`         | No       | `http://localhost:3000`     | Allowed CORS origin                    |
-| `TRACKING_SCRIPT_URL`  | No       | `http://localhost:8000`     | Base URL embedded in tracking snippets |
+Everything is under `/api/v1`.
 
-## Project Structure
+| Method | Path | Auth | Description |
+| --- | --- | --- | --- |
+| `GET` | `/health` | none | DB, Redis and queue status |
+| `POST` | `/track` | none | Ingest an event |
+| `POST` | `/auth/register` | none | Register |
+| `POST` | `/auth/login` | none | Login |
+| `POST` | `/auth/refresh` | cookie | New access token |
+| `POST` | `/auth/logout` | bearer | Revoke token |
+| `GET` `PATCH` | `/auth/me` | bearer | Current user |
+| `GET` `POST` | `/sites` | bearer | List, create |
+| `GET` `PUT` `DELETE` | `/sites/:id` | bearer | Read, update, delete |
+| `POST` | `/sites/:id/regen-key` | bearer | New tracking key |
+| `GET` | `/analytics/:siteId/*` | bearer | `overview`, `timeseries`, `pages`, `referrers`, `devices`, `geo`, `realtime`, `events` |
+| `POST` | `/ai/:siteId/ask` | bearer | Natural-language query |
+| `GET` `DELETE` | `/ai/:siteId/conversations` | bearer | Query history |
 
-```
-src/
-├── config/       — env, redis, prisma, queue, rate limit config
-├── middleware/   — auth, error handling, rate limiting, request ID
-├── modules/
-│   ├── analytics/  — dashboard query endpoints
-│   ├── auth/       — register, login, logout, JWT refresh
-│   ├── health/     — deep health check (DB + Redis + queue)
-│   ├── ingestion/  — event tracking endpoint (/track)
-│   └── site/       — site management
-├── services/     — shared services (GeoIP lookup)
-├── types/        — shared TypeScript types
-├── utils/        — logger, error class, async handler, IP extraction
-├── workers/      — BullMQ event worker
-└── seed/         — dev data seeding scripts
-```
-
-## API Endpoints
-
-| Method  | Path                          | Auth   | Description           |
-| ------- | ----------------------------- | ------ | --------------------- |
-| `GET`   | `/api/v1/health`              | —      | Health check          |
-| `POST`  | `/api/v1/auth/register`       | —      | Register              |
-| `POST`  | `/api/v1/auth/login`          | —      | Login                 |
-| `POST`  | `/api/v1/auth/logout`         | Bearer | Logout + revoke token |
-| `POST`  | `/api/v1/auth/refresh`        | Cookie | Refresh access token  |
-| `GET`   | `/api/v1/auth/me`             | Bearer | Get current user      |
-| `PATCH` | `/api/v1/auth/me`             | Bearer | Update current user   |
-| `GET`   | `/api/v1/sites`               | Bearer | List sites            |
-| `POST`  | `/api/v1/sites`               | Bearer | Create site           |
-| `GET`   | `/api/v1/analytics/:siteId/*` | Bearer | Analytics queries     |
-| `POST`  | `/api/v1/track`               | —      | Ingest event (public) |
+`/track` accepts any origin. Everything else is restricted to `FRONTEND_URL`.
 
 ## Deployment
 
-The `Dockerfile` builds a production image (non-root user, healthcheck included).
+Production runs the same compose stack with the API and worker in Docker too.
+`docker-compose.prod.yml` layers them onto the base file.
 
 ```bash
-docker build -t pulse-backend .
+cp .env.example .env.prod                 # hosts become "postgres" and "redis"
+scp GeoLite2-City.mmdb <box>:backend/data/
+
+export COMPOSE_FILE=docker-compose.yml:docker-compose.prod.yml
+export COMPOSE_ENV_FILE=.env.prod
+docker compose up -d --build
 ```
 
-On AWS, the recommended setup is:
+The API container runs migrations before starting. `prisma migrate deploy` takes
+an advisory lock, so several containers booting together is safe.
 
-- **ECS Fargate** — runs the API and worker containers
-- **RDS** — managed PostgreSQL with TimescaleDB extension
-- **ElastiCache** — managed Redis
-- **ECR** — stores Docker images
-- **ALB** — HTTPS termination + routing
+Postgres and Redis bind to `127.0.0.1` by default, which keeps them off the
+internet on a public VM. The load rig puts the data layer on its own box with
+`PG_BIND=0.0.0.0` and a security group, and starts the API boxes with
+`docker compose up -d --no-deps api worker`. Full walkthrough in
+[`notes/aws-load-rig.md`](../notes/aws-load-rig.md).
+
+`GET /api/v1/health` returns 503 when Postgres or Redis is unreachable.

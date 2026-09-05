@@ -6,7 +6,11 @@
   "main": "src/index.ts",
   "type": "module",
   "scripts": {
-    "dev": "tsx watch src/index.ts",
+    "dev": "docker compose up -d --wait && pnpm db:migrate && concurrently -n api,worker -c cyan,yellow --kill-others \"pnpm dev:api\" \"pnpm dev:worker\"",
+    "dev:api": "tsx watch src/index.ts",
+    "dev:worker": "tsx watch src/worker.ts",
+    "infra:up": "docker compose up -d --wait",
+    "infra:down": "docker compose down",
     "build": "tsup",
     "typecheck": "tsc --noEmit",
     "lint": "eslint .",

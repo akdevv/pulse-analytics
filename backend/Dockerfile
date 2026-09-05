@@ -1,5 +1,7 @@
 FROM node:22-alpine AS base
-RUN npm install -g pnpm
+# Pinned to package.json's "packageManager". Any other version self-installs
+# that one and fails: its Linux binary is not in a macOS-resolved lockfile.
+RUN npm install -g pnpm@10.27.0
 WORKDIR /app
 
 # All deps: tsx is a devDep but the CMD needs it at runtime.

@@ -1,0 +1,59 @@
+name: backend ci
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "backend/**"
+      - ".github/workflows/backend-ci.yml"
+  pull_request:
+    paths:
+      - "backend/**"
+      - ".github/workflows/backend-ci.yml"
+
+concurrency:
+  group: backend-ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  checks:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend
+    env:
+      # Test-only. config/env.ts exits when these are missing, so the suite
+      # cannot import without them. No database is reached: the integration
+      # file skips itself when nothing answers.
+      ACCESS_TOKEN_SECRET: ci-test-secret
+      REFRESH_TOKEN_SECRET: ci-test-secret
+      DATABASE_URL: postgresql://postgres:postgres@localhost:5432/pulse_ci
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          # Keep in sync with "packageManager" in backend/package.json.
+          version: 10.27.0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+          cache-dependency-path: backend/pnpm-lock.yaml
+
+      - run: pnpm install --frozen-lockfile
+
+      # src/generated/prisma is gitignored, so typecheck fails without it.
+      - run: pnpm exec prisma generate
+
+      - run: pnpm typecheck
+      - run: pnpm lint
+      - run: pnpm test
+
+  # The image is what ships. `pnpm build` (tsup) writes a dist/ nothing runs.
+  image:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: docker build -t pulse-api backend
