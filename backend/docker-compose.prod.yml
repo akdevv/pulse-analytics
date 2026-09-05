@@ -1,0 +1,29 @@
+services:
+  api:
+    image: pulse-api
+    build: .
+    restart: unless-stopped
+    env_file: .env.prod
+    ports:
+      - ${API_BIND:-0.0.0.0}:8000:8000
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    # migrate deploy takes an advisory lock, so parallel API containers are safe
+    command: sh -c "pnpm db:migrate && node --import tsx src/index.ts"
+
+  worker:
+    image: pulse-api
+    build: .
+    restart: unless-stopped
+    env_file: .env.prod
+    depends_on:
+      api:
+        condition: service_started
+    # Mounted, not baked: 66MB, and MaxMind's licence forbids redistribution.
+    # Missing file means one error line and no geo, not a crash.
+    volumes:
+      - ./data:/app/data:ro
+    command: node --import tsx src/worker.ts

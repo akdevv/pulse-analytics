@@ -4,10 +4,12 @@ services:
     restart: always
     environment:
       POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: password
-      POSTGRES_DB: pulse_dev
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-password}
+      POSTGRES_DB: ${POSTGRES_DB:-pulse_dev}
+    # localhost-only by default so a public VM does not expose the database.
+    # The load rig's data box sets PG_BIND=0.0.0.0 and filters in the firewall.
     ports:
-      - 5432:5432
+      - ${PG_BIND:-127.0.0.1}:5432:5432
     volumes:
       # pg18 stores data in a version subdir, so mount the parent
       - postgres_data:/var/lib/postgresql
@@ -21,7 +23,7 @@ services:
     image: redis:7-alpine
     restart: always
     ports:
-      - 6379:6379
+      - ${REDIS_BIND:-127.0.0.1}:6379:6379
     volumes:
       - redis_data:/data
     healthcheck:

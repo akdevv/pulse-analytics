@@ -39,7 +39,6 @@ const envSchema = z.object({
   GEOIP_DB_PATH: z.string().default("./data/GeoLite2-City.mmdb"),
 
   FRONTEND_URL: z.string().default("http://localhost:3000"),
-  TRACKING_SCRIPT_URL: z.url().default("http://localhost:8000"),
 });
 
 const parsed = envSchema.safeParse(process.env);
