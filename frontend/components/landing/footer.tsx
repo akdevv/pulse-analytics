@@ -17,6 +17,15 @@ const COLS = [
     ],
   },
   {
+    title: "Docs",
+    links: [
+      { label: "Quickstart", href: "/docs/quickstart" },
+      { label: "Installation", href: "/docs/installation" },
+      { label: "Custom events", href: "/docs/events" },
+      { label: "SDK reference", href: "/docs/reference" },
+    ],
+  },
+  {
     title: "Source",
     links: [
       { label: "Repository", href: REPO },
@@ -40,7 +49,7 @@ export function Footer() {
       />
 
       <div className="mx-auto max-w-7xl px-6 pt-20">
-        <div className="grid grid-cols-2 gap-x-10 gap-y-14 md:grid-cols-[1.6fr_1fr_1fr]">
+        <div className="grid grid-cols-2 gap-x-10 gap-y-14 md:grid-cols-[1.6fr_1fr_1fr_1fr]">
           <div className="col-span-2 flex flex-col gap-5 md:col-span-1">
             <Link href="/" className="inline-flex w-fit items-center gap-2.5">
               <PulseLogo size={26} />

@@ -121,6 +121,13 @@ export function Nav() {
         <span className="mx-1 hidden h-5 w-px bg-ink/10 md:block" />
 
         <Link
+          href="/docs"
+          className="hidden rounded-full px-3 py-1.5 text-[13px] text-ink/60 transition-colors duration-150 ease-[var(--ease-out)] hover:bg-ink/[0.06] hover:text-ink md:inline-block"
+        >
+          Docs
+        </Link>
+
+        <Link
           href="/login"
           className="hidden rounded-full px-3 py-1.5 text-[13px] text-ink/60 transition-colors duration-150 ease-[var(--ease-out)] hover:text-ink sm:inline-block"
         >
@@ -218,6 +225,17 @@ export function Nav() {
           })}
 
           <div className="my-1.5 h-px bg-ink/8" />
+
+          <Link
+            href="/docs"
+            onClick={() => setOpen(false)}
+            className="flex items-center justify-between rounded-xl px-4 py-3.5 text-[15px] text-ink/70 transition-colors duration-150 ease-[var(--ease-out)] active:bg-ink/[0.07]"
+          >
+            Documentation
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" className="text-ink/25" aria-hidden>
+              <path d="M9 6l6 6-6 6" />
+            </svg>
+          </Link>
 
           <a
             href="https://github.com/akdevv/pulse-analytics"
