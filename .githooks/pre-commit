@@ -1,0 +1,30 @@
+#!/bin/sh
+# Format and lint whatever workspace has staged changes.
+#
+# Plain git hooks, not husky + lint-staged: the repo has no root package.json
+# to hang a `prepare` script on, and creating one to install a hook runner is
+# more moving parts than the hook itself. Cost is one command per clone:
+#
+#   git config core.hooksPath .githooks
+#
+set -e
+
+staged() {
+  git diff --cached --name-only --diff-filter=ACMR | grep "^$1/.*\.\(ts\|tsx\)$" || true
+}
+
+check() {
+  workspace=$1
+  files=$(staged "$workspace")
+  [ -z "$files" ] && return 0
+
+  echo "→ $workspace"
+  # Paths arrive repo-relative; prettier runs from inside the workspace.
+  echo "$files" | sed "s|^$workspace/||" | tr '\n' '\0' |
+    (cd "$workspace" && xargs -0 pnpm exec prettier --write)
+  echo "$files" | tr '\n' '\0' | xargs -0 git add
+  (cd "$workspace" && pnpm lint)
+}
+
+check frontend
+check backend
