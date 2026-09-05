@@ -87,9 +87,6 @@ temp/
 # PM2 logs
 .pm2/
 
-# Docker
-.dockerignore
-
 # Misc
 .cache/
 .parcel-cache/

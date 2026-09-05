@@ -17,9 +17,8 @@ const envSchema = z.object({
   DATABASE_URL: z.string().min(1),
   AI_DATABASE_URL: z.string().optional(),
 
-  // AI query feature. Any OpenAI-compatible /chat/completions endpoint —
-  // Groq, Cerebras, OpenRouter, Gemini. Swapping provider is a config edit.
-  // Without AI_API_KEY the feature is off and the rest of the API boots fine.
+  // Any OpenAI-compatible /chat/completions endpoint. No AI_API_KEY means the
+  // AI feature is off and the rest of the API still boots.
   AI_BASE_URL: z.string().default("https://api.groq.com/openai/v1"),
   AI_API_KEY: z.string().optional(),
   AI_MODEL: z.string().default("openai/gpt-oss-120b"),
@@ -28,10 +27,8 @@ const envSchema = z.object({
   REDIS_PORT: z.coerce.number().default(6379),
   REDIS_PASSWORD: z.string().optional(),
 
-  // Left unset, this follows NODE_ENV: off in development, on everywhere else.
-  // An explicit "true" turns limiting back on locally when you want to test it.
-  // The optional lives inside the preprocess: an empty value in .env arrives as
-  // "" rather than undefined, so it has to be normalised before the enum runs.
+  // Unset follows NODE_ENV (see the default export). The preprocess is needed
+  // because an empty value in .env arrives as "" and would fail the enum.
   RATE_LIMIT_ENABLED: z
     .preprocess(
       (v) => (v === "" ? undefined : v),

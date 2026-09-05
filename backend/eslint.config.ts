@@ -18,8 +18,7 @@ export default defineConfig([
     languageOptions: { globals: globals.node },
   },
   {
-    // public/ is served to browsers, not run by node. Without this every
-    // window/document/history reference in pulse.js reads as no-undef.
+    // public/ runs in browsers, so window and document are not no-undef.
     files: ["public/**/*.js"],
     languageOptions: { globals: globals.browser },
   },

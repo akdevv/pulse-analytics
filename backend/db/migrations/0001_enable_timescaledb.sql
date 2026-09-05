@@ -1,5 +1,3 @@
--- Enables the TimescaleDB extension on this Postgres instance.
--- Must run before any other TimescaleDB commands.
--- The CASCADE option automatically installs any dependencies.
+-- Must run before any other TimescaleDB command. CASCADE pulls in deps.
 
 CREATE EXTENSION IF NOT EXISTS timescaledb CASCADE;

@@ -4,8 +4,8 @@
 # Users: loadtest01-05@gmail.com / Password@123
 # First run creates them automatically. Subsequent runs reuse them.
 #
-# Rate limit fix: each VU sends a unique X-Forwarded-For IP so every VU
-# gets its own rate-limit bucket in Redis (requires trust proxy = true, which is set).
+# Each VU sends a unique X-Forwarded-For so it gets its own rate-limit bucket
+# in Redis. Relies on trust proxy being set.
 #
 # Thresholds: p99 < 300ms, error rate < 0.5%
 
@@ -30,9 +30,8 @@ config:
         strict: false
 
 # Each scenario:
-#   1. Tries to register the fixed test user — no status expectation.
-#      201 on first run, 409 on subsequent runs. Both are fine.
-#      Uses a fixed IP per user so register rate limit is isolated per user.
+#   1. Registers the fixed test user, with no status expectation: 201 on the
+#      first run, 409 after. A fixed IP per user isolates the register limit.
 #   2. Logs in with a random IP so every VU gets its own rate-limit window.
 
 scenarios:

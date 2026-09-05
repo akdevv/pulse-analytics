@@ -1,19 +1,11 @@
--- Creates pre-computed rollup views over the raw events table.
---
--- Why continuous aggregates?
---   Every dashboard query right now scans raw events. With a small dataset
---   that's fine. At 50M+ rows it's hundreds of milliseconds per query.
---   Continuous aggregates pre-compute the COUNT/SUM/DISTINCT values and
---   store them in a materialized view that TimescaleDB keeps up-to-date
---   automatically as new events arrive.
---
+-- Pre-computed rollups so dashboard queries scan hundreds of rows, not millions.
+-- TimescaleDB keeps them current as events arrive.
 --   hourly_pageviews: one row per (hour, site, page, browser, os, device, country)
---   daily_pageviews:  rolled up from hourly — one row per (day, site, page, ...)
+--   daily_pageviews:  the same rolled up per day
 --
--- Dashboard queries hit these views instead of raw events.
--- The difference is scanning hundreds of rows vs millions.
+-- Note: the sessions and visitors columns are distinct counts within a group,
+-- so they cannot be summed across groups. See analytics.repository.ts.
 
--- Hourly rollup from raw events
 CREATE MATERIALIZED VIEW IF NOT EXISTS hourly_pageviews
 WITH (timescaledb.continuous, timescaledb.materialized_only = true) AS
 SELECT
@@ -41,7 +33,7 @@ SELECT add_continuous_aggregate_policy(
   if_not_exists     => TRUE
 );
 
--- Daily rollup from hourly (not from raw events)
+-- From hourly, not from raw events.
 CREATE MATERIALIZED VIEW IF NOT EXISTS daily_pageviews
 WITH (timescaledb.continuous) AS
 SELECT
@@ -67,8 +59,7 @@ SELECT add_continuous_aggregate_policy(
   if_not_exists     => TRUE
 );
 
--- Backfill both views with any data that already exists in the events table.
--- This is a one-time operation — the policies above handle ongoing refresh.
+-- One-time backfill. The policies above handle every refresh after this.
 CALL refresh_continuous_aggregate(
   'hourly_pageviews',
   (NOW() - INTERVAL '90 days')::timestamp,

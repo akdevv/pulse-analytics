@@ -1,14 +1,6 @@
--- Enables compression on the events hypertable.
---
--- How TimescaleDB compression works:
---   Chunks older than the threshold are compressed in the background.
---   Compressed chunks use 90-95% less disk space and are still fully queryable.
---   compress_segmentby tells TimescaleDB to keep all rows for a given siteId
---   together in the same compressed block — this makes per-site queries faster
---   even on compressed data.
---
--- The compression policy runs automatically in the background via a TimescaleDB
--- background worker job. You don't trigger it manually.
+-- Chunks past the threshold compress in the background and stay queryable.
+-- segmentby keeps one site's rows in the same block, so per-site queries stay
+-- fast on compressed chunks.
 
 ALTER TABLE events SET (
   timescaledb.compress,

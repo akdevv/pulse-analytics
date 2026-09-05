@@ -1,10 +1,8 @@
-# Artillery load test: ingestion /track — Heavy
-# Target: 10,000 RPS → p99 < 1s, error rate < 1%
+# Artillery load test: ingestion /track, heavy
+# Target: 10,000 RPS, p99 < 1s, error rate < 1%
 #
-# Single Artillery process tops out ~2-3k RPS.
-# Run with multiple workers:
+# One Artillery process tops out around 2-3k RPS, so run it as:
 #   npx artillery run --workers 8 tests/load/ingestion-heavy.yml
-# Or distributed mode:
 #   npx artillery run-distributed tests/load/ingestion-heavy.yml
 #
 # Prereq: data/users.csv must exist (pnpm load:seed)
