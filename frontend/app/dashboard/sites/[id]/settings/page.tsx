@@ -2,10 +2,8 @@
 
 import { useState } from "react";
 import { useParams } from "next/navigation";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { IoArrowBackOutline } from "react-icons/io5";
 import { TbRefresh } from "react-icons/tb";
 import { GoTrash } from "react-icons/go";
 import {
@@ -18,6 +16,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { SiteTabs } from "@/components/sites/site-tabs";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
   useDeleteSite,
@@ -106,7 +105,7 @@ export default function SiteSettingsPage() {
   if (isLoading) {
     return (
       <div className="max-w-2xl space-y-6 p-1">
-        <Skeleton className="h-9 w-48" />
+        <SiteTabs />
         <Skeleton className="h-56 rounded-xl" />
         <Skeleton className="h-40 rounded-xl" />
       </div>
@@ -115,9 +114,12 @@ export default function SiteSettingsPage() {
 
   if (error || !site) {
     return (
-      <p className="p-1 text-sm text-destructive">
-        {getErrorMessage(error, "Site not found.")}
-      </p>
+      <div className="max-w-2xl space-y-6 p-1">
+        <SiteTabs />
+        <p className="text-sm text-destructive">
+          {getErrorMessage(error, "Site not found.")}
+        </p>
+      </div>
     );
   }
 
@@ -142,18 +144,7 @@ export default function SiteSettingsPage() {
 
   return (
     <div className="max-w-2xl space-y-6 p-1">
-      {/* Header */}
-      <div className="flex items-center gap-3">
-        <Button variant="ghost" size="icon" className="size-8 shrink-0" asChild>
-          <Link href={`/dashboard/sites/${id}`}>
-            <IoArrowBackOutline className="size-4" />
-          </Link>
-        </Button>
-        <div className="min-w-0">
-          <h1 className="text-xl font-semibold tracking-tight">Settings</h1>
-          <p className="truncate text-sm text-muted-foreground">{site.name}</p>
-        </div>
-      </div>
+      <SiteTabs />
 
       <GeneralCard site={site} />
 

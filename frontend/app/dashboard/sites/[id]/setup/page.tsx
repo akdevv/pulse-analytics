@@ -11,6 +11,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { SiteTabs } from "@/components/sites/site-tabs";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useSite } from "@/hooks/useSites";
 import { getErrorMessage } from "@/lib/utils";
@@ -80,6 +81,7 @@ export default function SiteSetupPage() {
   if (isLoading) {
     return (
       <div className="space-y-6 p-1">
+        <SiteTabs />
         <div className="grid gap-3 sm:grid-cols-3">
           {Array.from({ length: 3 }).map((_, i) => (
             <Skeleton key={i} className="h-20 rounded-xl" />
@@ -93,9 +95,12 @@ export default function SiteSetupPage() {
 
   if (error || !site) {
     return (
-      <p className="p-1 text-sm text-destructive">
-        {getErrorMessage(error, "Site not found.")}
-      </p>
+      <div className="space-y-6 p-1">
+        <SiteTabs />
+        <p className="text-sm text-destructive">
+          {getErrorMessage(error, "Site not found.")}
+        </p>
+      </div>
     );
   }
 
@@ -104,6 +109,8 @@ export default function SiteSetupPage() {
 
   return (
     <div className="space-y-6 p-1">
+      <SiteTabs />
+
       {/* Stat Cards */}
       <div className="grid gap-3 sm:grid-cols-3">
         <Card className="overflow-hidden py-0">

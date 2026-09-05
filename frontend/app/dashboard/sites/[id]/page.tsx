@@ -13,6 +13,7 @@ import {
   useCustomEvents,
 } from "@/hooks/useAnalytics";
 import { DateRangeBar } from "@/components/analytics/date-range-bar";
+import { SiteTabs } from "@/components/sites/site-tabs";
 import type { Preset, Interval } from "@/components/analytics/date-range-bar";
 import { OverviewCards } from "@/components/analytics/overview-cards";
 import { TimeseriesChart } from "@/components/analytics/timeseries-chart";
@@ -89,14 +90,14 @@ export default function SiteAnalyticsPage() {
 
   return (
     <div className="space-y-5">
-      <div className="flex items-center justify-end">
+      <SiteTabs>
         <DateRangeBar
           preset={preset}
           interval={interval}
           onPresetChange={setPreset}
           onIntervalChange={setInterval}
         />
-      </div>
+      </SiteTabs>
 
       <RealtimeWidget
         data={realtime ?? undefined}

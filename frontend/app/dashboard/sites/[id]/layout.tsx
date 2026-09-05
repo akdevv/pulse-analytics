@@ -1,18 +1,8 @@
 "use client";
 
-import { useParams, usePathname } from "next/navigation";
-import Link from "next/link";
+import { useParams } from "next/navigation";
+import { Skeleton } from "@/components/ui/skeleton";
 import { useSite } from "@/hooks/useSites";
-
-const TABS = [
-  { label: "Analytics", href: (id: string) => `/dashboard/sites/${id}` },
-  { label: "Ask AI", href: (id: string) => `/dashboard/sites/${id}/ask` },
-  { label: "Setup", href: (id: string) => `/dashboard/sites/${id}/setup` },
-  {
-    label: "Settings",
-    href: (id: string) => `/dashboard/sites/${id}/settings`,
-  },
-];
 
 export default function SiteLayout({
   children,
@@ -20,14 +10,14 @@ export default function SiteLayout({
   children: React.ReactNode;
 }) {
   const { id } = useParams<{ id: string }>();
-  const pathname = usePathname();
   const { data: site, error } = useSite(id);
 
   return (
     <div className="flex h-full flex-col">
-      {/* Site header */}
+      {/* Who this page is about. The breadcrumb stops at Sites and the tabs
+          name the section, so the site is named once, here. */}
       <div className="shrink-0 px-1 pt-1 pb-0">
-        <div className="mb-4 flex items-center gap-2.5">
+        <div className="mb-4 flex flex-wrap items-center gap-2.5">
           {site ? (
             <>
               <h1 className="text-xl font-semibold tracking-tight">
@@ -57,37 +47,12 @@ export default function SiteLayout({
               Site unavailable
             </h1>
           ) : (
-            <div className="h-7 w-40 animate-pulse rounded-md bg-muted" />
+            <Skeleton className="h-7 w-40" />
           )}
-        </div>
-
-        {/* Tab nav */}
-        <div className="flex gap-1 border-b border-border">
-          {TABS.map((tab) => {
-            const href = tab.href(id);
-            const isActive = pathname === href;
-            return (
-              <Link
-                key={tab.label}
-                href={href}
-                className={`relative px-3 pb-2.5 text-sm font-medium transition-colors ${
-                  isActive
-                    ? "text-foreground"
-                    : "text-muted-foreground hover:text-foreground"
-                }`}
-              >
-                {tab.label}
-                {isActive && (
-                  <span className="absolute right-0 bottom-0 left-0 h-0.5 rounded-full bg-foreground" />
-                )}
-              </Link>
-            );
-          })}
         </div>
       </div>
 
-      {/* Tab content */}
-      <div className="flex-1 overflow-y-auto px-1 pt-5 pb-10">{children}</div>
+      <div className="flex-1 overflow-y-auto px-1 pt-1 pb-10">{children}</div>
     </div>
   );
 }
