@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="en"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Setup</title>
+<title>Analytics — loading</title>
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,500;12..96,600;12..96,700&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="tokens.css">
@@ -96,15 +96,28 @@ pre .a{color:var(--accent)}
 .kv .v{font-family:var(--mono);font-size:11.5px;background:var(--bg);border:1px solid var(--seam);border-radius:5px;padding:3px 8px;color:var(--t3)}
 
 
-.wait{display:flex;align-items:center;gap:13px;padding:15px 18px;border:1px solid color-mix(in oklab,var(--powder) 24%,transparent);background:color-mix(in oklab,var(--powder) 7%,transparent);border-radius:10px;margin-bottom:18px}
-.wait .pip{position:relative;display:flex;width:8px;height:8px;flex:none}
-.wait .pip i{position:absolute;inset:0;border-radius:50%;background:var(--powder)}
-.wait .pip i:first-child{animation:ping 1.8s var(--ease) infinite;opacity:.5}
-@keyframes ping{0%{transform:scale(1);opacity:.5}75%,100%{transform:scale(2.6);opacity:0}}
-.wait b{font-size:13.5px;font-weight:500;display:block}
-.wait p{font-size:12.5px;color:var(--t5);margin-top:3px}
-.copy{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--seam);background:var(--bg);border-radius:6px;padding:5px 10px;font-size:12px;color:var(--t4);cursor:pointer}
-.stack{display:flex;flex-direction:column;gap:16px}
+.sk{background:linear-gradient(90deg,var(--rule) 25%,color-mix(in oklab,var(--ink) 13%,transparent) 50%,var(--rule) 75%);background-size:200% 100%;animation:sh 1.4s linear infinite;border-radius:5px}
+@keyframes sh{to{background-position:-200% 0}}
+.mrow{display:grid;grid-template-columns:repeat(4,1fr)}
+.m{padding:16px 18px;border-right:1px solid var(--seam)}
+.m:last-child{border-right:0}
+.chartcard{padding:18px 20px;margin-top:16px}
+.duo{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:16px}
+.p{padding:16px 18px}
+.ph{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
+.ph b{font-size:14px;font-weight:500}
+.mid{display:grid;place-items:center;text-align:center;padding:52px 24px}
+.mid h2{font-family:var(--display);font-weight:600;letter-spacing:-0.03em;font-size:19px;margin-bottom:8px}
+.mid p{font-size:13.5px;line-height:1.6;color:var(--t5);max-width:52ch}
+.checks{display:grid;grid-template-columns:repeat(3,1fr);gap:22px;margin-top:30px;text-align:left;width:100%}
+.checks li{list-style:none;display:flex;gap:11px}
+.checks .q{width:23px;height:23px;flex:none;border:1px solid var(--seam);border-radius:50%;display:grid;place-items:center;font-size:11px;color:var(--t5)}
+.checks b{display:block;font-size:13px;font-weight:500;margin-bottom:4px}
+.checks p{font-size:12.5px;line-height:1.55;color:var(--t5)}
+code{font-family:var(--mono);font-size:11.5px;background:var(--bg);border:1px solid var(--seam);border-radius:4px;padding:1px 5px}
+.err{border-color:color-mix(in oklab,oklch(0.63 0.21 25) 32%,transparent)}
+.err .ic{width:34px;height:34px;border-radius:50%;display:grid;place-items:center;border:1px solid color-mix(in oklab,oklch(0.63 0.21 25) 40%,transparent);color:oklch(0.74 0.17 25);margin-bottom:14px;font-size:17px}
+.act{display:flex;gap:9px;margin-top:18px}
 
 @media (max-width: 900px){
   .app{grid-template-columns:1fr}
@@ -176,33 +189,26 @@ pre .a{color:var(--accent)}
 </div>
 <div class="bar">
   <div class="tabs">
-    <a class="">Analytics</a><a class="">Ask AI</a><a class="on">Setup</a><a class="">Settings</a>
+    <a class="on">Analytics</a><a class="">Ask AI</a><a class="">Setup</a><a class="">Settings</a>
   </div>
-  
+  <div class="seg"><span class="on">7D</span><span>30D</span><span>90D</span></div>
 </div>
-  <div class="wait">
-    <span class="pip"><i></i><i></i></span>
-    <span><b>Waiting for your first event</b><p>This page turns into the dashboard the moment one arrives. Checking every few seconds.</p></span>
+  <div class="card mrow" aria-busy="true">
+    <div class="m"><span class="meta">Pageviews</span><div class="sk" style="height:31px;width:96px;margin-top:12px"></div><div class="sk" style="height:11px;width:52px;margin-top:10px"></div></div><div class="m"><span class="meta">Sessions</span><div class="sk" style="height:31px;width:96px;margin-top:12px"></div><div class="sk" style="height:11px;width:52px;margin-top:10px"></div></div><div class="m"><span class="meta">Visitors</span><div class="sk" style="height:31px;width:96px;margin-top:12px"></div><div class="sk" style="height:11px;width:52px;margin-top:10px"></div></div><div class="m"><span class="meta">Active now</span><div class="sk" style="height:31px;width:96px;margin-top:12px"></div><div class="sk" style="height:11px;width:52px;margin-top:10px"></div></div>
   </div>
-  <div class="stack">
-    <div class="card">
-      <div class="ch"><span><b>Tracking snippet</b><p>Paste this once, inside the &lt;head&gt; of every page you want counted.</p></span><button class="copy">Copy</button></div>
-      <div class="cb"><pre>&lt;<span class="t">script</span> <span class="a">src</span>="https://api.pulse.dev/pulse.js"
-        <span class="a">data-tid</span>="pk-kdR4zKJf-6h6CBZZc2YUQMsk8tyH_oVE"
-        <span class="a">data-host</span>="https://api.pulse.dev"&gt;&lt;/<span class="t">script</span>&gt;</pre></div>
-    </div>
-    <div class="card">
-      <div class="ch"><span><b>Send a test event</b><p>Fires one pageview from your terminal, so you can tell a broken snippet from an empty site.</p></span><button class="copy">Copy</button></div>
-      <div class="cb"><pre><span class="t">curl</span> -X POST "https://api.pulse.dev/api/v1/track" -G \
-  --data-urlencode <span class="a">"tid=pk-kdR4zKJf-6h6CBZZc2YUQMsk8tyH_oVE"</span> \
-  --data-urlencode <span class="a">"t=PAGEVIEW"</span> \
-  --data-urlencode <span class="a">"dl=https://example.com/"</span></pre></div>
-    </div>
-    <div class="card">
-      <div class="ch"><b>Details</b></div>
-      <div class="cb" style="padding-top:4px;padding-bottom:6px">
-        <div class="kv"><span class="k">Tracking ID</span><span class="v">pk-kdR4zKJf-6h6CBZZc2YUQMsk8tyH_oVE</span></div><div class="kv"><span class="k">Domain</span><span class="v">example.com</span></div><div class="kv"><span class="k">Plan</span><span class="v">Free — 100k events / month</span></div><div class="kv"><span class="k">Created</span><span class="v">29 Aug 2026</span></div>
-      </div>
+  <div class="card chartcard" aria-busy="true">
+    <div class="ph"><b>Traffic</b></div>
+    <div class="sk" style="height:300px"></div>
+  </div>
+  <div class="duo">
+    <div class="card p" aria-busy="true"><div class="ph"><b>Top pages</b></div>
+      <div style="display:flex;gap:14px;align-items:center;padding:9px 0;border-bottom:1px solid var(--rule)"><div class="sk" style="height:11px;flex:1;max-width:70%"></div><div class="sk" style="height:4px;width:88px"></div><div class="sk" style="height:11px;width:34px"></div></div><div style="display:flex;gap:14px;align-items:center;padding:9px 0;border-bottom:1px solid var(--rule)"><div class="sk" style="height:11px;flex:1;max-width:52%"></div><div class="sk" style="height:4px;width:88px"></div><div class="sk" style="height:11px;width:34px"></div></div><div style="display:flex;gap:14px;align-items:center;padding:9px 0;border-bottom:1px solid var(--rule)"><div class="sk" style="height:11px;flex:1;max-width:61%"></div><div class="sk" style="height:4px;width:88px"></div><div class="sk" style="height:11px;width:34px"></div></div><div style="display:flex;gap:14px;align-items:center;padding:9px 0;border-bottom:1px solid var(--rule)"><div class="sk" style="height:11px;flex:1;max-width:44%"></div><div class="sk" style="height:4px;width:88px"></div><div class="sk" style="height:11px;width:34px"></div></div><div style="display:flex;gap:14px;align-items:center;padding:9px 0;border-bottom:1px solid var(--rule)"><div class="sk" style="height:11px;flex:1;max-width:58%"></div><div class="sk" style="height:4px;width:88px"></div><div class="sk" style="height:11px;width:34px"></div></div><div style="display:flex;gap:14px;align-items:center;padding:9px 0;border-bottom:1px solid var(--rule)"><div class="sk" style="height:11px;flex:1;max-width:38%"></div><div class="sk" style="height:4px;width:88px"></div><div class="sk" style="height:11px;width:34px"></div></div>
+    </div><div class="card p" aria-busy="true"><div class="ph"><b>Sources</b></div>
+      <div style="display:flex;gap:14px;align-items:center;padding:9px 0;border-bottom:1px solid var(--rule)"><div class="sk" style="height:11px;flex:1;max-width:70%"></div><div class="sk" style="height:4px;width:88px"></div><div class="sk" style="height:11px;width:34px"></div></div><div style="display:flex;gap:14px;align-items:center;padding:9px 0;border-bottom:1px solid var(--rule)"><div class="sk" style="height:11px;flex:1;max-width:52%"></div><div class="sk" style="height:4px;width:88px"></div><div class="sk" style="height:11px;width:34px"></div></div><div style="display:flex;gap:14px;align-items:center;padding:9px 0;border-bottom:1px solid var(--rule)"><div class="sk" style="height:11px;flex:1;max-width:61%"></div><div class="sk" style="height:4px;width:88px"></div><div class="sk" style="height:11px;width:34px"></div></div><div style="display:flex;gap:14px;align-items:center;padding:9px 0;border-bottom:1px solid var(--rule)"><div class="sk" style="height:11px;flex:1;max-width:44%"></div><div class="sk" style="height:4px;width:88px"></div><div class="sk" style="height:11px;width:34px"></div></div><div style="display:flex;gap:14px;align-items:center;padding:9px 0;border-bottom:1px solid var(--rule)"><div class="sk" style="height:11px;flex:1;max-width:58%"></div><div class="sk" style="height:4px;width:88px"></div><div class="sk" style="height:11px;width:34px"></div></div><div style="display:flex;gap:14px;align-items:center;padding:9px 0;border-bottom:1px solid var(--rule)"><div class="sk" style="height:11px;flex:1;max-width:38%"></div><div class="sk" style="height:4px;width:88px"></div><div class="sk" style="height:11px;width:34px"></div></div>
+    </div><div class="card p" aria-busy="true"><div class="ph"><b>Countries</b></div>
+      <div style="display:flex;gap:14px;align-items:center;padding:9px 0;border-bottom:1px solid var(--rule)"><div class="sk" style="height:11px;flex:1;max-width:70%"></div><div class="sk" style="height:4px;width:88px"></div><div class="sk" style="height:11px;width:34px"></div></div><div style="display:flex;gap:14px;align-items:center;padding:9px 0;border-bottom:1px solid var(--rule)"><div class="sk" style="height:11px;flex:1;max-width:52%"></div><div class="sk" style="height:4px;width:88px"></div><div class="sk" style="height:11px;width:34px"></div></div><div style="display:flex;gap:14px;align-items:center;padding:9px 0;border-bottom:1px solid var(--rule)"><div class="sk" style="height:11px;flex:1;max-width:61%"></div><div class="sk" style="height:4px;width:88px"></div><div class="sk" style="height:11px;width:34px"></div></div><div style="display:flex;gap:14px;align-items:center;padding:9px 0;border-bottom:1px solid var(--rule)"><div class="sk" style="height:11px;flex:1;max-width:44%"></div><div class="sk" style="height:4px;width:88px"></div><div class="sk" style="height:11px;width:34px"></div></div><div style="display:flex;gap:14px;align-items:center;padding:9px 0;border-bottom:1px solid var(--rule)"><div class="sk" style="height:11px;flex:1;max-width:58%"></div><div class="sk" style="height:4px;width:88px"></div><div class="sk" style="height:11px;width:34px"></div></div><div style="display:flex;gap:14px;align-items:center;padding:9px 0;border-bottom:1px solid var(--rule)"><div class="sk" style="height:11px;flex:1;max-width:38%"></div><div class="sk" style="height:4px;width:88px"></div><div class="sk" style="height:11px;width:34px"></div></div>
+    </div><div class="card p" aria-busy="true"><div class="ph"><b>Technology</b></div>
+      <div style="display:flex;gap:14px;align-items:center;padding:9px 0;border-bottom:1px solid var(--rule)"><div class="sk" style="height:11px;flex:1;max-width:70%"></div><div class="sk" style="height:4px;width:88px"></div><div class="sk" style="height:11px;width:34px"></div></div><div style="display:flex;gap:14px;align-items:center;padding:9px 0;border-bottom:1px solid var(--rule)"><div class="sk" style="height:11px;flex:1;max-width:52%"></div><div class="sk" style="height:4px;width:88px"></div><div class="sk" style="height:11px;width:34px"></div></div><div style="display:flex;gap:14px;align-items:center;padding:9px 0;border-bottom:1px solid var(--rule)"><div class="sk" style="height:11px;flex:1;max-width:61%"></div><div class="sk" style="height:4px;width:88px"></div><div class="sk" style="height:11px;width:34px"></div></div><div style="display:flex;gap:14px;align-items:center;padding:9px 0;border-bottom:1px solid var(--rule)"><div class="sk" style="height:11px;flex:1;max-width:44%"></div><div class="sk" style="height:4px;width:88px"></div><div class="sk" style="height:11px;width:34px"></div></div><div style="display:flex;gap:14px;align-items:center;padding:9px 0;border-bottom:1px solid var(--rule)"><div class="sk" style="height:11px;flex:1;max-width:58%"></div><div class="sk" style="height:4px;width:88px"></div><div class="sk" style="height:11px;width:34px"></div></div><div style="display:flex;gap:14px;align-items:center;padding:9px 0;border-bottom:1px solid var(--rule)"><div class="sk" style="height:11px;flex:1;max-width:38%"></div><div class="sk" style="height:4px;width:88px"></div><div class="sk" style="height:11px;width:34px"></div></div>
     </div>
   </div>
 </div></main></div></body></html>

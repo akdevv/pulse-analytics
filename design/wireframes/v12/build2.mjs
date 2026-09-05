@@ -72,22 +72,44 @@ const rows = (items, key, val) => {
   return items.map((r) => ({ label: key(r), value: val(r), share: val(r) / max, pct: ((val(r) / total) * 100).toFixed(1) }));
 };
 
+/* The previous window, drawn as a ghost behind the current one. A total with
+   nothing to compare it against is a number, not a reading — this is the shape
+   the delta in the metric strip is quoting. The API has no comparison endpoint
+   yet, so the series here is the current one shifted and damped, and it is the
+   one thing on these screens that is not real. */
+const smoothed = pv.map((_, i) => {
+  const w = pv.slice(Math.max(0, i - 4), i + 5);
+  return w.reduce((a, b) => a + b, 0) / w.length;
+});
+const prev = smoothed.map((v, i) => v * (0.80 + 0.13 * Math.sin(i / 24)));
+const PREV = smooth(pts(prev));
+
+// The readout the pointer produces. Drawn at the window's peak so the comp
+// shows the interaction rather than describing it.
+const at = pv.indexOf(Math.max(...pv));
+const hx = (at / (pv.length - 1)) * 100;
+const hy = (1 - pv[at] / yMax) * 100;
+const hyPrev = (1 - prev[at] / yMax) * 100;
+const hStamp = new Date(d.timeseries[at].time).toLocaleString("en", { weekday: "short", month: "short", day: "numeric", hour: "numeric", hour12: true });
+
 const ctx = {
   O: d.overview,
+  hover: { x: hx, y: hy, yPrev: hyPrev, stamp: hStamp, pv: pv[at].toLocaleString("en-US"), prev: Math.round(prev[at]).toLocaleString("en-US"), se: se[at].toLocaleString("en-US") },
   chartSvg: `<svg class="plot" viewBox="0 0 ${W} ${H}" preserveAspectRatio="none">
     <defs><linearGradient id="g" x1="0" y1="0" x2="0" y2="1">
       <stop offset="0%" stop-color="var(--accent)" stop-opacity="0.15"/>
       <stop offset="100%" stop-color="var(--accent)" stop-opacity="0"/></linearGradient></defs>
     ${ticks.map((t) => `<line x1="0" x2="${W}" y1="${((1 - t / yMax) * H).toFixed(1)}" y2="${((1 - t / yMax) * H).toFixed(1)}" stroke="var(--ink)" stroke-opacity="0.05" vector-effect="non-scaling-stroke"/>`).join("")}
+    <path d="${PREV}" fill="none" stroke="var(--ink)" stroke-opacity="0.24" stroke-width="1" stroke-dasharray="3 4" vector-effect="non-scaling-stroke"/>
     <path d="${LINE} L${W},${H} L0,${H} Z" fill="url(#g)"/>
     <path d="${LINE2}" fill="none" stroke="var(--powder)" stroke-opacity="0.42" stroke-width="1.1" vector-effect="non-scaling-stroke" stroke-linejoin="round"/>
     <path d="${LINE}" fill="none" stroke="var(--accent)" stroke-width="1.7" vector-effect="non-scaling-stroke" stroke-linejoin="round"/>
   </svg>`,
   yTicks: ticks.map((t) => ({ y: (1 - t / yMax) * 100, label: compact(t) })),
   dayTicks,
-  SPARK_PV: spark(blocks(pv, 6)),
-  SPARK_SE: spark(blocks(se, 6)),
-  SPARK_VI: spark(blocks(pv, 6).map((v, i) => v * (0.72 + ((i * 7) % 11) / 32))),
+  SPARK_PV: spark(blocks(pv, 12)),
+  SPARK_SE: spark(blocks(se, 12)),
+  SPARK_VI: spark(blocks(pv, 12).map((v, i) => v * (0.72 + ((i * 7) % 11) / 32))),
   PAGES: rows(d.pages.slice(0, 8), (r) => r.page, (r) => r.pageviews),
   REFS: rows(d.referrers.slice(0, 8), (r) => host(r.source), (r) => r.pageviews),
   GEO: rows(d.geo.slice(0, 8), (r) => r.country, (r) => r.pageviews),

@@ -19,29 +19,44 @@ const analytics = (c) => shell("Analytics", `
 .leg{display:flex;gap:14px}
 .leg i{display:inline-block;width:6px;height:6px;border-radius:50%;margin-right:6px}
 .plotwrap{position:relative;padding-left:42px;height:300px}
+/* The readout under the pointer. A trend line you cannot interrogate is a
+   picture of data rather than a reading of it. */
+.cursor{position:absolute;top:0;bottom:0;width:1px;background:linear-gradient(180deg,transparent,var(--rule) 8%,var(--rule) 92%,transparent);pointer-events:none}
+.dot{position:absolute;width:9px;height:9px;border-radius:50%;background:var(--accent);border:2px solid var(--panel);translate:-50% -50%;box-shadow:0 0 0 3px color-mix(in oklab,var(--accent) 22%,transparent)}
+.dot.ghost{width:6px;height:6px;background:var(--ink);opacity:.3;box-shadow:none;border-width:1px}
+.readout{position:absolute;translate:14px -50%;background:var(--raised);border:1px solid var(--seam);border-radius:9px;padding:9px 11px;white-space:nowrap;box-shadow:0 12px 28px -12px rgba(0,0,0,.85);pointer-events:none}
+.readout .when{font-size:11px;letter-spacing:.05em;text-transform:uppercase;color:var(--t5);margin-bottom:7px}
+.readout .r{display:flex;align-items:center;gap:8px;font-size:12.5px;font-variant-numeric:tabular-nums;margin-top:3px}
+.readout .r i{width:6px;height:6px;border-radius:50%;flex:none}
+.readout .r span{color:var(--t5);flex:1}
+.readout .r b{font-weight:500;color:var(--t2)}
 .plot{width:100%;height:100%;display:block}
 .yaxis{position:absolute;inset:0 auto 0 0;width:36px}
-.yaxis span{position:absolute;right:0;translate:0 -50%;font-size:11px;color:color-mix(in oklab,var(--ink) 38%,transparent);font-variant-numeric:tabular-nums}
+.yaxis span{position:absolute;right:0;translate:0 -50%;font-size:11px;color:var(--t5);font-variant-numeric:tabular-nums}
 .xaxis{position:relative;height:18px;margin-left:42px;margin-top:9px}
-.xaxis span{position:absolute;translate:-50% 0;font-size:11px;color:color-mix(in oklab,var(--ink) 38%,transparent)}
+.xaxis span{position:absolute;translate:-50% 0;font-size:11px;color:var(--t5)}
 .duo{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:16px}
 .p{padding:16px 18px}
 .ph{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
 .ph b{font-size:14px;font-weight:500}
 .mini{display:flex;gap:2px}
-.mini span{padding:3px 8px;border-radius:5px;font-size:11px;font-weight:500;color:color-mix(in oklab,var(--ink) 45%,transparent)}
+.mini span{padding:3px 8px;border-radius:5px;font-size:11px;font-weight:500;color:var(--t5)}
 .mini span.on{background:var(--raised);color:var(--ink)}
 table{width:100%;border-collapse:collapse;table-layout:fixed}
 thead td{padding-bottom:7px;border-bottom:1px solid var(--seam)}
-tbody td{padding:8px 0;border-bottom:1px solid color-mix(in oklab,var(--seam) 55%,transparent);font-size:13px}
+tbody tr{cursor:pointer}
+tbody tr:hover td{background:color-mix(in oklab,var(--ink) 4%,transparent)}
+tbody tr:hover td:first-child{border-radius:4px 0 0 4px}
+tbody tr:hover td:last-child{border-radius:0 4px 4px 0}
+tbody td{padding:8px 0;border-bottom:1px solid var(--rule);font-size:13px;transition:background .12s var(--ease)}
 tbody tr:last-child td{border-bottom:0}
-td.l{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:color-mix(in oklab,var(--ink) 88%,transparent)}
+td.l{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--t2)}
 td.l.mn{font-family:var(--mono);font-size:12px}
 td.s{width:88px;padding-left:14px}
-td.n{width:58px;text-align:right;font-variant-numeric:tabular-nums;color:color-mix(in oklab,var(--ink) 68%,transparent);font-size:12.5px}
-.track{display:block;height:4px;border-radius:2px;background:color-mix(in oklab,var(--ink) 7%,transparent);overflow:hidden}
+td.n{width:58px;text-align:right;font-variant-numeric:tabular-nums;color:var(--t3);font-size:12.5px}
+.track{display:block;height:4px;border-radius:2px;background:var(--rule);overflow:hidden}
 .track i{display:block;height:100%;background:var(--accent);opacity:.8;border-radius:2px}
-`, `<div class="app">${rail("sites")}<main><div class="col">
+`, `<div class="app">${rail("sites", "Acme Docs")}<main><div class="col">
   ${siteHead("Analytics")}
   <div class="card mrow">
     ${[
@@ -49,14 +64,23 @@ td.n{width:58px;text-align:right;font-variant-numeric:tabular-nums;color:color-m
       ["Sessions", F(c.O.totalSessions), c.SPARK_SE, `<span class="d up">↗ 8.1%</span>`],
       ["Visitors", F(c.O.totalVisitors), c.SPARK_VI, `<span class="d dn">↘ 2.0%</span>`],
     ].map(([l, v, sp, d]) => `<div class="m"><div class="mtop"><span class="meta">${l}</span><svg width="86" height="24" fill="none"><path d="${sp}" stroke="var(--accent)" stroke-opacity=".7" stroke-width="1.3"/></svg></div><span class="fig v">${v}</span>${d}</div>`).join("")}
-    <div class="m"><div class="mtop"><span class="meta">Active now</span></div><span class="fig v" style="color:var(--powder)">3</span><span class="d" style="color:color-mix(in oklab,var(--ink) 40%,transparent)">last 5 min</span></div>
+    <div class="m"><div class="mtop"><span class="meta">Active now</span></div><span class="fig v" style="color:var(--powder)">3</span><span class="d" style="color:var(--t5)">last 5 min</span></div>
   </div>
 
   <div class="card chartcard">
-    <div class="chh"><b>Traffic</b><div class="leg"><span class="meta"><i style="background:var(--accent)"></i>Pageviews</span><span class="meta"><i style="background:var(--powder)"></i>Sessions</span></div></div>
+    <div class="chh"><b>Traffic</b><div class="leg"><span class="meta"><i style="background:var(--accent)"></i>Pageviews</span><span class="meta"><i style="background:var(--powder)"></i>Sessions</span><span class="meta"><i style="background:var(--t5)"></i>Previous week</span></div></div>
     <div class="plotwrap">
       <div class="yaxis">${c.yTicks.map((t) => `<span style="top:${t.y}%">${t.label}</span>`).join("")}</div>
       ${c.chartSvg}
+      <div class="cursor" style="left:calc(42px + ${c.hover.x}% - ${c.hover.x / 100} * 42px)"></div>
+      <span class="dot ghost" style="left:calc(42px + ${c.hover.x}% - ${c.hover.x / 100} * 42px);top:${c.hover.yPrev}%"></span>
+      <span class="dot" style="left:calc(42px + ${c.hover.x}% - ${c.hover.x / 100} * 42px);top:${c.hover.y}%"></span>
+      <div class="readout" style="right:14px;top:${c.hover.y}%">
+        <div class="when">${c.hover.stamp}</div>
+        <div class="r"><i style="background:var(--accent)"></i><span>Pageviews</span><b>${c.hover.pv}</b></div>
+        <div class="r"><i style="background:var(--powder)"></i><span>Sessions</span><b>${c.hover.se}</b></div>
+        <div class="r"><i style="background:var(--t5)"></i><span>Previous week</span><b>${c.hover.prev}</b></div>
+      </div>
     </div>
     <div class="xaxis">${c.dayTicks.map((t) => `<span style="left:${t.x}%">${t.label}</span>`).join("")}</div>
   </div>
@@ -93,21 +117,21 @@ const sites = (c) => shell("Sites", `
 .sc:hover{border-color:color-mix(in oklab,var(--accent) 45%,transparent)}
 .sct{display:flex;align-items:flex-start;justify-content:space-between;gap:10px}
 .sct b{font-family:var(--display);font-weight:600;letter-spacing:-0.025em;font-size:17px;display:block}
-.sct .dm{font-family:var(--mono);font-size:11.5px;color:color-mix(in oklab,var(--ink) 45%,transparent);margin-top:5px;display:block}
+.sct .dm{font-family:var(--mono);font-size:11.5px;color:var(--t5);margin-top:5px;display:block}
 .live{display:flex;align-items:center;gap:6px;font-size:11px;font-weight:500;letter-spacing:.06em;text-transform:uppercase;color:var(--success)}
 .live i{width:5px;height:5px;border-radius:50%;background:currentColor}
-.paused{color:color-mix(in oklab,var(--ink) 38%,transparent)}
+.paused{color:var(--t5)}
 .nums{display:flex;gap:22px}
 .nums .n b{font-family:var(--display);font-weight:600;letter-spacing:-0.03em;font-size:19px;font-variant-numeric:tabular-nums;display:block}
-.nums .n span{font-size:11px;color:color-mix(in oklab,var(--ink) 44%,transparent);margin-top:3px;display:block}
+.nums .n span{font-size:11px;color:var(--t5);margin-top:3px;display:block}
 .spark{margin-top:auto;opacity:.85}
 .empty{padding:34px 30px}
 .empty h2{font-family:var(--display);font-weight:600;letter-spacing:-0.03em;font-size:19px}
 .steps{display:grid;grid-template-columns:repeat(3,1fr);gap:20px;margin-top:26px}
 .steps li{list-style:none;display:flex;gap:11px}
-.steps .n{width:23px;height:23px;flex:none;border:1px solid var(--seam);border-radius:50%;display:grid;place-items:center;font-size:11px;font-weight:600;color:color-mix(in oklab,var(--ink) 55%,transparent)}
+.steps .n{width:23px;height:23px;flex:none;border:1px solid var(--seam);border-radius:50%;display:grid;place-items:center;font-size:11px;font-weight:600;color:var(--t5)}
 .steps b{display:block;font-size:13px;font-weight:500;margin-bottom:4px}
-.steps p{font-size:12.5px;line-height:1.55;color:color-mix(in oklab,var(--ink) 50%,transparent)}
+.steps p{font-size:12.5px;line-height:1.55;color:var(--t5)}
 `, `<div class="app">${rail("sites")}<main><div class="col">
   <div class="top"><h1>Sites</h1><button class="btn primary" style="margin-left:auto">＋ Add site</button></div>
   <div class="grid">
@@ -119,7 +143,7 @@ const sites = (c) => shell("Sites", `
           <span class="live ${live ? "" : "paused"}"><i></i>${live ? "Live" : "Paused"}</span></div>
         <div class="nums"><span class="n"><b>${F(pv)}</b><span>pageviews</span></span><span class="n"><b>${F(vi)}</b><span>visitors</span></span></div>
         ${sp ? `<svg class="spark" width="100%" height="34" viewBox="0 0 92 26" preserveAspectRatio="none" fill="none"><path d="${sp}" stroke="var(--accent)" stroke-opacity=".55" stroke-width="1.2" vector-effect="non-scaling-stroke"/></svg>`
-             : `<div class="spark" style="height:34px;display:grid;place-items:center;font-size:12px;color:color-mix(in oklab,var(--ink) 34%,transparent)">no events yet</div>`}
+             : `<div class="spark" style="height:34px;display:grid;place-items:center;font-size:12px;color:var(--t5)">no events yet</div>`}
       </a>`).join("")}
   </div>
 
@@ -147,10 +171,10 @@ const setup = (c) => shell("Setup", `
 .wait .pip i:first-child{animation:ping 1.8s var(--ease) infinite;opacity:.5}
 @keyframes ping{0%{transform:scale(1);opacity:.5}75%,100%{transform:scale(2.6);opacity:0}}
 .wait b{font-size:13.5px;font-weight:500;display:block}
-.wait p{font-size:12.5px;color:color-mix(in oklab,var(--ink) 55%,transparent);margin-top:3px}
-.copy{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--seam);background:var(--bg);border-radius:6px;padding:5px 10px;font-size:12px;color:color-mix(in oklab,var(--ink) 62%,transparent);cursor:pointer}
+.wait p{font-size:12.5px;color:var(--t5);margin-top:3px}
+.copy{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--seam);background:var(--bg);border-radius:6px;padding:5px 10px;font-size:12px;color:var(--t4);cursor:pointer}
 .stack{display:flex;flex-direction:column;gap:16px}
-`, `<div class="app">${rail("sites")}<main><div class="col">
+`, `<div class="app">${rail("sites", "Acme Docs")}<main><div class="col">
   ${siteHead("Setup")}
   <div class="wait">
     <span class="pip"><i></i><i></i></span>
@@ -190,10 +214,10 @@ const settings = (c) => shell("Settings", `
 .danger .ch b{color:oklch(0.72 0.17 25)}
 .rowend{display:flex;justify-content:flex-end;gap:9px;margin-top:4px}
 .between{display:flex;align-items:center;justify-content:space-between;gap:18px}
-.between p{font-size:12.5px;line-height:1.55;color:color-mix(in oklab,var(--ink) 52%,transparent);margin-top:4px}
+.between p{font-size:12.5px;line-height:1.55;color:var(--t5);margin-top:4px}
 .between b{font-size:13.5px;font-weight:500}
-.key{display:flex;align-items:center;justify-content:space-between;gap:12px;background:var(--bg);border:1px solid var(--seam);border-radius:8px;padding:10px 12px;font-family:var(--mono);font-size:11.5px;color:color-mix(in oklab,var(--ink) 72%,transparent);margin-bottom:14px}
-`, `<div class="app">${rail("sites")}<main><div class="col">
+.key{display:flex;align-items:center;justify-content:space-between;gap:12px;background:var(--bg);border:1px solid var(--seam);border-radius:8px;padding:10px 12px;font-family:var(--mono);font-size:11.5px;color:var(--t3);margin-bottom:14px}
+`, `<div class="app">${rail("sites", "Acme Docs")}<main><div class="col">
   ${siteHead("Settings")}
   <div class="stack">
     <div class="card">
@@ -226,26 +250,26 @@ const ask = (c) => shell("Ask AI", `
 .wrap{display:grid;grid-template-columns:212px 1fr;gap:16px;align-items:start}
 .threads{padding:12px}
 .threads .nt{width:100%;justify-content:center;margin-bottom:10px}
-.threads a{display:block;padding:8px 10px;border-radius:6px;font-size:12.5px;color:color-mix(in oklab,var(--ink) 58%,transparent);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.threads a{display:block;padding:8px 10px;border-radius:6px;font-size:12.5px;color:var(--t4);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .threads a.on{background:var(--raised);color:var(--ink)}
 .conv{display:flex;flex-direction:column;min-height:560px}
 .msgs{padding:20px;display:flex;flex-direction:column;gap:24px;flex:1}
 .q{font-size:16px;font-weight:500;letter-spacing:-0.015em}
-.a p{font-size:14px;line-height:1.6;color:color-mix(in oklab,var(--ink) 88%,transparent)}
+.a p{font-size:14px;line-height:1.6;color:var(--t2)}
 .sql{margin-top:12px}
 .sqlhead{display:flex;align-items:center;gap:8px;margin-bottom:7px}
 .res{margin-top:12px;border:1px solid var(--seam);border-radius:8px;overflow:hidden}
 .res table{width:100%;border-collapse:collapse}
-.res td,.res th{padding:8px 12px;font-size:12.5px;text-align:left;border-bottom:1px solid color-mix(in oklab,var(--seam) 55%,transparent)}
-.res th{background:var(--bg);font-weight:500;font-size:11px;letter-spacing:.07em;text-transform:uppercase;color:color-mix(in oklab,var(--ink) 50%,transparent)}
+.res td,.res th{padding:8px 12px;font-size:12.5px;text-align:left;border-bottom:1px solid var(--rule)}
+.res th{background:var(--bg);font-weight:500;font-size:11px;letter-spacing:.07em;text-transform:uppercase;color:var(--t5)}
 .res tr:last-child td{border-bottom:0}
 .res td.n{text-align:right;font-variant-numeric:tabular-nums}
 .res td.mn{font-family:var(--mono);font-size:11.5px}
 .composer{border-top:1px solid var(--seam);padding:14px 18px;display:flex;gap:10px;align-items:center}
 .composer input{flex:1;background:var(--bg);border:1px solid var(--seam);border-radius:8px;padding:10px 12px;color:var(--ink);font-family:inherit;font-size:13.5px}
 .chips{display:flex;flex-wrap:wrap;gap:7px;margin-top:14px}
-.chip{border:1px solid var(--seam);border-radius:20px;padding:6px 12px;font-size:12.5px;color:color-mix(in oklab,var(--ink) 60%,transparent);cursor:pointer}
-`, `<div class="app">${rail("sites")}<main><div class="col">
+.chip{border:1px solid var(--seam);border-radius:20px;padding:6px 12px;font-size:12.5px;color:var(--t4);cursor:pointer}
+`, `<div class="app">${rail("sites", "Acme Docs")}<main><div class="col">
   ${siteHead("Ask AI")}
   <div class="wrap">
     <div class="card threads">
@@ -288,7 +312,7 @@ const ask = (c) => shell("Ask AI", `
 const addSite = (c) => shell("Add site", `
 .two{display:grid;grid-template-columns:1fr 1fr;gap:16px;align-items:start}
 .preview pre{font-size:11px}
-.muted{font-size:12.5px;line-height:1.55;color:color-mix(in oklab,var(--ink) 50%,transparent)}
+.muted{font-size:12.5px;line-height:1.55;color:var(--t5)}
 `, `<div class="app">${rail("sites")}<main><div class="col">
   <div class="head"><h1>Add a site</h1></div>
   <p class="lede">A name and a domain. You get the snippet on the next screen, and the first visit shows up while you are still looking at it.</p>
@@ -313,7 +337,7 @@ const addSite = (c) => shell("Add site", `
 const account = (c) => shell("Account", `
 .stack{display:flex;flex-direction:column;gap:16px;max-width:600px}
 .rowend{display:flex;justify-content:flex-end;margin-top:4px}
-.rule{display:flex;align-items:center;gap:8px;font-size:12.5px;color:color-mix(in oklab,var(--ink) 50%,transparent);margin-bottom:6px}
+.rule{display:flex;align-items:center;gap:8px;font-size:12.5px;color:var(--t5);margin-bottom:6px}
 .rule i{width:5px;height:5px;border-radius:50%;background:var(--success);flex:none}
 .rule.off i{background:color-mix(in oklab,var(--ink) 24%,transparent)}
 `, `<div class="app">${rail("account")}<main><div class="col">
@@ -343,4 +367,80 @@ const account = (c) => shell("Account", `
   </div>
 </div></main></div>`);
 
-export const pages = { "d-analytics": analytics, "e-sites": sites, "f-setup": setup, "g-settings": settings, "h-ask": ask, "i-add-site": addSite, "j-account": account };
+
+/* ── States ─────────────────────────────────────────────────
+   Drawn, not left to the implementation. The old app had eight
+   panels each saying "no data" for a site that had simply never
+   reported, and a failed request that rendered as an empty list. */
+const STATE_CSS = `
+.sk{background:linear-gradient(90deg,var(--rule) 25%,color-mix(in oklab,var(--ink) 13%,transparent) 50%,var(--rule) 75%);background-size:200% 100%;animation:sh 1.4s linear infinite;border-radius:5px}
+@keyframes sh{to{background-position:-200% 0}}
+.mrow{display:grid;grid-template-columns:repeat(4,1fr)}
+.m{padding:16px 18px;border-right:1px solid var(--seam)}
+.m:last-child{border-right:0}
+.chartcard{padding:18px 20px;margin-top:16px}
+.duo{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:16px}
+.p{padding:16px 18px}
+.ph{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
+.ph b{font-size:14px;font-weight:500}
+.mid{display:grid;place-items:center;text-align:center;padding:52px 24px}
+.mid h2{font-family:var(--display);font-weight:600;letter-spacing:-0.03em;font-size:19px;margin-bottom:8px}
+.mid p{font-size:13.5px;line-height:1.6;color:var(--t5);max-width:52ch}
+.checks{display:grid;grid-template-columns:repeat(3,1fr);gap:22px;margin-top:30px;text-align:left;width:100%}
+.checks li{list-style:none;display:flex;gap:11px}
+.checks .q{width:23px;height:23px;flex:none;border:1px solid var(--seam);border-radius:50%;display:grid;place-items:center;font-size:11px;color:var(--t5)}
+.checks b{display:block;font-size:13px;font-weight:500;margin-bottom:4px}
+.checks p{font-size:12.5px;line-height:1.55;color:var(--t5)}
+code{font-family:var(--mono);font-size:11.5px;background:var(--bg);border:1px solid var(--seam);border-radius:4px;padding:1px 5px}
+.err{border-color:color-mix(in oklab,oklch(0.63 0.21 25) 32%,transparent)}
+.err .ic{width:34px;height:34px;border-radius:50%;display:grid;place-items:center;border:1px solid color-mix(in oklab,oklch(0.63 0.21 25) 40%,transparent);color:oklch(0.74 0.17 25);margin-bottom:14px;font-size:17px}
+.act{display:flex;gap:9px;margin-top:18px}
+`;
+
+const loading = (c) => shell("Analytics — loading", STATE_CSS, `<div class="app">${rail("sites", "Acme Docs")}<main><div class="col">
+  ${siteHead("Analytics", { ago: "12s" })}
+  <div class="card mrow" aria-busy="true">
+    ${["Pageviews", "Sessions", "Visitors", "Active now"].map((l) => `<div class="m"><span class="meta">${l}</span><div class="sk" style="height:31px;width:96px;margin-top:12px"></div><div class="sk" style="height:11px;width:52px;margin-top:10px"></div></div>`).join("")}
+  </div>
+  <div class="card chartcard" aria-busy="true">
+    <div class="ph"><b>Traffic</b></div>
+    <div class="sk" style="height:300px"></div>
+  </div>
+  <div class="duo">
+    ${["Top pages", "Sources", "Countries", "Technology"].map((t) => `<div class="card p" aria-busy="true"><div class="ph"><b>${t}</b></div>
+      ${Array.from({ length: 6 }).map((_, i) => `<div style="display:flex;gap:14px;align-items:center;padding:9px 0;border-bottom:1px solid var(--rule)"><div class="sk" style="height:11px;flex:1;max-width:${[70, 52, 61, 44, 58, 38][i]}%"></div><div class="sk" style="height:4px;width:88px"></div><div class="sk" style="height:11px;width:34px"></div></div>`).join("")}
+    </div>`).join("")}
+  </div>
+</div></main></div>`);
+
+const empty = (c) => shell("Analytics — nothing yet", STATE_CSS, `<div class="app">${rail("sites", "Acme Docs")}<main><div class="col">
+  <div class="head"><h1>Acme Docs</h1><span class="sub">example.com</span>
+    <span class="st"><span class="ago">no events yet</span><span class="live" style="color:var(--t5)"><i style="background:currentColor"></i>Listening</span></span></div>
+  <div class="bar"><div class="tabs">${["Analytics", "Ask AI", "Setup", "Settings"].map((t) => `<a class="${t === "Analytics" ? "on" : ""}">${t}</a>`).join("")}</div></div>
+  <div class="card">
+    <div class="mid">
+      <h2>Nothing has arrived yet</h2>
+      <p>The snippet has not reported a single event from this domain. A chart of zeros would not tell you anything, so here is what usually explains it.</p>
+      <div class="act"><button class="btn primary">Open setup</button><button class="btn">Installation guide</button></div>
+      <ol class="checks">
+        <li><span class="q">?</span><span><b>Is the snippet on the page?</b><p>View source on the live site and search for <code>pulse.js</code>. An ad blocker can stop it loading too.</p></span></li>
+        <li><span class="q">?</span><span><b>Does the hostname match?</b><p>Events are kept only from <code>example.com</code> or a subdomain of it, so a page served from localhost is dropped.</p></span></li>
+        <li><span class="q">?</span><span><b>Did it look like it worked?</b><p>It would either way. <code>/track</code> answers 204 on a rejected event exactly as on an accepted one.</p></span></li>
+      </ol>
+    </div>
+  </div>
+</div></main></div>`);
+
+const failed = (c) => shell("Analytics — failed", STATE_CSS, `<div class="app">${rail("sites", "Acme Docs")}<main><div class="col">
+  ${siteHead("Analytics", { ago: "12s" })}
+  <div class="card err">
+    <div class="mid">
+      <div class="ic">!</div>
+      <h2>Could not load this range</h2>
+      <p>The analytics API answered <code>503 Service Unavailable</code>. Your events are still being collected — this is the read path, not the write path.</p>
+      <div class="act"><button class="btn primary">Try again</button><button class="btn">Check status</button></div>
+    </div>
+  </div>
+</div></main></div>`);
+
+export const pages = { "d-analytics": analytics, "e-sites": sites, "f-setup": setup, "g-settings": settings, "h-ask": ask, "i-add-site": addSite, "j-account": account, "k-loading": loading, "l-empty": empty, "m-failed": failed };
