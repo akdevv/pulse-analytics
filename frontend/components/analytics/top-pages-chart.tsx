@@ -1,13 +1,8 @@
 "use client";
 
 import { Skeleton } from "@/components/ui/skeleton";
+import { formatCompact } from "@/lib/format";
 import type { PageStat } from "@/lib/types/analytics.types";
-
-function fmt(n: number): string {
-  if (n >= 1_000_000) return (n / 1_000_000).toFixed(1) + "M";
-  if (n >= 1_000) return (n / 1_000).toFixed(1) + "K";
-  return n.toLocaleString();
-}
 
 interface Props {
   data?: PageStat[];
@@ -61,17 +56,18 @@ export function TopPagesChart({ data, isLoading, error }: Props) {
                     {row.page}
                   </span>
                   <span className="shrink-0 text-xs font-semibold text-foreground/80 tabular-nums">
-                    {fmt(row.pageviews)}
+                    {formatCompact(row.pageviews)}
                   </span>
                 </div>
                 <div className="h-1 w-full overflow-hidden rounded-full bg-muted/60">
                   <div
-                    className="h-full rounded-full transition-all duration-700 ease-out"
-                    style={{
-                      width: `${(row.pageviews / max) * 100}%`,
-                      background:
-                        "linear-gradient(90deg, #ea580c 0%, #fb923c 100%)",
-                    }}
+                    className="bar-fill h-full rounded-full transition-all duration-700 ease-out"
+                    style={
+                      {
+                        width: `${(row.pageviews / max) * 100}%`,
+                        "--bar": "var(--chart-1)",
+                      } as React.CSSProperties
+                    }
                   />
                 </div>
               </div>

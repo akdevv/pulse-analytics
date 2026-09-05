@@ -8,10 +8,17 @@
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {
+  /* Brand hues. Fixed, not theme-switched: the landing page is built on this
+     charcoal ground in either theme, and components/landing/tokens.ts reads
+     these same values back as var() so there is one place to change them. */
   --color-ink: oklch(0.9128 0.0228 101.3697);
   --color-charcoal: oklch(0.2002 0 0);
   --color-tangerine: oklch(0.6832 0.2107 38.6427);
+  --color-tangerine-soft: oklch(0.78 0.14 45);
   --color-powder: oklch(0.8192 0.0304 204.4701);
+  --color-surface-1: oklch(0.235 0 0);
+  --color-surface-2: oklch(0.2603 0 0);
+  --color-success: var(--success);
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --font-sans: "DM Sans", ui-sans-serif, sans-serif, system-ui;
@@ -74,6 +81,7 @@
   --accent: oklch(0.9128 0.0228 101.3697);
   --accent-foreground: oklch(0.2002 0 0);
   --destructive: oklch(0.5783 0.2301 28.5639);
+  --success: oklch(0.58 0.13 152);
   --border: oklch(0.86 0.02 101);
   --input: oklch(0.86 0.02 101);
   --ring: oklch(0.6832 0.2107 38.6427);
@@ -120,6 +128,7 @@
   --accent: oklch(0.3012 0 0);
   --accent-foreground: oklch(0.9128 0.0228 101.3697);
   --destructive: oklch(0.6256 0.1933 23.0261);
+  --success: oklch(0.75 0.15 155);
   --border: oklch(0.29 0 0);
   --input: oklch(0.29 0 0);
   --ring: oklch(0.6832 0.2107 38.6427);
@@ -137,6 +146,17 @@
   --sidebar-border: oklch(0.29 0 0);
   --sidebar-ring: oklch(0.6832 0.2107 38.6427);
   --destructive-foreground: oklch(0.2002 0 0);
+}
+
+/* Horizontal bar fill for the ranked lists (pages, referrers, geo, events,
+   devices). Set --bar to the chart token the card is keyed to; the lighter
+   end is derived so a new hue never needs a second value picked by hand. */
+.bar-fill {
+  background: linear-gradient(
+    90deg,
+    var(--bar, var(--chart-1)) 0%,
+    color-mix(in oklch, var(--bar, var(--chart-1)) 62%, white) 100%
+  );
 }
 
 @layer base {

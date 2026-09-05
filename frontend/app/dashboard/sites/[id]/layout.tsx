@@ -36,13 +36,13 @@ export default function SiteLayout({
               <span
                 className={`inline-flex items-center gap-1.5 rounded-full px-2 py-0.5 text-xs font-medium ${
                   site.isActive
-                    ? "bg-green-500/10 text-green-600 dark:text-green-400"
+                    ? "bg-success/10 text-success"
                     : "bg-muted text-muted-foreground"
                 }`}
               >
                 <span
                   className={`size-1.5 rounded-full ${
-                    site.isActive ? "bg-green-500" : "bg-muted-foreground"
+                    site.isActive ? "bg-success" : "bg-muted-foreground"
                   }`}
                 />
                 {site.isActive ? "Active" : "Inactive"}

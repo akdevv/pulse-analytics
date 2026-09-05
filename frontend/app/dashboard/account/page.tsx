@@ -200,7 +200,7 @@ export default function AccountPage() {
             <p className="flex items-center gap-1.5 text-sm">
               {user.isVerified ? (
                 <>
-                  <GoCheckCircleFill className="size-3.5 text-green-500" />
+                  <GoCheckCircleFill className="size-3.5 text-success" />
                   Verified
                 </>
               ) : (

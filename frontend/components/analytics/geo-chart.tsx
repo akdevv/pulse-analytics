@@ -1,13 +1,8 @@
 "use client";
 
 import { Skeleton } from "@/components/ui/skeleton";
+import { formatCompact } from "@/lib/format";
 import type { GeoStat } from "@/lib/types/analytics.types";
-
-function fmt(n: number): string {
-  if (n >= 1_000_000) return (n / 1_000_000).toFixed(1) + "M";
-  if (n >= 1_000) return (n / 1_000).toFixed(1) + "K";
-  return n.toLocaleString();
-}
 
 // Convert ISO 3166-1 alpha-2 code to regional indicator emoji flag
 function toFlag(code: string): string {
@@ -73,17 +68,18 @@ export function GeoChart({ data, isLoading, error }: Props) {
                     {row.country || "Unknown"}
                   </span>
                   <span className="shrink-0 text-xs font-semibold text-foreground/80 tabular-nums">
-                    {fmt(row.pageviews)}
+                    {formatCompact(row.pageviews)}
                   </span>
                 </div>
                 <div className="h-1 w-full overflow-hidden rounded-full bg-muted/60">
                   <div
-                    className="h-full rounded-full transition-all duration-700 ease-out"
-                    style={{
-                      width: `${(row.pageviews / max) * 100}%`,
-                      background:
-                        "linear-gradient(90deg, #d97706 0%, #fbbf24 100%)",
-                    }}
+                    className="bar-fill h-full rounded-full transition-all duration-700 ease-out"
+                    style={
+                      {
+                        width: `${(row.pageviews / max) * 100}%`,
+                        "--bar": "var(--chart-3)",
+                      } as React.CSSProperties
+                    }
                   />
                 </div>
               </div>

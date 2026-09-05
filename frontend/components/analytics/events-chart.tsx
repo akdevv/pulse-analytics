@@ -2,18 +2,13 @@
 
 import { useState } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
+import { formatCompact } from "@/lib/format";
 import { useEventProperties } from "@/hooks/useAnalytics";
 import type {
   EventStat,
   DateRangeParams,
   PropertyStat,
 } from "@/lib/types/analytics.types";
-
-function fmt(n: number): string {
-  if (n >= 1_000_000) return (n / 1_000_000).toFixed(1) + "M";
-  if (n >= 1_000) return (n / 1_000).toFixed(1) + "K";
-  return n.toLocaleString();
-}
 
 /** Rows arrive flat, ordered by key then count. Group them back per key so
     each property renders as its own small list of values. */
@@ -93,7 +88,7 @@ function PropertyBreakdown({
                   {row.value === "" ? "(empty)" : row.value}
                 </span>
                 <span className="shrink-0 text-foreground/60 tabular-nums">
-                  {fmt(row.count)}
+                  {formatCompact(row.count)}
                 </span>
               </div>
             ))}
@@ -179,21 +174,24 @@ export function EventsChart({
                         {row.eventName}
                       </span>
                       <span className="shrink-0 text-xs text-foreground/80 tabular-nums">
-                        <span className="font-semibold">{fmt(row.count)}</span>
+                        <span className="font-semibold">
+                          {formatCompact(row.count)}
+                        </span>
                         <span className="ml-2 text-muted-foreground">
-                          {fmt(row.visitors)}{" "}
+                          {formatCompact(row.visitors)}{" "}
                           {row.visitors === 1 ? "visitor" : "visitors"}
                         </span>
                       </span>
                     </div>
                     <div className="h-1 w-full overflow-hidden rounded-full bg-muted/60">
                       <div
-                        className="h-full rounded-full transition-all duration-700 ease-out"
-                        style={{
-                          width: `${(row.count / max) * 100}%`,
-                          background:
-                            "linear-gradient(90deg, #ea580c 0%, #fb923c 100%)",
-                        }}
+                        className="bar-fill h-full rounded-full transition-all duration-700 ease-out"
+                        style={
+                          {
+                            width: `${(row.count / max) * 100}%`,
+                            "--bar": "var(--chart-1)",
+                          } as React.CSSProperties
+                        }
                       />
                     </div>
                   </div>

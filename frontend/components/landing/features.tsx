@@ -1,5 +1,5 @@
 import { Zap, BarChart2, Globe, Code2, Bell, Lock } from "lucide-react";
-import { ACCENT, DISPLAY, POWDER } from "./tokens";
+import { ACCENT, DISPLAY, POWDER, SURFACE_1 } from "./tokens";
 import { Reveal, SectionHeading } from "./shared";
 
 const ICON = {
@@ -19,7 +19,7 @@ const HIGHLIGHT_EVENTS = [
   { event: "scroll_depth", path: "/story", ms: 4 },
 ];
 
-const SURFACE = { background: "oklch(0.2350 0 0)" };
+const SURFACE = { background: SURFACE_1 };
 const INSET = { background: "oklch(0.1750 0 0)" };
 
 /* ── Cells ─────────────────────────────────────────────────────

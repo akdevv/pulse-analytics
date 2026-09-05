@@ -15,8 +15,8 @@ export function RealtimeWidget({ data, isLoading, error }: Props) {
       {/* Header */}
       <div className="mb-5 flex items-center gap-2.5">
         <span className="relative flex size-2">
-          <span className="absolute inline-flex size-full animate-ping rounded-full bg-emerald-400 opacity-75" />
-          <span className="relative inline-flex size-2 rounded-full bg-emerald-500" />
+          <span className="absolute inline-flex size-full animate-ping rounded-full bg-success opacity-75" />
+          <span className="relative inline-flex size-2 rounded-full bg-success" />
         </span>
         <h2 className="text-sm font-semibold text-foreground">Realtime</h2>
         <span className="ml-auto text-[11px] text-muted-foreground/60">
@@ -33,14 +33,14 @@ export function RealtimeWidget({ data, isLoading, error }: Props) {
           {/* Summary row */}
           <div className="mb-5 grid grid-cols-3 gap-3">
             {/* Active sessions - highlighted */}
-            <div className="rounded-lg border border-emerald-500/20 bg-emerald-500/5 p-4">
-              <p className="text-[11px] font-bold tracking-[0.12em] text-emerald-500/70 uppercase">
+            <div className="rounded-lg border border-success/20 bg-success/5 p-4">
+              <p className="text-[11px] font-bold tracking-[0.12em] text-success/70 uppercase">
                 Active Now
               </p>
               {isLoading ? (
                 <Skeleton className="mt-2 h-9 w-16 rounded-lg" />
               ) : (
-                <p className="mt-1 text-3xl leading-none font-bold text-emerald-400 tabular-nums">
+                <p className="mt-1 text-3xl leading-none font-bold text-success tabular-nums">
                   {(data?.activeSessions ?? 0).toLocaleString()}
                 </p>
               )}
@@ -102,8 +102,8 @@ export function RealtimeWidget({ data, isLoading, error }: Props) {
                         {row.path}
                       </span>
                       <div className="flex shrink-0 items-center gap-2.5">
-                        <span className="flex items-center gap-1 text-xs font-semibold text-emerald-400">
-                          <span className="size-1.5 rounded-full bg-emerald-400" />
+                        <span className="flex items-center gap-1 text-xs font-semibold text-success">
+                          <span className="size-1.5 rounded-full bg-success" />
                           {row.activeSessions}
                         </span>
                         <span className="text-xs text-muted-foreground tabular-nums">

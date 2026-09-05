@@ -64,7 +64,7 @@ function CopyButton({ text }: { text: string }) {
       className="flex items-center gap-1.5 rounded-md border px-2.5 py-1.5 text-xs font-medium text-muted-foreground transition-all hover:bg-accent hover:text-foreground"
     >
       {copied ? (
-        <GoCheck className="text-success size-3.5" />
+        <GoCheck className="size-3.5 text-success" />
       ) : (
         <GoCopy className="size-3.5" />
       )}
@@ -200,7 +200,7 @@ export default function SiteSetupPage() {
           </div>
         </CardHeader>
         <CardContent className="px-5 pb-5">
-          <pre className="overflow-x-auto rounded-lg border border-zinc-800 bg-zinc-950 p-4 text-[11px] leading-relaxed text-zinc-300 dark:bg-zinc-900">
+          <pre className="overflow-x-auto rounded-lg border border-border bg-charcoal p-4 text-[11px] leading-relaxed text-ink/80">
             <code>{snippet}</code>
           </pre>
         </CardContent>
@@ -223,7 +223,7 @@ export default function SiteSetupPage() {
           </div>
         </CardHeader>
         <CardContent className="px-5 pb-5">
-          <pre className="overflow-x-auto rounded-lg border border-zinc-800 bg-zinc-950 p-4 text-[11px] leading-relaxed text-zinc-300 dark:bg-zinc-900">
+          <pre className="overflow-x-auto rounded-lg border border-border bg-charcoal p-4 text-[11px] leading-relaxed text-ink/80">
             <code>{curlCmd}</code>
           </pre>
         </CardContent>

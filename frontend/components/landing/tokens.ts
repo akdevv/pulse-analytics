@@ -7,17 +7,16 @@
    across that boundary receives a client reference rather than the
    string, so `linear-gradient(180deg, ${ACCENT})` interpolated the
    reference's source text into the stylesheet and the rule died.
-   Plain module, no directive, real values on both sides.
+   Plain module, no directive, real values on both sides. The values
+   themselves live in globals.css @theme; these are var() references to them.
    ───────────────────────────────────────────────────────────── */
-export const ACCENT = "oklch(0.6832 0.2107 38.6427)";
-export const POWDER = "oklch(0.8192 0.0304 204.4701)";
-export const INK = "oklch(0.9128 0.0228 101.3697)";
-export const ACCENT_SOFT = "oklch(0.7800 0.1400 45)";
-export const SURFACE_1 = "oklch(0.2350 0 0)";
-export const SURFACE_2 = "oklch(0.2603 0 0)";
-export const BG = "oklch(0.2002 0 0)";
-/** @deprecated use SURFACE_1 */
-export const SURFACE = SURFACE_1;
+export const ACCENT = "var(--color-tangerine)";
+export const POWDER = "var(--color-powder)";
+export const INK = "var(--color-ink)";
+export const ACCENT_SOFT = "var(--color-tangerine-soft)";
+export const SURFACE_1 = "var(--color-surface-1)";
+export const SURFACE_2 = "var(--color-surface-2)";
+export const BG = "var(--color-charcoal)";
 
 export const DISPLAY = {
   fontFamily: "'Bricolage Grotesque', ui-sans-serif, system-ui, sans-serif",

@@ -2,35 +2,27 @@
 
 import { Eye, Users, Activity } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
+import { formatCompact } from "@/lib/format";
 import type { OverviewStats } from "@/lib/types/analytics.types";
-
-function fmt(n: number): string {
-  if (n >= 1_000_000) return (n / 1_000_000).toFixed(1) + "M";
-  if (n >= 1_000) return (n / 1_000).toFixed(1) + "K";
-  return n.toLocaleString();
-}
 
 const STATS = [
   {
     key: "totalPageviews" as keyof OverviewStats,
     label: "Pageviews",
     icon: Eye,
-    accent: "#f97316",
-    bg: "rgba(249,115,22,0.07)",
+    accent: "var(--chart-1)",
   },
   {
     key: "totalSessions" as keyof OverviewStats,
     label: "Sessions",
     icon: Activity,
-    accent: "#22d3ee",
-    bg: "rgba(34,211,238,0.07)",
+    accent: "var(--chart-2)",
   },
   {
     key: "totalVisitors" as keyof OverviewStats,
     label: "Unique Visitors",
     icon: Users,
-    accent: "#a78bfa",
-    bg: "rgba(167,139,250,0.07)",
+    accent: "var(--chart-5)",
   },
 ] as const;
 
@@ -51,7 +43,7 @@ export function OverviewCards({ data, isLoading, error }: Props) {
 
   return (
     <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-      {STATS.map(({ key, label, icon: Icon, accent, bg }) => (
+      {STATS.map(({ key, label, icon: Icon, accent }) => (
         <div
           key={key}
           className="relative overflow-hidden rounded-xl border border-border bg-card p-6 transition-all duration-200 hover:border-border/80 hover:shadow-lg"
@@ -73,13 +65,15 @@ export function OverviewCards({ data, isLoading, error }: Props) {
                 <Skeleton className="mt-2.5 h-10 w-28 rounded-lg" />
               ) : (
                 <p className="mt-1 text-[2.75rem] leading-none font-bold tracking-tight tabular-nums">
-                  {fmt(data?.[key] ?? 0)}
+                  {formatCompact(data?.[key] ?? 0)}
                 </p>
               )}
             </div>
             <div
               className="mt-0.5 shrink-0 rounded-xl p-2.5"
-              style={{ background: bg }}
+              style={{
+                background: `color-mix(in oklch, ${accent} 8%, transparent)`,
+              }}
             >
               <Icon className="size-[18px]" style={{ color: accent }} />
             </div>

@@ -2,25 +2,17 @@
 
 import { useState } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
+import { formatCompact } from "@/lib/format";
 import type { DeviceStats } from "@/lib/types/analytics.types";
 
 type Tab = "devices" | "browsers" | "os";
 
-function fmt(n: number): string {
-  if (n >= 1_000) return (n / 1_000).toFixed(1) + "K";
-  return n.toLocaleString();
-}
-
-const TAB_ACCENT: Record<Tab, string> = {
-  devices: "#a78bfa",
-  browsers: "#34d399",
-  os: "#f472b6",
-};
-
-const TAB_GRADIENT: Record<Tab, string> = {
-  devices: "linear-gradient(90deg, #7c3aed 0%, #a78bfa 100%)",
-  browsers: "linear-gradient(90deg, #059669 0%, #34d399 100%)",
-  os: "linear-gradient(90deg, #db2777 0%, #f472b6 100%)",
+// One chart token per tab. The bar's lighter end is derived from it by
+// `.bar-fill`, so a hue change is a single value here.
+const TAB_COLOR: Record<Tab, string> = {
+  devices: "var(--chart-1)",
+  browsers: "var(--chart-2)",
+  os: "var(--chart-3)",
 };
 
 interface Props {
@@ -49,8 +41,7 @@ export function DevicesChart({ data, isLoading, error }: Props) {
           }));
 
   const max = rows.length ? Math.max(...rows.map((r) => r.value), 1) : 1;
-  const accent = TAB_ACCENT[tab];
-  const gradient = TAB_GRADIENT[tab];
+  const color = TAB_COLOR[tab];
 
   const TABS: { value: Tab; label: string }[] = [
     { value: "devices", label: "Devices" },
@@ -72,7 +63,7 @@ export function DevicesChart({ data, isLoading, error }: Props) {
                   ? "bg-accent text-foreground shadow-sm"
                   : "text-muted-foreground hover:bg-accent/40 hover:text-foreground"
               }`}
-              style={tab === value ? { color: accent } : {}}
+              style={tab === value ? { color } : {}}
             >
               {label}
             </button>
@@ -109,16 +100,18 @@ export function DevicesChart({ data, isLoading, error }: Props) {
                     {row.label}
                   </span>
                   <span className="shrink-0 text-xs font-semibold text-foreground/80 tabular-nums">
-                    {fmt(row.value)}
+                    {formatCompact(row.value)}
                   </span>
                 </div>
                 <div className="h-1 w-full overflow-hidden rounded-full bg-muted/60">
                   <div
-                    className="h-full rounded-full transition-all duration-700 ease-out"
-                    style={{
-                      width: `${(row.value / max) * 100}%`,
-                      background: gradient,
-                    }}
+                    className="bar-fill h-full rounded-full transition-all duration-700 ease-out"
+                    style={
+                      {
+                        width: `${(row.value / max) * 100}%`,
+                        "--bar": color,
+                      } as React.CSSProperties
+                    }
                   />
                 </div>
               </div>

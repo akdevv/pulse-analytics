@@ -2,6 +2,7 @@
 
 import { Area, AreaChart, CartesianGrid, XAxis, YAxis } from "recharts";
 import { Skeleton } from "@/components/ui/skeleton";
+import { formatTick } from "@/lib/format";
 import {
   ChartContainer,
   ChartTooltip,
@@ -13,19 +14,13 @@ import type { TimeseriesPoint } from "@/lib/types/analytics.types";
 const chartConfig: ChartConfig = {
   pageviews: {
     label: "Pageviews",
-    color: "#f97316",
+    color: "var(--chart-1)",
   },
   sessions: {
     label: "Sessions",
-    color: "#22d3ee",
+    color: "var(--chart-2)",
   },
 };
-
-function fmtTick(v: number): string {
-  if (v >= 1_000_000) return `${(v / 1_000_000).toFixed(1)}M`;
-  if (v >= 1_000) return `${(v / 1_000).toFixed(0)}k`;
-  return `${v}`;
-}
 
 interface Props {
   data?: TimeseriesPoint[];
@@ -53,14 +48,14 @@ export function TimeseriesChart({ data, isLoading, error }: Props) {
           <span className="flex items-center gap-2 text-xs text-muted-foreground">
             <span
               className="inline-block size-2.5 rounded-full"
-              style={{ background: "#f97316" }}
+              style={{ background: "var(--chart-1)" }}
             />
             Pageviews
           </span>
           <span className="flex items-center gap-2 text-xs text-muted-foreground">
             <span
               className="inline-block size-2.5 rounded-full"
-              style={{ background: "#22d3ee" }}
+              style={{ background: "var(--chart-2)" }}
             />
             Sessions
           </span>
@@ -87,12 +82,20 @@ export function TimeseriesChart({ data, isLoading, error }: Props) {
           >
             <defs>
               <linearGradient id="pvGrad" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="5%" stopColor="#f97316" stopOpacity={0.18} />
-                <stop offset="95%" stopColor="#f97316" stopOpacity={0} />
+                <stop
+                  offset="5%"
+                  stopColor="var(--chart-1)"
+                  stopOpacity={0.18}
+                />
+                <stop offset="95%" stopColor="var(--chart-1)" stopOpacity={0} />
               </linearGradient>
               <linearGradient id="sessGrad" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="5%" stopColor="#22d3ee" stopOpacity={0.14} />
-                <stop offset="95%" stopColor="#22d3ee" stopOpacity={0} />
+                <stop
+                  offset="5%"
+                  stopColor="var(--chart-2)"
+                  stopOpacity={0.14}
+                />
+                <stop offset="95%" stopColor="var(--chart-2)" stopOpacity={0} />
               </linearGradient>
             </defs>
             <CartesianGrid vertical={false} strokeOpacity={0.07} />
@@ -108,14 +111,14 @@ export function TimeseriesChart({ data, isLoading, error }: Props) {
               tickLine={false}
               axisLine={false}
               tick={{ fontSize: 11, fill: "currentColor", fillOpacity: 0.38 }}
-              tickFormatter={fmtTick}
+              tickFormatter={formatTick}
               width={40}
             />
             <ChartTooltip content={<ChartTooltipContent />} />
             <Area
               type="monotone"
               dataKey="sessions"
-              stroke="#22d3ee"
+              stroke="var(--chart-2)"
               strokeWidth={2}
               fill="url(#sessGrad)"
               dot={false}
@@ -124,7 +127,7 @@ export function TimeseriesChart({ data, isLoading, error }: Props) {
             <Area
               type="monotone"
               dataKey="pageviews"
-              stroke="#f97316"
+              stroke="var(--chart-1)"
               strokeWidth={2}
               fill="url(#pvGrad)"
               dot={false}
