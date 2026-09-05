@@ -96,7 +96,7 @@ function scheduleFlusher() {
   }, FLUSH_INTERVAL_MS);
 }
 
-async function enrichEvent(raw: RawEvent) {
+export async function enrichEvent(raw: RawEvent) {
   const uaString = raw.userAgent ?? "";
   const uaInfo = parseUA(uaString);
 
@@ -104,6 +104,11 @@ async function enrichEvent(raw: RawEvent) {
 
   return {
     ...raw,
+
+    // An IP is personal data under GDPR, and the docs promise Pulse stores
+    // nothing that identifies a person. Geo above is all it was needed for.
+    // Dropped here, the one point every insert passes through.
+    ipAddress: null,
 
     // Device info
     browser: uaInfo.browser.name ?? "Unknown",

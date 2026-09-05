@@ -136,7 +136,9 @@ A separate process pulls jobs with a concurrency of 5 and does everything the ho
 - Browser, OS, and device from the user agent, parsed with `ua-parser-js`. Parsed results are memoised up to 5,000 entries, because real traffic reuses a few hundred user agent strings over and over.
 - Country, region, and city from the IP, read from a local MaxMind file. No external call. Results are cached up to 10,000 IPs, private and loopback addresses are skipped, and if the database file is missing the worker logs it once and carries on with empty geo rather than failing every job.
 
-The raw IP is used for that lookup. It is not what the dashboard reads back.
+The raw IP is used for that lookup and then dropped. The worker nulls it as soon as geo resolves, so the address never reaches the insert and no row in `events` holds one. Country survives, the address does not. An IP is personal data under GDPR, and storing one would break the claim that Pulse collects nothing identifying.
+
+What a stored event does keep, so you can judge that claim yourself: the URL and page title, the referrer, the user agent string, screen and viewport size, browser language, and two random UUIDs for the visitor and the session. The visitor UUID is generated in the browser, not derived from anything about the person.
 
 **Batching** is where the throughput comes from:
 

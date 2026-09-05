@@ -177,7 +177,8 @@ async function main() {
               ]),
         sessionId: faker.string.uuid(),
         visitorId: faker.string.uuid(),
-        ipAddress: faker.internet.ipv4(),
+        // Ingestion drops the IP, so seeding one fakes a row it cannot produce.
+        ipAddress: null,
         userAgent,
         deviceType: faker.helpers.arrayElement(["desktop", "mobile", "tablet"]),
         browser: faker.helpers.arrayElement([
