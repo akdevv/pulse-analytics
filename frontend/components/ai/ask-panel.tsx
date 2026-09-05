@@ -18,6 +18,8 @@ import {
 } from "@/hooks/useAi";
 import { Markdown } from "@/components/ai/markdown";
 import { ResultTable } from "@/components/ai/result-table";
+import { Skeleton } from "@/components/ui/skeleton";
+import { getErrorMessage } from "@/lib/utils";
 import type { AskResult, ConversationSummary } from "@/lib/types/ai.types";
 
 // What the thread shows. A live answer carries its rows; a reloaded one cannot,
@@ -253,7 +255,11 @@ export function AskPanel({ siteId }: { siteId: string }) {
   const { data: conversations } = useConversations(siteId);
   // Stored messages are only fetched when a past thread is opened — the live
   // thread already holds everything, including the rows the server never keeps.
-  const { data: replayed } = useConversation(siteId, replayId);
+  const {
+    data: replayed,
+    isLoading: replayLoading,
+    error: replayError,
+  } = useConversation(siteId, replayId);
 
   const conversationId = liveConversationId ?? replayId;
 
@@ -365,7 +371,28 @@ export function AskPanel({ siteId }: { siteId: string }) {
           aria-busy={askMutation.isPending}
           className="flex-1 space-y-7 overflow-y-auto p-5 [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-border"
         >
-          {turns.length === 0 && (
+          {/* Opening a stored thread re-runs its SQL server-side, which is why
+              the request carries a 40s timeout. It used to show the
+              "ask a question" intro the whole time, as if the thread were
+              empty. */}
+          {replayLoading && (
+            <div className="space-y-4 py-10">
+              <Skeleton className="h-5 w-64" />
+              <Skeleton className="h-24 w-full rounded-lg" />
+              <p className="text-xs text-muted-foreground">
+                Re-running this thread&apos;s query — rows are never stored, so
+                they are read back fresh.
+              </p>
+            </div>
+          )}
+
+          {replayError && (
+            <p className="py-10 text-sm text-destructive">
+              {getErrorMessage(replayError, "Could not reopen this thread.")}
+            </p>
+          )}
+
+          {turns.length === 0 && !replayLoading && !replayError && (
             <div className="py-10">
               <h2 className="text-lg font-semibold tracking-tight">
                 Ask about this site&apos;s traffic

@@ -1,6 +1,6 @@
 "use client";
 
-import Link from "next/link";
+import { EmptyState, StepList } from "@/components/common/empty-state";
 import { SiteCard } from "@/components/sites/site-card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useSites } from "@/hooks/useSites";
@@ -31,16 +31,38 @@ export function SitesList() {
 
   if (!sites?.length) {
     return (
-      <div className="text-sm text-muted-foreground">
-        No sites yet.{" "}
-        <Link
-          href="/dashboard/sites/new"
-          className="underline underline-offset-4"
-        >
-          Add your first site
-        </Link>
-        .
-      </div>
+      <EmptyState
+        title="Track your first site"
+        description="Give us a domain and you get a one-line snippet back. Events land as they happen — there is no nightly batch to wait for, and no cookie banner to add."
+        actions={[
+          { label: "Add a site", href: "/dashboard/sites/new", primary: true },
+          { label: "Read the docs", href: "/docs/quickstart" },
+        ]}
+      >
+        <StepList
+          marker="count"
+          items={[
+            {
+              title: "Add the site",
+              body: "A name and a domain. Two fields, nothing else to decide.",
+            },
+            {
+              title: "Paste one line",
+              body: (
+                <>
+                  A script tag in your{" "}
+                  <code className="font-mono text-[11px]">&lt;head&gt;</code>.
+                  Any stack, no build step.
+                </>
+              ),
+            },
+            {
+              title: "Watch it land",
+              body: "The first visit shows up live while you are still on the page.",
+            },
+          ]}
+        />
+      </EmptyState>
     );
   }
 
