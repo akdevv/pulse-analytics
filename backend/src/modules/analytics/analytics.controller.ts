@@ -228,3 +228,54 @@ export const getRawEvents = async (req: Request, res: Response) => {
     data: { siteId, result },
   });
 };
+
+// GET /:siteId/events
+export const getCustomEvents = async (req: Request, res: Response) => {
+  const siteId = req.params.siteId as string;
+  if (!siteId) throw AppError.validation("Site ID is required");
+
+  const userId = req.user!.userId;
+
+  const { error, data } = parseQuery(req);
+  if (error) return res.status(400).json({ error });
+
+  const result = await AnalyticsService.getCustomEvents(
+    siteId,
+    userId,
+    data!.from,
+    data!.to,
+    data!.limit
+  );
+
+  return res.status(200).json({
+    status: "success",
+    message: "Fetched custom events",
+    data: result,
+  });
+};
+
+// GET /:siteId/events/properties?name=signup_completed
+export const getEventProperties = async (req: Request, res: Response) => {
+  const siteId = req.params.siteId as string;
+  if (!siteId) throw AppError.validation("Site ID is required");
+
+  const userId = req.user!.userId;
+
+  const { error, data } = parseQuery(req);
+  if (error) return res.status(400).json({ error });
+  if (!data!.name) throw AppError.validation("Event name is required");
+
+  const result = await AnalyticsService.getEventProperties(
+    siteId,
+    userId,
+    data!.name,
+    data!.from,
+    data!.to
+  );
+
+  return res.status(200).json({
+    status: "success",
+    message: "Fetched event properties",
+    data: result,
+  });
+};

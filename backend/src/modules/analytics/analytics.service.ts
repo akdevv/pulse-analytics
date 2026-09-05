@@ -110,3 +110,32 @@ export async function getRawEvents(siteId: string, userId: string) {
   await verifySiteOwnership(siteId, userId);
   return analyticsRepository.getRawEvents(siteId);
 }
+
+export async function getCustomEvents(
+  siteId: string,
+  userId: string,
+  from?: string,
+  to?: string,
+  limit: number = 10
+) {
+  await verifySiteOwnership(siteId, userId);
+  const { fromDate, toDate } = resolveDateRange(from, to);
+  return analyticsRepository.getCustomEvents(siteId, fromDate, toDate, limit);
+}
+
+export async function getEventProperties(
+  siteId: string,
+  userId: string,
+  eventName: string,
+  from?: string,
+  to?: string
+) {
+  await verifySiteOwnership(siteId, userId);
+  const { fromDate, toDate } = resolveDateRange(from, to);
+  return analyticsRepository.getEventProperties(
+    siteId,
+    eventName,
+    fromDate,
+    toDate
+  );
+}

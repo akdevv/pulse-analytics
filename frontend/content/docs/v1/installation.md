@@ -1,10 +1,10 @@
-There are two ways to get Pulse onto a site, and the choice comes down to one question: do you need custom events?
+There are two ways to get Pulse onto a site, and the choice comes down to whether you have a build step.
 
-**The script tag** is one line of HTML with no build step. It tracks pageviews, including client side route changes, and that is all it does. `pulse.js` has no API you can call.
+**The script tag** is one line of HTML and nothing to install. It tracks pageviews including client side route changes, tracks clicks on any element carrying `data-pulse-event`, and exposes `window.Pulse.trackEvent` for events you fire from your own code.
 
-**The npm package** ([`@akdevv/pulse`](https://www.npmjs.com/package/@akdevv/pulse)) tracks the same pageviews and adds `trackEvent`, so you can record a signup or a plan upgrade. It is written in TypeScript, has no dependencies, and ships a React hook.
+**The npm package** ([`@akdevv/pulse`](https://www.npmjs.com/package/@akdevv/pulse)) does the same things with types, an import you can typecheck, and a React hook. Written in TypeScript, no dependencies.
 
-Start with the script tag. Move to the package the day you want to track something that is not a pageview.
+Neither one is more capable than the other. Start with the script tag; reach for the package when you are already in a bundler and would rather import `trackEvent` than call it off the global.
 
 ## Script tag
 

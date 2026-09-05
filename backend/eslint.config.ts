@@ -17,6 +17,12 @@ export default defineConfig([
     files: ["tests/load/**/*.mjs", "tests/load/**/*.js"],
     languageOptions: { globals: globals.node },
   },
+  {
+    // public/ is served to browsers, not run by node. Without this every
+    // window/document/history reference in pulse.js reads as no-undef.
+    files: ["public/**/*.js"],
+    languageOptions: { globals: globals.browser },
+  },
   tseslint.configs.recommended,
   {
     rules: {

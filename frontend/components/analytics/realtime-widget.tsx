@@ -73,8 +73,8 @@ export function RealtimeWidget({ data, isLoading, error }: Props) {
             </div>
           </div>
 
-          {/* Active pages + referrers */}
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          {/* Active pages + referrers + events */}
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {/* Active pages */}
             <div>
               <p className="mb-2.5 text-[11px] font-bold tracking-[0.12em] text-muted-foreground/60 uppercase">
@@ -144,6 +144,41 @@ export function RealtimeWidget({ data, isLoading, error }: Props) {
                       </span>
                       <span className="shrink-0 text-xs font-semibold tabular-nums">
                         {row.activeSessions}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Live custom events */}
+            <div>
+              <p className="mb-2.5 text-[11px] font-bold tracking-[0.12em] text-muted-foreground/60 uppercase">
+                Live Events
+              </p>
+              {isLoading ? (
+                <Skeleton className="h-36 w-full rounded-lg" />
+              ) : !data?.events?.length ? (
+                <div className="flex h-16 items-center justify-center rounded-lg border border-border/50 bg-muted/10">
+                  <p className="text-xs text-muted-foreground">
+                    No events right now
+                  </p>
+                </div>
+              ) : (
+                <div className="space-y-1.5">
+                  {data.events.map((row) => (
+                    <div
+                      key={row.name}
+                      className="flex items-center justify-between gap-3 rounded-lg bg-muted/20 px-3 py-2.5"
+                    >
+                      <span
+                        className="min-w-0 truncate font-mono text-xs text-foreground/70"
+                        title={row.name}
+                      >
+                        {row.name}
+                      </span>
+                      <span className="shrink-0 text-xs font-semibold tabular-nums">
+                        {row.count}
                       </span>
                     </div>
                   ))}

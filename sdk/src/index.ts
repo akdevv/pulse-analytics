@@ -4,12 +4,14 @@ import type {
   EventProperties,
 } from "./tracker.ts";
 import { enableSPA } from "./spa.ts";
+import { enableAutoEvents } from "./auto-events.ts";
 import { configure, sendEvent } from "./tracker.ts";
 
 const Pulse = {
   /**
    * Initialize Pulse Analytics. Must be called once before any tracking.
-   * Sends an initial pageview and enables automatic SPA route tracking.
+   * Sends an initial pageview, enables automatic SPA route tracking, and
+   * starts listening for clicks on `data-pulse-event` elements.
    *
    * @param config - Configuration options
    * @param config.siteId - Your site tracking ID
@@ -22,6 +24,7 @@ const Pulse = {
   init(config: PulseConfig): void {
     configure(config);
     enableSPA();
+    enableAutoEvents();
 
     // Send the first pageview immediately on initialization
     sendEvent("PAGEVIEW");

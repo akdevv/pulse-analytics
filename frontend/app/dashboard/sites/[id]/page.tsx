@@ -10,6 +10,7 @@ import {
   useDevices,
   useGeo,
   useRealtimeStream,
+  useCustomEvents,
 } from "@/hooks/useAnalytics";
 import { DateRangeBar } from "@/components/analytics/date-range-bar";
 import type { Preset, Interval } from "@/components/analytics/date-range-bar";
@@ -20,6 +21,7 @@ import { ReferrersChart } from "@/components/analytics/referrers-chart";
 import { DevicesChart } from "@/components/analytics/devices-chart";
 import { GeoChart } from "@/components/analytics/geo-chart";
 import { RealtimeWidget } from "@/components/analytics/realtime-widget";
+import { EventsChart } from "@/components/analytics/events-chart";
 
 function computeDateRange(preset: Preset, interval: Interval) {
   const to = new Date();
@@ -74,6 +76,11 @@ export default function SiteAnalyticsPage() {
     isLoading: geoLoading,
     error: geoError,
   } = useGeo(id, dateRange);
+  const {
+    data: events,
+    isLoading: eventsLoading,
+    error: eventsError,
+  } = useCustomEvents(id, dateRange);
   const {
     data: realtime,
     isLoading: realtimeLoading,
@@ -130,6 +137,14 @@ export default function SiteAnalyticsPage() {
         />
         <GeoChart data={geo?.data} isLoading={geoLoading} error={geoError} />
       </div>
+
+      <EventsChart
+        siteId={id}
+        dateRange={dateRange}
+        data={events?.data}
+        isLoading={eventsLoading}
+        error={eventsError}
+      />
     </div>
   );
 }

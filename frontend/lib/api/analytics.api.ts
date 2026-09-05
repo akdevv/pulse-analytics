@@ -32,6 +32,23 @@ export const getRealtime = async (siteId: string) => {
   return api.get(`analytics/${siteId}/realtime`);
 };
 
+export const getCustomEvents = async (
+  siteId: string,
+  params: DateRangeParams
+) => {
+  return api.get(`analytics/${siteId}/events`, { params });
+};
+
+export const getEventProperties = async (
+  siteId: string,
+  name: string,
+  params: DateRangeParams
+) => {
+  return api.get(`analytics/${siteId}/events/properties`, {
+    params: { ...params, name },
+  });
+};
+
 export const getRawEvents = async (siteId: string) => {
   return api.get(`analytics/${siteId}/raw`);
 };

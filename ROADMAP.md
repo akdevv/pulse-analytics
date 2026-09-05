@@ -18,8 +18,8 @@ It was built to learn how a high-throughput pipeline fits together. That worked.
 | Analytics API | Overview, timeseries, pages, referrers, devices, geo, realtime SSE. Works |
 | AI queries | Built 5 Sept. Cost control and tests still open |
 | Dashboard | Auth, sites, analytics, setup page. Works, unpolished |
-| Custom events | Stored. **Never displayed anywhere** |
-| Docs | An SDK README. Nothing else |
+| Custom events | `data-pulse-event` clicks and `trackEvent`. Counts, property breakdown, realtime |
+| Docs | Five pages at `/docs`, plus the SDK README |
 | Deployment | None. Local docker only |
 | Load testing | Configs written, never run |
 
@@ -103,11 +103,11 @@ Missing:
 - **A "waiting for your first event" state** on the setup page that polls and flips to connected. Highest-value missing piece in the flow. It's the moment the dev decides whether the tool works.
 - Troubleshooting list: wrong tracking ID, ad blocker, CSP, snippet in `<body>`, domain mismatch.
 
-**5. Track button clicks.** `Pulse.trackEvent(name, props)` works and the payload reaches the database. Two gaps:
-- **Automatic click tracking.** `data-pulse-event="hire_me_click"` on a button, done. A delegated listener in the SDK is roughly twenty lines and means no JavaScript on an Astro site.
-- **Custom events are invisible.** They're stored, but `eventName` appears nowhere in the analytics module. The dev tracks a click, it saves, they never see it. Needs `GET /analytics/:siteId/events` with counts over a range, a breakdown by property value, a dashboard card, and events in the realtime widget.
+**5. Track button clicks.** Done. `data-pulse-event="hire_me_click"` on a button tracks the click with no JavaScript, `data-pulse-props` carries a JSON object with it, and both installs support them — `pulse.js` now exposes `window.Pulse.trackEvent` instead of being pageview-only. On the read side, `GET /analytics/:siteId/events` returns counts and distinct visitors per name, `GET /analytics/:siteId/events/properties?name=` returns the property breakdown, the site dashboard has a Custom Events card that expands into that breakdown, and the realtime panel has a Live Events column.
 
-**6. Read reports.** Pageview coverage is solid. Only custom events block Test 1. Period comparison would be nice, not required.
+Both read queries hit raw `events` rather than an aggregate: the continuous aggregates filter `eventType = 'PAGEVIEW'`, and the property breakdown groups on arbitrary JSONB keys, which a fixed-column rollup cannot express. Worth revisiting only if a real dataset makes it slow.
+
+**6. Read reports.** Pageview and custom event coverage is solid. Nothing blocks Test 1 on the reporting side. Period comparison would be nice, not required.
 
 ### 5.3 Docs
 
@@ -273,7 +273,7 @@ Written down so it stops coming back.
 - A dedicated docs site. Four pages in the app is enough.
 - Self-hosting as a pitch. It runs in docker and always will, but the product is the hosted dashboard.
 - SSE streaming and prose answers in the AI feature.
-- Any feature not already in the repo, except custom-event reporting and `data-pulse-event` click tracking.
+- Any feature not already in the repo. (Custom-event reporting and `data-pulse-event` click tracking were the two exceptions, and both shipped.)
 
 ---
 
@@ -285,7 +285,7 @@ Written down so it stops coming back.
 |---|---|---|
 | **Sept 5** | 1 | Finish AI: apply `0008`, validator tests, rate limit, cache, daily budget, Ask panel errors |
 | **Sept 6** | 2 | Deploy day. Node 22 image, GeoIP at build time, Timescale, Redis, API, worker, migrations, Vercel, secrets, CORS, health check green from outside |
-| **Sept 7** | 2 | Custom events: endpoint, dashboard card, realtime widget. `data-pulse-event` in the SDK, republish to npm |
+| **Sept 7** | 2 | ~~Custom events: endpoint, dashboard card, realtime widget, `data-pulse-event`~~ done 5 Sept. Left: republish the SDK to npm |
 | **Sept 8** | 2 | Four docs pages. Setup page "waiting for first event" state |
 | **Sept 9** | 2 | Install on `akdevv.com` **by following the docs**, fix what that exposes. Integration tests, CI, `main` vs `rebuild` |
 | **Sept 10** | | **Checkpoint. Test 1 passes**, or it gets cut down until it does. Nothing unfinished travels past this line |

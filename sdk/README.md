@@ -133,6 +133,17 @@ Pulse.trackPageview();
 Pulse.trackPageview({ url: "/checkout", title: "Checkout" });
 ```
 
+### Click attributes
+
+`init()` attaches one delegated click listener to the document, so no-code tracking works on elements mounted at any point:
+
+```html
+<button data-pulse-event="hire_me_click">Hire me</button>
+<button data-pulse-event="plan_picked" data-pulse-props='{"plan":"pro"}'>Pro</button>
+```
+
+`data-pulse-props` must be a JSON object. Invalid JSON warns in the console and the event still sends, without properties.
+
 ### `Pulse.trackEvent(eventName, properties?)`
 
 Track a custom event with an optional properties payload.

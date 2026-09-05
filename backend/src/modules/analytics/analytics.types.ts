@@ -10,6 +10,9 @@ export const AnalyticsQuerySchema = z.object({
   to: dateString,
   interval: z.enum(["hour", "day"]).default("day"),
   limit: z.coerce.number().int().min(1).max(100).default(10),
+  // Only /events/properties reads this. Event names are free text up to 255
+  // chars, so they travel as a query param rather than a path segment.
+  name: z.string().max(255).optional(),
 });
 
 export type AnalyticsQuery = z.infer<typeof AnalyticsQuerySchema>;
@@ -60,4 +63,18 @@ export interface RealtimeStats {
   visitors: number;
   activePages: { path: string; activeSessions: number; pageviews: number }[];
   topReferrers: { referrer: string | null; activeSessions: number }[];
+  events: { name: string; count: number }[];
+}
+
+export interface EventStat {
+  eventName: string;
+  count: number;
+  visitors: number;
+}
+
+/** One (key, value) pair seen in an event's properties, with how often. */
+export interface PropertyStat {
+  key: string;
+  value: string;
+  count: number;
 }

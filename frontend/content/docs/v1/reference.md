@@ -50,6 +50,25 @@ Pulse.trackEvent("signup_completed", { plan: "pro" });
 | `name`       | `string`, up to 255 characters                | yes      |
 | `properties` | `Record<string, string \| number \| boolean>` | no       |
 
+Available as `window.Pulse.trackEvent` on the script tag install too, with the same signature.
+
+## Click attributes
+
+`init()` attaches one delegated click listener to the document, so these work on elements added to the page at any point. Both installs support them.
+
+| Attribute          | Required | Description                                                                                     |
+| ------------------ | -------- | ----------------------------------------------------------------------------------------------- |
+| `data-pulse-event` | yes      | Event name. The click is sent as a `CUSTOM` event under this name.                              |
+| `data-pulse-props` | no       | Properties as a JSON object. Invalid JSON warns in the console and the event sends without them. |
+
+```html
+<button data-pulse-event="plan_picked" data-pulse-props='{"plan":"pro"}'>
+  Choose Pro
+</button>
+```
+
+The listener matches with `closest()`, so a click on an icon inside the button still resolves to the button carrying the attribute.
+
 ## usePulse(config)
 
 React hook, same config as `init`. Runs once on mount, guards against React's double invocation in development, and ignores every render after the first.
@@ -85,8 +104,9 @@ Private browsing can make both storage APIs throw. When that happens the SDK fal
 | ----------- | -------- | -------------------------------------------------------------------------------------------------- |
 | `data-tid`  | yes      | Tracking ID. Without it the script warns and stops.                                                |
 | `data-host` | no       | API origin, no path. Defaults to `http://localhost:8000`, which is only ever right in development. |
+| `data-debug` | no      | `"true"` logs every event to the console. Off by default; warnings always show. |
 
-The script tracks pageviews. It has no `trackEvent`, and it does not attach anything to `window`. For events, use the npm package.
+The script tracks pageviews, handles `data-pulse-event` clicks, and exposes `window.Pulse` with `trackEvent(name, properties?)` and `trackPageview()`. Custom events do not require the npm package.
 
 ## Tracking endpoint
 
