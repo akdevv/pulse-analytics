@@ -3,6 +3,7 @@
 import { AppSidebar } from "@/components/common/app-sidebar";
 import { SiteHeader } from "@/components/common/site-header";
 import { SidebarProvider } from "@/components/ui/sidebar";
+import { Skeleton } from "@/components/ui/skeleton";
 import { useAuth } from "@/contexts/auth.context";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
@@ -19,11 +20,25 @@ export default function DashboardLayout({
     if (!isLoading && !user) {
       router.replace("/login");
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user, isLoading]);
+  }, [user, isLoading, router]);
 
+  // The session is restored from a cookie on every load, so this renders on
+  // every entry to the dashboard. It draws the shell it is about to become
+  // rather than a bare word, which used to land as a flash of unstyled page.
   if (isLoading) {
-    return <div>Loading...</div>;
+    return (
+      <div className="flex h-dvh w-full gap-2 bg-sidebar p-2">
+        <div className="hidden w-64 shrink-0 flex-col gap-3 p-4 md:flex">
+          <Skeleton className="h-6 w-40" />
+          <Skeleton className="mt-4 h-8 w-full" />
+          <Skeleton className="h-8 w-full" />
+        </div>
+        <div className="flex-1 rounded-xl bg-background p-6">
+          <Skeleton className="h-8 w-48" />
+          <Skeleton className="mt-6 h-64 w-full rounded-xl" />
+        </div>
+      </div>
+    );
   }
 
   if (!user) {
@@ -32,7 +47,7 @@ export default function DashboardLayout({
 
   return (
     <SidebarProvider>
-      <div className="flex h-screen w-screen bg-sidebar">
+      <div className="flex h-dvh w-full bg-sidebar">
         <AppSidebar />
         <div className="flex-1 p-2">
           <div className="flex h-full flex-col rounded-xl bg-background">
