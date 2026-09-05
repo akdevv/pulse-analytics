@@ -68,18 +68,15 @@ The hot path is deliberately thin: the ingestion endpoint validates, rate-limits
 Requires Node ≥ 22, pnpm, and Docker.
 
 ```bash
-# Backend (starts TimescaleDB + Redis via docker compose, then API + worker)
-cd backend
-cp .env.example .env
-pnpm install
-pnpm db:migrate
-pnpm dev
+# One-time setup
+(cd backend && cp .env.example .env && pnpm install)
+(cd frontend && cp .env.example .env && pnpm install)
 
-# Frontend
-cd frontend
-cp .env.example .env
-pnpm install
-pnpm dev
+# Then two commands, one per terminal.
+# The backend one starts TimescaleDB + Redis in docker, runs migrations,
+# then the API and worker together.
+pnpm --dir backend dev
+pnpm --dir frontend dev
 ```
 
 Then follow the [quickstart](./frontend/content/docs/v1) — or read it at `/docs` once the frontend is up.
