@@ -51,9 +51,11 @@ export async function getCachedSite(
     inflight.set(trackingId, promise);
     return promise;
   } catch (err) {
-    // if redis is down, fallback to DB
-    logger.warn("[cache] Redis error, falling back to DB", { err, trackingId });
-    return getSiteByTrackingId(trackingId);
+    // No Postgres fallback. The rate limiter fails closed and the queue is
+    // Redis-backed, so with Redis down the event is dropped anyway. A fallback
+    // would only add a Postgres query per event during the outage.
+    logger.warn("[cache] Redis error, dropping event", { err, trackingId });
+    return null;
   }
 }
 

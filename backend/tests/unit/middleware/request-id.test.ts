@@ -12,8 +12,6 @@ function makeRes() {
   return { setHeader: vi.fn() } as unknown as Response;
 }
 
-// ─── requestId middleware ─────────────────────────────────────────────────────
-
 describe("requestId middleware", () => {
   it("uses x-request-id header when present", () => {
     const req = makeReq("my-custom-id");

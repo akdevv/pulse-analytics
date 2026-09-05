@@ -1,8 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { AppError, ErrorCode } from "@/utils/app-error.ts";
 
-// ─── Constructor ──────────────────────────────────────────────────────────────
-
 describe("AppError constructor", () => {
   it("sets statusCode, message, isOperational, type", () => {
     const err = new AppError(404, "not found");
@@ -32,8 +30,6 @@ describe("AppError constructor", () => {
     expect(err.stack).toBeDefined();
   });
 });
-
-// ─── Static factories ─────────────────────────────────────────────────────────
 
 describe("AppError static factories", () => {
   it("unauthorized() → 401, default message, UNAUTHORIZED code", () => {
@@ -92,8 +88,6 @@ describe("AppError static factories", () => {
     expect(err.code).toBe(ErrorCode.INTERNAL_ERROR);
   });
 });
-
-// ─── Custom message overrides ─────────────────────────────────────────────────
 
 describe("AppError custom messages", () => {
   it("unauthorized(custom) uses custom message", () => {

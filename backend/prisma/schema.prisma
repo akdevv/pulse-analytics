@@ -23,9 +23,10 @@ model User {
 model Site {
   id            String        @id @default(uuid())
   name          String
-  domain        String        @unique
+  domain        String
   userId        String
-  trackingId    String
+  // Unique, not just indexed. Lookups use findFirst on the ingestion path.
+  trackingId    String        @unique
   rateLimitTier RateLimitTier @default(FREE)
   isActive      Boolean       @default(true)
   createdAt     DateTime      @default(now())
@@ -34,12 +35,12 @@ model Site {
   conversations Conversation[]
   user          User          @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  @@index([trackingId])
+  // Per user, not global. One account must not claim a domain for everyone.
+  @@unique([userId, domain])
   @@index([userId])
   @@map("sites")
 }
 
-// A thread of questions about one site. Cheap to create — one row per chat.
 model Conversation {
   id        String      @id @default(uuid())
   userId    String
@@ -55,9 +56,7 @@ model Conversation {
   @@map("conversations")
 }
 
-// This IS the audit log — there is no second table. The generated SQL is stored
-// every time; returned rows never are. Re-run the query to see rows again,
-// which keeps visitor data out of a second store.
+// The audit log itself. Stores generated SQL, never returned rows.
 model AiMessage {
   id             String       @id @default(uuid())
   conversationId String
@@ -93,7 +92,6 @@ model Event {
   referrer         String?   @db.VarChar(2048)
   sessionId        String?   @db.Uuid
   visitorId        String?   @db.Uuid
-  ipAddress        String?   @db.Inet
   userAgent        String?   @db.VarChar(500)
   deviceType       String?   @db.VarChar(20)
   browser          String    @db.VarChar(50)
@@ -110,7 +108,9 @@ model Event {
   screenResolution String?   @db.VarChar(15)
   userLanguage     String?   @db.VarChar(10)
   viewportSize     String?   @db.VarChar(15)
-  site             Site      @relation(fields: [siteId], references: [id])
+  // ponytail: cascade deletes a site's events in one statement. Fine at demo
+  // volume. Drop the hypertable chunks instead if a site ever holds millions.
+  site             Site      @relation(fields: [siteId], references: [id], onDelete: Cascade)
 
   @@id([id, receivedAt])
   @@index([siteId, timestamp(sort: Desc)])

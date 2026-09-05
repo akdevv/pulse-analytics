@@ -1,4 +1,4 @@
-import { generateEmbedCode, generateTrackingId } from "@/utils/gen-tracking.ts";
+import { generateTrackingId } from "@/utils/gen-tracking.ts";
 import { AppError } from "@/utils/app-error.ts";
 import {
   createSite,
@@ -20,22 +20,14 @@ export const createSiteService = async ({
   userId: string;
   name: string;
   domain: string;
-}): Promise<{ site: ISite; embedCode: string }> => {
-  const existingSite = await findSiteByDomain(domain);
+}): Promise<ISite> => {
+  const existingSite = await findSiteByDomain(userId, domain);
   if (existingSite) {
     throw AppError.alreadyExists("Site");
   }
 
-  // generate tracking id & embed code
   const trackingId = generateTrackingId();
-  const embedCode = generateEmbedCode(trackingId);
-
-  const site = await createSite(userId, name, domain, trackingId);
-
-  return {
-    site,
-    embedCode,
-  };
+  return createSite(userId, name, domain, trackingId);
 };
 
 export const getSitesService = async (userId: string): Promise<ISite[]> => {
@@ -59,15 +51,13 @@ export const updateSiteService = async (
   siteId: string,
   data: { name?: string; domain?: string }
 ): Promise<ISite> => {
-  // Check if site exists and belongs to user
   const existingSite = await getSiteById(userId, siteId);
   if (!existingSite) {
     throw AppError.notFound("Site");
   }
 
-  // If domain is being updated, check if new domain is already taken
   if (data.domain && data.domain !== existingSite.domain) {
-    const siteWithDomain = await findSiteByDomain(data.domain);
+    const siteWithDomain = await findSiteByDomain(userId, data.domain);
     if (siteWithDomain) {
       throw AppError.alreadyExists("Domain");
     }
@@ -81,7 +71,6 @@ export const deleteSiteService = async (
   userId: string,
   siteId: string
 ): Promise<void> => {
-  // Check if site exists and belongs to user
   const existingSite = await getSiteById(userId, siteId);
   if (!existingSite) {
     throw AppError.notFound("Site");
@@ -94,23 +83,14 @@ export const deleteSiteService = async (
 export const regenerateTrackingIdService = async (
   userId: string,
   siteId: string
-): Promise<{ site: ISite; embedCode: string }> => {
-  // Check if site exists and belongs to user
+): Promise<ISite> => {
   const existingSite = await getSiteById(userId, siteId);
   if (!existingSite) {
     throw AppError.notFound("Site");
   }
 
-  await invalidateSiteCache(existingSite.trackingId); // invalidate cache
+  await invalidateSiteCache(existingSite.trackingId);
 
-  // Generate new tracking ID and embed code
   const newTrackingId = generateTrackingId();
-  const embedCode = generateEmbedCode(newTrackingId);
-
-  const updatedSite = await updateTrackingId(userId, siteId, newTrackingId);
-
-  return {
-    site: updatedSite,
-    embedCode,
-  };
+  return updateTrackingId(userId, siteId, newTrackingId);
 };

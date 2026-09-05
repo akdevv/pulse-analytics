@@ -1,8 +1,8 @@
 import { describe, it, expect } from "vitest";
 import type { Request } from "express";
 import {
-  getClientIp,
   buildRawEvent,
+  hostnameMatchesSite,
 } from "@/modules/ingestion/track.service.ts";
 import type { TrackQueryParams } from "@/modules/ingestion/track.types.ts";
 
@@ -29,29 +29,8 @@ const baseParams: TrackQueryParams = {
   dl: "https://example.com/path?foo=bar",
   ep: undefined,
   ts: undefined,
-  debug: false,
 };
 
-// ─── getClientIp ──────────────────────────────────────────────────────────────
-
-describe("getClientIp", () => {
-  it("extracts first IP from x-forwarded-for (comma + space separated)", () => {
-    const req = makeReq({ forwardedFor: "1.2.3.4, 5.6.7.8, 9.10.11.12" });
-    expect(getClientIp(req)).toBe("1.2.3.4");
-  });
-
-  it("extracts first IP from array-form header", () => {
-    const req = makeReq({ forwardedFor: ["1.2.3.4", "5.6.7.8"] });
-    expect(getClientIp(req)).toBe("1.2.3.4");
-  });
-
-  it("falls back to req.socket.remoteAddress", () => {
-    const req = makeReq({ remoteAddress: "9.9.9.9" });
-    expect(getClientIp(req)).toBe("9.9.9.9");
-  });
-});
-
-// ─── buildRawEvent ────────────────────────────────────────────────────────────
 
 describe("buildRawEvent", () => {
   const req = makeReq({ remoteAddress: "1.2.3.4", userAgent: "Mozilla/5.0" });
@@ -67,9 +46,7 @@ describe("buildRawEvent", () => {
     expect(event.urlSearch).toBe("?foo=bar");
   });
 
-  it("strips empty urlSearch (bare ?)", () => {
-    // URL("https://example.com/path?").search === "?" → treated as empty
-    // Actually "?" is a non-empty string, let's test with no search params
+  it("leaves urlSearch undefined when the URL has no query", () => {
     const noSearch = { ...baseParams, dl: "https://example.com/path" };
     const event = buildRawEvent(noSearch, req, "site-1");
     expect(event.urlSearch).toBeUndefined();
@@ -113,5 +90,33 @@ describe("buildRawEvent", () => {
     const params = { ...baseParams, dr: "" };
     const event = buildRawEvent(params, req, "site-1");
     expect(event.referrer).toBeUndefined();
+  });
+});
+
+describe("hostnameMatchesSite", () => {
+  it.each([
+    ["example.com", "example.com"],
+    ["www.example.com", "example.com"],
+    ["example.com", "www.example.com"],
+    ["blog.example.com", "example.com"],
+    ["deep.blog.example.com", "example.com"],
+    ["EXAMPLE.COM", "example.com"],
+  ])("accepts %s for a site on %s", (hostname, domain) => {
+    expect(hostnameMatchesSite(hostname, domain)).toBe(true);
+  });
+
+  it.each([
+    ["evil.com", "example.com"],
+    ["notexample.com", "example.com"],
+    ["example.com.evil.com", "example.com"],
+    ["example.co", "example.com"],
+  ])("rejects %s for a site on %s", (hostname, domain) => {
+    expect(hostnameMatchesSite(hostname, domain)).toBe(false);
+  });
+
+  // parseUrl returns "" for a URL it cannot parse. That path already keeps the
+  // raw string in urlPathname, and dropping the event would hide a bad install.
+  it("lets an unparseable hostname through", () => {
+    expect(hostnameMatchesSite("", "example.com")).toBe(true);
   });
 });

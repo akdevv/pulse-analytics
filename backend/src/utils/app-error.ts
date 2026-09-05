@@ -12,8 +12,8 @@ export const ErrorCode = {
 
 export type ErrorCode = (typeof ErrorCode)[keyof typeof ErrorCode];
 
-// Represents a known, user-facing error. Anything that isn't an AppError
-// is treated as an unexpected failure by the error middleware.
+// A known, user-facing error. The error middleware treats anything else
+// as an unexpected failure.
 export class AppError extends Error {
   public readonly type = "app";
   public readonly statusCode: number;

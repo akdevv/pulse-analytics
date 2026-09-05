@@ -28,8 +28,6 @@ beforeEach(() => {
   vi.clearAllMocks();
 });
 
-// ─── getCachedSite ────────────────────────────────────────────────────────────
-
 describe("getCachedSite", () => {
   it("cache HIT → returns parsed site, does NOT call getSiteByTrackingId", async () => {
     vi.mocked(redis.get).mockResolvedValue(JSON.stringify(mockSite));
@@ -82,18 +80,18 @@ describe("getCachedSite", () => {
     expect(getSiteByTrackingId).toHaveBeenCalledTimes(1);
   });
 
-  it("Redis error → falls back to getSiteByTrackingId", async () => {
+  // A Postgres fallback could not save the event anyway: the rate limiter
+  // fails closed on the same outage and BullMQ needs Redis to enqueue.
+  it("Redis error → drops the event without touching Postgres", async () => {
     vi.mocked(redis.get).mockRejectedValue(new Error("redis down"));
     vi.mocked(getSiteByTrackingId).mockResolvedValue(mockSite as any);
 
     const result = await getCachedSite("pk-rederror");
 
-    expect(getSiteByTrackingId).toHaveBeenCalledWith("pk-rederror");
-    expect(result).toEqual(mockSite);
+    expect(getSiteByTrackingId).not.toHaveBeenCalled();
+    expect(result).toBeNull();
   });
 });
-
-// ─── invalidateSiteCache ──────────────────────────────────────────────────────
 
 describe("invalidateSiteCache", () => {
   it("calls redis.del with correct key", async () => {

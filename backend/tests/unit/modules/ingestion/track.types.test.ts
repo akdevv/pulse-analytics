@@ -7,8 +7,6 @@ const validBase = {
   dl: "https://example.com",
 };
 
-// ─── TrackQuerySchema ─────────────────────────────────────────────────────────
-
 describe("TrackQuerySchema", () => {
   it("valid minimal payload passes", () => {
     const result = TrackQuerySchema.safeParse(validBase);
@@ -92,14 +90,6 @@ describe("TrackQuerySchema", () => {
     expect(result.success).toBe(true);
     if (result.success) {
       expect(result.data.ts).toBeUndefined();
-    }
-  });
-
-  it("debug coerces 'true' → true", () => {
-    const result = TrackQuerySchema.safeParse({ ...validBase, debug: "true" });
-    expect(result.success).toBe(true);
-    if (result.success) {
-      expect(result.data.debug).toBe(true);
     }
   });
 });

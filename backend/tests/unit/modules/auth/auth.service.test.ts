@@ -36,8 +36,6 @@ beforeEach(() => {
   vi.clearAllMocks();
 });
 
-// ─── registerUser ─────────────────────────────────────────────────────────────
-
 describe("registerUser", () => {
   it("missing email → throws AppError(400)", async () => {
     await expect(
@@ -105,22 +103,38 @@ describe("registerUser", () => {
   });
 });
 
-// ─── loginUser ────────────────────────────────────────────────────────────────
-
 describe("loginUser", () => {
-  it("user not found → throws AppError(404)", async () => {
+  // Different answers would tell an attacker which emails are registered, so
+  // the assertion is that the two are indistinguishable.
+  it("unknown email and wrong password fail the same way", async () => {
     vi.mocked(repo.findUserByEmail).mockResolvedValue(null);
-    await expect(
-      loginUser({ email: "nobody@example.com", password: "Password1" })
-    ).rejects.toMatchObject({ statusCode: 404 });
-  });
+    vi.mocked(bcrypt.compare).mockResolvedValue(false as never);
+    const unknown = await loginUser({
+      email: "nobody@example.com",
+      password: "Password1",
+    }).catch((e) => e);
 
-  it("wrong password → throws AppError(400)", async () => {
     vi.mocked(repo.findUserByEmail).mockResolvedValue(mockUser);
     vi.mocked(bcrypt.compare).mockResolvedValue(false as never);
-    await expect(
-      loginUser({ email: "alice@example.com", password: "WrongPass" })
-    ).rejects.toMatchObject({ statusCode: 400 });
+    const wrongPassword = await loginUser({
+      email: "alice@example.com",
+      password: "WrongPass",
+    }).catch((e) => e);
+
+    expect(unknown.statusCode).toBe(401);
+    expect(wrongPassword.statusCode).toBe(401);
+    expect(unknown.message).toBe(wrongPassword.message);
+  });
+
+  // Skipping bcrypt would return in ~1ms against ~100ms: the same disclosure
+  // by timing.
+  it("still runs a bcrypt compare when the user does not exist", async () => {
+    vi.mocked(repo.findUserByEmail).mockResolvedValue(null);
+    vi.mocked(bcrypt.compare).mockResolvedValue(false as never);
+    await loginUser({ email: "nobody@example.com", password: "x" }).catch(
+      () => {}
+    );
+    expect(bcrypt.compare).toHaveBeenCalled();
   });
 
   it("correct credentials → calls updateLastLoginAt, returns tokens", async () => {
@@ -144,8 +158,6 @@ describe("loginUser", () => {
   });
 });
 
-// ─── refreshTokenService ──────────────────────────────────────────────────────
-
 describe("refreshTokenService", () => {
   it("invalid/expired token → propagates jwt error", async () => {
     vi.mocked(jwt.verify).mockImplementation(() => {
@@ -168,8 +180,6 @@ describe("refreshTokenService", () => {
   });
 });
 
-// ─── getUserById ──────────────────────────────────────────────────────────────
-
 describe("getUserById", () => {
   it("user not found → returns null", async () => {
     vi.mocked(repo.findUserById).mockResolvedValue(null);
@@ -186,8 +196,6 @@ describe("getUserById", () => {
     expect(result).toMatchObject({ id: mockUser.id, email: mockUser.email });
   });
 });
-
-// ─── updateUserService ────────────────────────────────────────────────────────
 
 describe("updateUserService", () => {
   it("user not found → throws AppError(404)", async () => {
