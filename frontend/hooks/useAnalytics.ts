@@ -8,8 +8,6 @@ import {
   getDevices,
   getGeo,
   getRealtime,
-  getRawEvents,
-  runRawQuery,
   getCustomEvents,
   getEventProperties,
 } from "@/lib/api/analytics.api";
@@ -182,23 +180,4 @@ export function useRealtimeStream(siteId: string) {
   }, [siteId]);
 
   return { data, isLoading, error };
-}
-
-export function useRawEvents(siteId: string) {
-  return useQuery({
-    queryKey: ["raw-events", siteId],
-    queryFn: () => getRawEvents(siteId),
-    refetchInterval: 30_000,
-    staleTime: 0,
-    enabled: !!siteId,
-  });
-}
-
-export function useRawQuery(siteId: string, query: string) {
-  return useQuery({
-    queryKey: ["raw-query", siteId, query],
-    queryFn: () => runRawQuery(siteId, query),
-    enabled: false,
-    staleTime: 0,
-  });
 }

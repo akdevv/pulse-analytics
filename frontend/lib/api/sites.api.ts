@@ -8,10 +8,7 @@ import type {
 type CreateSiteResponse = {
   status: string;
   message: string;
-  data: {
-    site: Site;
-    embedCode: string;
-  };
+  data: Site;
 };
 
 type GetSitesResponse = {
@@ -56,5 +53,5 @@ export const deleteSite = async (id: string): Promise<void> => {
 
 export const regenTrackingKey = async (id: string): Promise<Site> => {
   const res: CreateSiteResponse = await api.post(`/sites/${id}/regen-key`);
-  return res.data.site;
+  return res.data;
 };

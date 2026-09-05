@@ -48,11 +48,3 @@ export const getEventProperties = async (
     params: { ...params, name },
   });
 };
-
-export const getRawEvents = async (siteId: string) => {
-  return api.get(`analytics/${siteId}/raw`);
-};
-
-export const runRawQuery = async (siteId: string, query: string) => {
-  return api.post(`analytics/${siteId}/raw-query`, { query });
-};

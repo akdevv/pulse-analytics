@@ -22,7 +22,6 @@ export function StepProgress({ currentStep }: StepProgressProps) {
           {steps.map((step, index) => {
             const isCompleted = step.number < currentStep;
             const isCurrent = step.number === currentStep;
-            const isUpcoming = step.number > currentStep;
 
             return (
               <div key={step.number} className="relative">

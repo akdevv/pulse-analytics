@@ -135,7 +135,7 @@ export function Nav() {
         </Link>
 
         <Link
-          href="/signup"
+          href="/register"
           className="pa-btn group inline-flex items-center gap-1.5 rounded-full px-4 py-2 text-[13px] font-medium text-charcoal"
           style={{
             background: `linear-gradient(180deg, ${ACCENT_SOFT}, ${ACCENT})`,

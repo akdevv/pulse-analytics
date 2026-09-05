@@ -62,7 +62,7 @@ export function GeoChart({ data, isLoading, error }: Props) {
         </div>
       ) : (
         <div className="space-y-2.5">
-          {data.map((row, i) => (
+          {data.map((row) => (
             <div key={row.country} className="flex items-center gap-3">
               <span className="w-5 shrink-0 text-center text-base leading-none select-none">
                 {toFlag(row.country)}

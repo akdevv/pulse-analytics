@@ -107,7 +107,7 @@ export function CTA() {
               }}
             >
               <Link
-                href="/signup"
+                href="/register"
                 className="pa-btn group inline-flex items-center justify-center gap-2 rounded-full px-6 py-3.5 text-[14px] font-semibold text-charcoal"
                 style={{
                   background: `linear-gradient(180deg, ${ACCENT_SOFT}, ${ACCENT})`,
