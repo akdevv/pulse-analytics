@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useParams } from "next/navigation";
 import { toast } from "sonner";
 import { GoCheck, GoCopy } from "react-icons/go";
@@ -11,8 +11,9 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { getSiteById } from "@/lib/api/sites.api";
-import type { Site } from "@/lib/types/site.types";
+import { Skeleton } from "@/components/ui/skeleton";
+import { useSite } from "@/hooks/useSites";
+import { getErrorMessage } from "@/lib/utils";
 
 function getCurlCommand(trackingId: string, domain: string) {
   const origin = domain.startsWith("http") ? domain : `https://${domain}`;
@@ -30,22 +31,31 @@ function getCurlCommand(trackingId: string, domain: string) {
 }
 
 // pulse.js appends /api/v1/track itself, so data-host is the API origin
-// without the /api/v1 suffix that NEXT_PUBLIC_API_URL carries.
-const apiOrigin = new URL(process.env.NEXT_PUBLIC_API_URL!).origin;
+// without the /api/v1 suffix that NEXT_PUBLIC_API_URL carries. Resolved per
+// render, not at module scope: `new URL(undefined!)` throws on import, which
+// takes down the route before it can say what is misconfigured.
+function getApiOrigin() {
+  const url = process.env.NEXT_PUBLIC_API_URL;
+  return url ? new URL(url).origin : "";
+}
 
 function getSnippet(trackingId: string) {
+  const apiOrigin = getApiOrigin();
   return `<!-- Pulse Analytics -->
 <script src="${apiOrigin}/pulse.js" data-tid="${trackingId}" data-host="${apiOrigin}"></script>`;
 }
 
 function CopyButton({ text }: { text: string }) {
   const [copied, setCopied] = useState(false);
+  const resetTimer = useRef<ReturnType<typeof setTimeout>>(undefined);
+
+  useEffect(() => () => clearTimeout(resetTimer.current), []);
 
   const handleCopy = async () => {
     await navigator.clipboard.writeText(text);
     setCopied(true);
     toast.success("Copied to clipboard!");
-    setTimeout(() => setCopied(false), 2000);
+    resetTimer.current = setTimeout(() => setCopied(false), 2000);
   };
 
   return (
@@ -54,7 +64,7 @@ function CopyButton({ text }: { text: string }) {
       className="flex items-center gap-1.5 rounded-md border px-2.5 py-1.5 text-xs font-medium text-muted-foreground transition-all hover:bg-accent hover:text-foreground"
     >
       {copied ? (
-        <GoCheck className="size-3.5 text-green-500" />
+        <GoCheck className="text-success size-3.5" />
       ) : (
         <GoCopy className="size-3.5" />
       )}
@@ -65,22 +75,27 @@ function CopyButton({ text }: { text: string }) {
 
 export default function SiteSetupPage() {
   const { id } = useParams<{ id: string }>();
-  const [site, setSite] = useState<Site | null>(null);
-  const [loading, setLoading] = useState(true);
+  const { data: site, isLoading, error } = useSite(id);
 
-  useEffect(() => {
-    getSiteById(id)
-      .then(setSite)
-      .finally(() => setLoading(false));
-  }, [id]);
-
-  if (loading) {
-    return <div className="p-1 text-sm text-muted-foreground">Loading...</div>;
+  if (isLoading) {
+    return (
+      <div className="space-y-6 p-1">
+        <div className="grid gap-3 sm:grid-cols-3">
+          {Array.from({ length: 3 }).map((_, i) => (
+            <Skeleton key={i} className="h-20 rounded-xl" />
+          ))}
+        </div>
+        <Skeleton className="h-40 rounded-xl" />
+        <Skeleton className="h-40 rounded-xl" />
+      </div>
+    );
   }
 
-  if (!site) {
+  if (error || !site) {
     return (
-      <div className="p-1 text-sm text-muted-foreground">Site not found.</div>
+      <p className="p-1 text-sm text-destructive">
+        {getErrorMessage(error, "Site not found.")}
+      </p>
     );
   }
 

@@ -1,10 +1,8 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import { useParams, usePathname } from "next/navigation";
 import Link from "next/link";
-import { getSiteById } from "@/lib/api/sites.api";
-import type { Site } from "@/lib/types/site.types";
+import { useSite } from "@/hooks/useSites";
 
 const TABS = [
   { label: "Analytics", href: (id: string) => `/dashboard/sites/${id}` },
@@ -23,13 +21,7 @@ export default function SiteLayout({
 }) {
   const { id } = useParams<{ id: string }>();
   const pathname = usePathname();
-  const [site, setSite] = useState<Site | null>(null);
-
-  useEffect(() => {
-    getSiteById(id)
-      .then(setSite)
-      .catch(() => null);
-  }, [id]);
+  const { data: site, error } = useSite(id);
 
   return (
     <div className="flex h-full flex-col">
@@ -59,6 +51,11 @@ export default function SiteLayout({
                 {site.domain}
               </span>
             </>
+          ) : error ? (
+            // A deleted or foreign site used to sit on a skeleton forever.
+            <h1 className="text-xl font-semibold tracking-tight text-destructive">
+              Site unavailable
+            </h1>
           ) : (
             <div className="h-7 w-40 animate-pulse rounded-md bg-muted" />
           )}

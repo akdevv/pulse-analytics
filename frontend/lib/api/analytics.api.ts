@@ -7,7 +7,6 @@ import type {
   OverviewStats,
   PageStat,
   PropertyStat,
-  RealtimeStats,
   ReferrerStat,
   TimeseriesPoint,
 } from "@/lib/types/analytics.types";
@@ -29,9 +28,6 @@ export const getDevices = (siteId: string, params: DateRangeParams) =>
 
 export const getGeo = (siteId: string, params: DateRangeParams) =>
   apiGet<GeoStat[]>(`analytics/${siteId}/geo`, { params });
-
-export const getRealtime = (siteId: string) =>
-  apiGet<RealtimeStats>(`analytics/${siteId}/realtime`);
 
 export const getCustomEvents = (siteId: string, params: DateRangeParams) =>
   apiGet<EventStat[]>(`analytics/${siteId}/events`, { params });

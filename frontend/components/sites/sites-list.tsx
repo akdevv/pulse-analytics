@@ -1,35 +1,35 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import Link from "next/link";
 import { SiteCard } from "@/components/sites/site-card";
-import { getSites } from "@/lib/api/sites.api";
-import type { Site } from "@/lib/types/site.types";
+import { Skeleton } from "@/components/ui/skeleton";
+import { useSites } from "@/hooks/useSites";
+import { getErrorMessage } from "@/lib/utils";
 
 export function SitesList() {
-  const [sites, setSites] = useState<Site[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { data: sites, isLoading, error } = useSites();
 
-  useEffect(() => {
-    (async () => {
-      try {
-        const data = await getSites();
-        setSites(data);
-      } catch (err) {
-        console.error("Failed to fetch sites:", err);
-      } finally {
-        setLoading(false);
-      }
-    })();
-  }, []);
-
-  if (loading) {
+  if (isLoading) {
     return (
-      <div className="text-sm text-muted-foreground">Loading sites...</div>
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        {Array.from({ length: 3 }).map((_, i) => (
+          <Skeleton key={i} className="h-32 rounded-xl" />
+        ))}
+      </div>
     );
   }
 
-  if (sites?.length === 0) {
+  // Distinct from the empty state below — a failed request used to render as
+  // "No sites yet", which reads as data loss.
+  if (error) {
+    return (
+      <p className="text-sm text-destructive">
+        {getErrorMessage(error, "Failed to load sites.")}
+      </p>
+    );
+  }
+
+  if (!sites?.length) {
     return (
       <div className="text-sm text-muted-foreground">
         No sites yet.{" "}

@@ -50,7 +50,9 @@ export default function Login() {
       await login(data.email, data.password);
       router.push("/dashboard");
     } catch (err) {
-      setError(err instanceof Error ? err.message : "An unknown error occurred");
+      setError(
+        err instanceof Error ? err.message : "An unknown error occurred"
+      );
     } finally {
       setLoading(false);
     }

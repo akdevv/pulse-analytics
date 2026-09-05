@@ -133,10 +133,7 @@ const PASSWORD_RULES: { label: string; test: (v: string) => boolean }[] = [
 function PasswordRules({ value }: { value: string }) {
   const { formDescriptionId } = useFormField();
   return (
-    <ul
-      id={formDescriptionId}
-      className="mt-2.5 flex flex-wrap gap-1.5"
-    >
+    <ul id={formDescriptionId} className="mt-2.5 flex flex-wrap gap-1.5">
       {PASSWORD_RULES.map(({ label, test }) => {
         const met = value.length > 0 && test(value);
         return (
@@ -207,7 +204,9 @@ export default function Register() {
       await register(data.name, data.email, data.password);
       router.push("/dashboard");
     } catch (err) {
-      setError(err instanceof Error ? err.message : "An unknown error occurred");
+      setError(
+        err instanceof Error ? err.message : "An unknown error occurred"
+      );
     } finally {
       setLoading(false);
     }

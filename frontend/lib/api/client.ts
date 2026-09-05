@@ -125,9 +125,7 @@ export const apiPatch = <T>(
   config?: AxiosRequestConfig
 ) => api.patch<never, Envelope<T>>(url, body, config).then((r) => r.data);
 
-export const apiDelete = <T = void>(
-  url: string,
-  config?: AxiosRequestConfig
-) => api.delete<never, Envelope<T>>(url, config).then((r) => r.data);
+export const apiDelete = <T = void>(url: string, config?: AxiosRequestConfig) =>
+  api.delete<never, Envelope<T>>(url, config).then((r) => r.data);
 
 export default api;

@@ -74,7 +74,11 @@ export function Hero() {
               className="text-ink/55 transition-transform duration-200 ease-[var(--ease-out)] group-hover:translate-x-0.5"
               aria-hidden
             >
-              <path d="M9 6l6 6-6 6" strokeLinecap="round" strokeLinejoin="round" />
+              <path
+                d="M9 6l6 6-6 6"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
             </svg>
           </Link>
         </Reveal>
@@ -99,7 +103,10 @@ export function Hero() {
 
         <Reveal delay={180}>
           <div className="mt-9 flex flex-col items-stretch justify-center gap-2.5 sm:flex-row sm:items-center">
-            <PrimaryButton href="/register" className="justify-center px-6 py-3">
+            <PrimaryButton
+              href="/register"
+              className="justify-center px-6 py-3"
+            >
               Try the demo
             </PrimaryButton>
             <GhostButton href="#how-it-works" className="justify-center">

@@ -12,7 +12,7 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { createSite } from "@/lib/api/sites.api";
+import { useCreateSite } from "@/hooks/useSites";
 import { getErrorMessage } from "@/lib/utils";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
@@ -35,6 +35,7 @@ type FormData = z.infer<typeof formSchema>;
 
 export function NewSiteForm() {
   const router = useRouter();
+  const createSite = useCreateSite();
   const form = useForm<FormData>({
     resolver: zodResolver(formSchema),
     defaultValues: { name: "", domain: "" },
@@ -42,7 +43,9 @@ export function NewSiteForm() {
 
   const onSubmit = async (data: FormData) => {
     try {
-      const site = await createSite(data);
+      // Through the mutation, so the cached sites list is invalidated and the
+      // new site is there when the user navigates back to it.
+      const site = await createSite.mutateAsync(data);
       toast.success("Site created successfully!");
       router.push(`/dashboard/sites/${site.id}/setup`);
     } catch (err) {

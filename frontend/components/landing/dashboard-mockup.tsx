@@ -1,7 +1,15 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { ACCENT, ACCENT_SOFT, BG, DISPLAY, POWDER, SURFACE_1, SURFACE_2 } from "./tokens";
+import {
+  ACCENT,
+  ACCENT_SOFT,
+  BG,
+  DISPLAY,
+  POWDER,
+  SURFACE_1,
+  SURFACE_2,
+} from "./tokens";
 import { PulseLogo } from "./shared";
 
 /* ── Series ────────────────────────────────────────────────────
@@ -37,7 +45,9 @@ function series(
     const hour = perDay === 1 ? 14 : (i % perDay) * (24 / perDay);
     /* gaussian around 14:00 with a floor for overnight traffic */
     const diurnal =
-      perDay === 1 ? 1 : 0.26 + 0.74 * Math.exp(-Math.pow((hour - 14) / 6.2, 2));
+      perDay === 1
+        ? 1
+        : 0.26 + 0.74 * Math.exp(-Math.pow((hour - 14) / 6.2, 2));
     const trend = 1 + growth * (i / (n - 1));
     return Math.max(
       6,
@@ -97,9 +107,9 @@ const tick = (n: number) =>
 function niceScale(max: number) {
   const raw = max / 3;
   const mag = Math.pow(10, Math.floor(Math.log10(raw)));
-  const step = ([1, 1.2, 1.5, 2, 2.5, 3, 4, 5, 6, 8, 10].find(
-    (m) => m * mag >= raw
-  ) ?? 10) * mag;
+  const step =
+    ([1, 1.2, 1.5, 2, 2.5, 3, 4, 5, 6, 8, 10].find((m) => m * mag >= raw) ??
+      10) * mag;
   return { yMax: step * 3.4, ticks: [step * 3, step * 2, step, 0] };
 }
 
@@ -147,7 +157,14 @@ function buildView(cfg: {
   stamps: string[];
   cadence: string;
 }) {
-  const cur = series(cfg.seed, cfg.n, cfg.perDay, cfg.dayOffset, cfg.base, cfg.growth);
+  const cur = series(
+    cfg.seed,
+    cfg.n,
+    cfg.perDay,
+    cfg.dayOffset,
+    cfg.base,
+    cfg.growth
+  );
   const prev = series(
     cfg.prevSeed,
     cfg.n,
@@ -265,8 +282,7 @@ const REALTIME_BARS = [
    font. The rail's routes are the app's real ones: /sites and /account,
    with a site's own Overview, Setup and Settings beneath. */
 const ICON = {
-  site:
-    "M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18M3.3 9.5h17.4M3.3 14.5h17.4M12 3c-2.3 2.5-3.5 5.5-3.5 9s1.2 6.5 3.5 9c2.3-2.5 3.5-5.5 3.5-9S14.3 5.5 12 3",
+  site: "M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18M3.3 9.5h17.4M3.3 14.5h17.4M12 3c-2.3 2.5-3.5 5.5-3.5 9s1.2 6.5 3.5 9c2.3-2.5 3.5-5.5 3.5-9S14.3 5.5 12 3",
   account:
     "M4.8 20v-1.2A4.8 4.8 0 0 1 9.6 14h4.8a4.8 4.8 0 0 1 4.8 4.8V20M12 11a3.6 3.6 0 1 0 0-7.2 3.6 3.6 0 0 0 0 7.2",
   overview: "M4 13h3.6v7H4zM10.2 4h3.6v16h-3.6zM16.4 9H20v11h-3.6z",
@@ -280,7 +296,8 @@ const ICON = {
   panel: "M4.5 5.5h15v13h-15zM9.75 5.5v13",
   back: "m14 6-6 6 6 6",
   forward: "m10 6 6 6-6 6",
-  share: "M12 3.5v10M8.5 7 12 3.5 15.5 7M6.5 11.5V19a1 1 0 0 0 1 1h9a1 1 0 0 0 1-1v-7.5",
+  share:
+    "M12 3.5v10M8.5 7 12 3.5 15.5 7M6.5 11.5V19a1 1 0 0 0 1 1h9a1 1 0 0 0 1-1v-7.5",
   plus: "M12 5.5v13M5.5 12h13",
   tabs: "M4.5 7h9v9h-9zM10.5 9.5h9v9h-9",
 } as const;
@@ -719,9 +736,7 @@ function TrafficChart({
   const plot = useMemo(() => {
     const values = view.values.map((v) => v * factor);
     const prevValues = view.prevValues.map((v) => v * factor);
-    const { yMax, ticks } = niceScale(
-      Math.max(...values, ...prevValues)
-    );
+    const { yMax, ticks } = niceScale(Math.max(...values, ...prevValues));
     return {
       values,
       prevValues,
@@ -858,7 +873,9 @@ function TrafficChart({
                   y1={(1 - t / plot.yMax) * CHART_H}
                   y2={(1 - t / plot.yMax) * CHART_H}
                   stroke={
-                    t === 0 ? "rgba(229,227,210,0.12)" : "rgba(229,227,210,0.05)"
+                    t === 0
+                      ? "rgba(229,227,210,0.12)"
+                      : "rgba(229,227,210,0.05)"
                   }
                   vectorEffect="non-scaling-stroke"
                 />
@@ -893,7 +910,8 @@ function TrafficChart({
                 style={{
                   strokeDasharray: 4200,
                   strokeDashoffset: 4200,
-                  animation: "pa-chart-draw 1.6s var(--ease-out) 0.15s forwards",
+                  animation:
+                    "pa-chart-draw 1.6s var(--ease-out) 0.15s forwards",
                   filter: "drop-shadow(0 0 8px var(--pa-accent-glow))",
                 }}
               />
@@ -1114,4 +1132,3 @@ function Delta({ value }: { value: number }) {
     </span>
   );
 }
-

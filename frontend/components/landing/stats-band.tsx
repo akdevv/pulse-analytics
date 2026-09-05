@@ -10,9 +10,7 @@ const STATS = [
 
 export function StatsBand() {
   return (
-    <section
-      className="relative border-y border-ink/8 bg-charcoal"
-    >
+    <section className="relative border-y border-ink/8 bg-charcoal">
       <div className="mx-auto max-w-6xl px-6">
         <div className="grid grid-cols-2 divide-x divide-y divide-ink/8 lg:grid-cols-4 lg:divide-y-0">
           {STATS.map(({ value, label }, i) => (

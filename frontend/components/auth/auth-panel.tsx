@@ -63,11 +63,7 @@ function Grain() {
   );
 }
 
-function Figures({
-  size = "lg",
-}: {
-  size?: "lg" | "sm";
-}) {
+function Figures({ size = "lg" }: { size?: "lg" | "sm" }) {
   const big = size === "lg";
   return (
     <div className={`flex ${big ? "gap-10 xl:gap-12" : "gap-7"}`}>
