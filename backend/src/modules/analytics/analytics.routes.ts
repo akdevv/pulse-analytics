@@ -10,6 +10,8 @@ import {
   getRealtime,
   streamRealtime,
   getRawEvents,
+  getCustomEvents,
+  getEventProperties,
 } from "./analytics.controller.ts";
 
 const router: Router = express.Router();
@@ -22,6 +24,12 @@ router.get("/:siteId/devices", authenticateToken, getDevices);
 router.get("/:siteId/geo", authenticateToken, getGeo);
 router.get("/:siteId/realtime", authenticateToken, getRealtime);
 router.get("/:siteId/realtime/stream", authenticateToken, streamRealtime);
+router.get("/:siteId/events", authenticateToken, getCustomEvents);
+router.get(
+  "/:siteId/events/properties",
+  authenticateToken,
+  getEventProperties
+);
 router.get("/:siteId/raw", authenticateToken, getRawEvents);
 
 export default router;

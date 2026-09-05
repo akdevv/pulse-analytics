@@ -7,6 +7,8 @@ import type {
   DeviceStats,
   GeoStat,
   RealtimeStats,
+  EventStat,
+  PropertyStat,
 } from "./analytics.types.ts";
 
 export const getSiteForUser = async (siteId: string, userId: string) => {
@@ -176,7 +178,7 @@ export async function getGeo(
 
 // Intentionally hits raw events — aggregates are too stale for "right now".
 export async function getRealtime(siteId: string): Promise<RealtimeStats> {
-  const [summaryRows, pageRows, referrerRows] = await Promise.all([
+  const [summaryRows, pageRows, referrerRows, eventRows] = await Promise.all([
     prisma.$queryRaw<
       { activeSessions: number; pageviews: number; visitors: number }[]
     >`
@@ -216,6 +218,19 @@ export async function getRealtime(siteId: string): Promise<RealtimeStats> {
       ORDER BY "activeSessions" DESC
       LIMIT 5
     `,
+    prisma.$queryRaw<{ name: string; count: number }[]>`
+      SELECT
+        "eventName"   AS name,
+        COUNT(*)::int AS count
+      FROM events
+      WHERE "siteId"     = ${siteId}
+        AND "receivedAt" >= NOW() - INTERVAL '5 minutes'
+        AND "eventType"  <> 'PAGEVIEW'
+        AND "eventName"  IS NOT NULL
+      GROUP BY "eventName"
+      ORDER BY count DESC
+      LIMIT 5
+    `,
   ]);
 
   return {
@@ -224,7 +239,73 @@ export async function getRealtime(siteId: string): Promise<RealtimeStats> {
     visitors: summaryRows[0]?.visitors ?? 0,
     activePages: pageRows,
     topReferrers: referrerRows,
+    events: eventRows,
   };
+}
+
+// Raw events, not an aggregate: both continuous aggregates filter on
+// eventType = 'PAGEVIEW', so custom events are in neither. Ranges use
+// "receivedAt" — the partition column, so chunks are pruned, and the same one
+// the aggregates bucket on, so these numbers agree with the pageview cards.
+//
+// Matches on eventName rather than eventType = 'CUSTOM' because CLICK events
+// carry a name too, and excluding them would just hide events.
+export async function getCustomEvents(
+  siteId: string,
+  from: Date,
+  to: Date,
+  limit: number
+): Promise<EventStat[]> {
+  return prisma.$queryRaw<EventStat[]>`
+    SELECT
+      "eventName"                      AS "eventName",
+      COUNT(*)::int                    AS count,
+      COUNT(DISTINCT "visitorId")::int AS visitors
+    FROM events
+    WHERE "siteId"     = ${siteId}
+      AND "receivedAt" >= ${from}
+      AND "receivedAt" <  ${to}
+      AND "eventType"  <> 'PAGEVIEW'
+      AND "eventName"  IS NOT NULL
+    GROUP BY "eventName"
+    ORDER BY count DESC
+    LIMIT ${limit}
+  `;
+}
+
+// Counts every (key, value) pair across the event's properties in one query,
+// so there is no per-key endpoint.
+//
+// Do not simplify the CASE away. track.types.ts parses `ep` with a bare
+// JSON.parse, so ep=[1,2] lands a non-object in the column and jsonb_each_text
+// throws on it. A WHERE guard does not help: the lateral join runs per row
+// before WHERE filters, so one bad row anywhere in range fails the query.
+export async function getEventProperties(
+  siteId: string,
+  eventName: string,
+  from: Date,
+  to: Date
+): Promise<PropertyStat[]> {
+  return prisma.$queryRaw<PropertyStat[]>`
+    SELECT
+      prop.key      AS key,
+      prop.value    AS value,
+      COUNT(*)::int AS count
+    FROM events e,
+      LATERAL jsonb_each_text(
+        CASE WHEN jsonb_typeof(e."eventProperties") = 'object'
+             THEN e."eventProperties"
+             ELSE '{}'::jsonb
+        END
+      ) AS prop(key, value)
+    WHERE e."siteId"     = ${siteId}
+      AND e."receivedAt" >= ${from}
+      AND e."receivedAt" <  ${to}
+      AND e."eventName"  = ${eventName}
+    GROUP BY prop.key, prop.value
+    ORDER BY prop.key ASC, count DESC
+    LIMIT 200
+  `;
 }
 
 export async function getRawEvents(siteId: string) {

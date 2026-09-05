@@ -1,10 +1,30 @@
 A pageview tells you someone arrived. A custom event tells you what they did once they were there: signed up, upgraded, played the video, gave up on the form.
 
-Custom events need the npm package. The script tag version of Pulse handles pageviews only and exposes no API to call.
+There are two ways to send one. Add a `data-pulse-event` attribute to an element and Pulse tracks the click for you, or call `Pulse.trackEvent()` from your own code. Both work with the script tag and with the npm package.
 
-> Reporting on custom events is still being built. Events you send today are validated, enriched, and stored with everything else, and they will appear once the events view ships. The dashboard cannot show them yet, so treat this page as the writing half of the feature.
+## The no-code way
+
+Put the event name on the element. Pulse listens for clicks on the whole document, so this works on elements added to the page later, and you write no JavaScript at all.
+
+```html
+<button data-pulse-event="hire_me_click">Hire me</button>
+```
+
+Properties go in a second attribute, as JSON:
+
+```html
+<button data-pulse-event="plan_picked" data-pulse-props='{"plan":"pro"}'>
+  Choose Pro
+</button>
+```
+
+Mind the quoting: the attribute is wrapped in single quotes because JSON uses double quotes inside. If the JSON does not parse, Pulse warns in the console and sends the event without properties rather than dropping it.
+
+This is the whole feature on a static site. No bundler, no module script, nothing to import.
 
 ## Sending an event
+
+For anything a click attribute cannot express — an event fired on success, on a timer, or from a form handler — call `trackEvent` directly.
 
 ```ts
 import { Pulse } from "@akdevv/pulse/sdk";
@@ -12,7 +32,15 @@ import { Pulse } from "@akdevv/pulse/sdk";
 Pulse.trackEvent("signup_completed", { plan: "pro", source: "pricing_page" });
 ```
 
-The name is required. Properties are optional.
+The name is required. Properties are optional. On the script tag install the same function is on the global, with no import:
+
+```html
+<script>
+  Pulse.trackEvent("signup_completed", { plan: "pro" });
+</script>
+```
+
+A few more shapes:
 
 ```ts
 Pulse.trackEvent("video_play");
@@ -20,7 +48,7 @@ Pulse.trackEvent("checkout_started", { cart_value: 49, currency: "USD" });
 Pulse.trackEvent("nav_click", { target: "docs", collapsed: true });
 ```
 
-`init` has to have run first. Call `trackEvent` before it and the SDK logs a warning and drops the event rather than firing at a host it does not know.
+With the npm package, `init` has to have run first. Call `trackEvent` before it and the SDK logs a warning and drops the event rather than firing at a host it does not know. The script tag initialises itself, so there is no ordering to get wrong beyond loading the script.
 
 ## In a React app
 
@@ -47,23 +75,27 @@ Fire the event before you navigate. The request uses `keepalive`, so the browser
 
 ## Without a framework
 
-One delegated listener covers every button on the page and survives DOM updates:
+Nothing to wire up. The script tag already installs the click listener and the global:
 
 ```html
-<button data-track="hero_cta">Get started</button>
+<script
+  src="{{API_ORIGIN}}/pulse.js"
+  data-tid="pk-..."
+  data-host="{{API_ORIGIN}}"
+></script>
 
-<script type="module">
-  // Any ESM CDN works. With a bundler, import from "@akdevv/pulse/sdk".
-  import { Pulse } from "https://esm.sh/@akdevv/pulse/sdk";
-
-  Pulse.init({ siteId: "pk-...", apiHost: "{{API_ORIGIN}}" });
-
-  document.addEventListener("click", (e) => {
-    const el = e.target.closest("[data-track]");
-    if (el) Pulse.trackEvent(el.dataset.track);
-  });
-</script>
+<button data-pulse-event="hero_cta">Get started</button>
 ```
+
+## Seeing them
+
+Custom events show up in two places on the site dashboard.
+
+The **Custom Events** card lists every event name in the selected range with its total count and how many distinct visitors fired it. Click a row and it expands into a breakdown of the properties that came with it, grouped by key, with a count per value — which is where `plan: pro` beats `plan: free` becomes a number you can read.
+
+The **Realtime** panel has a Live Events column showing named events from the last five minutes. That is the one to watch while you are wiring an event up: click the button, and the name should appear within about five seconds.
+
+If an event never appears, the name is the thing to check first. Pulse groups on the exact string it received.
 
 ## Naming
 

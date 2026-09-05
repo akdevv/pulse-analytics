@@ -44,4 +44,17 @@ export interface RealtimeStats {
   visitors: number;
   activePages: { path: string; activeSessions: number; pageviews: number }[];
   topReferrers: { referrer: string | null; activeSessions: number }[];
+  events: { name: string; count: number }[];
+}
+
+export interface EventStat {
+  eventName: string;
+  count: number;
+  visitors: number;
+}
+
+export interface PropertyStat {
+  key: string;
+  value: string;
+  count: number;
 }

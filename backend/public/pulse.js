@@ -4,6 +4,8 @@
   var currentScript = document.currentScript;
   var tid = currentScript.getAttribute("data-tid");
   var host = currentScript.getAttribute("data-host") || "http://localhost:8000";
+  // Off by default. A site's console is not ours to fill with one line per click.
+  var debug = currentScript.getAttribute("data-debug") === "true";
 
   if (!tid) {
     console.warn(
@@ -57,13 +59,13 @@
     };
   }
 
-  function sendPageView() {
+  function send(eventType, eventName, properties) {
     var pageData = collectPageData();
 
     var params = new URLSearchParams({
       v: "1",
       tid: tid,
-      t: "PAGEVIEW",
+      t: eventType,
       cid: getVisitorId(),
       sid: getSessionId(),
       dl: pageData.dl,
@@ -74,14 +76,27 @@
       ul: pageData.ul,
       z: Math.random(), // cache buster
     });
+
+    if (eventName) params.set("en", eventName);
+    if (properties && Object.keys(properties).length > 0) {
+      params.set("ep", JSON.stringify(properties));
+    }
+
     var url = host + "/api/v1/track?" + params.toString();
 
-    // fire & forget - we don't await or handle the response
-    fetch(url, { method: "POST" }).catch(function (err) {
+    // keepalive so an event fired from a click that navigates away still
+    // finishes sending while the page is tearing down
+    fetch(url, { method: "POST", keepalive: true }).catch(function (err) {
       // silent error handle - never break host page
-      console.warn("@pulse: failed to send pageview.", err);
+      console.warn("@pulse: failed to send event.", err);
     });
-    console.log("@pulse: pageview tracked —", pageData.dl);
+    if (debug) {
+      console.log("@pulse: tracked —", eventName || eventType, pageData.dl);
+    }
+  }
+
+  function sendPageView() {
+    send("PAGEVIEW");
   }
 
   // SPA navigation detection
@@ -102,6 +117,45 @@
   window.addEventListener("pulse:navigation", function () {
     sendPageView();
   });
+
+  // Declarative click tracking. One delegated listener on the document covers
+  // every element, including ones added to the DOM later, which is the whole
+  // point on a site with no bundler:
+  //   <button data-pulse-event="hire_me_click">Hire me</button>
+  //   <button data-pulse-event="plan_picked" data-pulse-props='{"plan":"pro"}'>
+  document.addEventListener("click", function (e) {
+    var el = e.target && e.target.closest && e.target.closest("[data-pulse-event]");
+    if (!el) return;
+
+    var name = el.getAttribute("data-pulse-event");
+    if (!name) return;
+
+    var raw = el.getAttribute("data-pulse-props");
+    var props;
+    if (raw) {
+      try {
+        props = JSON.parse(raw);
+      } catch (err) {
+        // Bad JSON in an attribute must not cost the event. Send it unadorned.
+        console.warn("@pulse: data-pulse-props is not valid JSON.", raw, err);
+      }
+    }
+
+    send("CUSTOM", name, props);
+  });
+
+  // Public API for anything the attribute cannot express.
+  //   Pulse.trackEvent("signup_completed", { plan: "pro" })
+  window.Pulse = {
+    trackEvent: function (eventName, properties) {
+      if (!eventName) {
+        console.warn("@pulse: trackEvent needs an event name.");
+        return;
+      }
+      send("CUSTOM", eventName, properties);
+    },
+    trackPageview: sendPageView,
+  };
 
   // initial pageview on load
   sendPageView();

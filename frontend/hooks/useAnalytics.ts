@@ -10,6 +10,8 @@ import {
   getRealtime,
   getRawEvents,
   runRawQuery,
+  getCustomEvents,
+  getEventProperties,
 } from "@/lib/api/analytics.api";
 import { getAccessToken } from "@/lib/api/client";
 import type {
@@ -68,6 +70,29 @@ export function useGeo(siteId: string, params: DateRangeParams) {
     queryFn: () => getGeo(siteId, params),
     staleTime: 60_000,
     enabled: !!siteId,
+  });
+}
+
+export function useCustomEvents(siteId: string, params: DateRangeParams) {
+  return useQuery({
+    queryKey: ["custom-events", siteId, params.from, params.to, params.limit],
+    queryFn: () => getCustomEvents(siteId, params),
+    staleTime: 60_000,
+    enabled: !!siteId,
+  });
+}
+
+/** Only fires once a row is selected — the breakdown is a click-to-expand. */
+export function useEventProperties(
+  siteId: string,
+  name: string | null,
+  params: DateRangeParams
+) {
+  return useQuery({
+    queryKey: ["event-properties", siteId, name, params.from, params.to],
+    queryFn: () => getEventProperties(siteId, name!, params),
+    staleTime: 60_000,
+    enabled: !!siteId && !!name,
   });
 }
 
