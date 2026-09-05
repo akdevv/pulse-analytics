@@ -64,6 +64,10 @@
   --radius-xl: calc(var(--radius) + 4px);
 }
 
+/* The light layer. Nothing renders it today — <html> carries `dark`, and the
+   product is dark throughout by decision, not by default. It is kept as the
+   base the .dark block overrides, and as the starting point if a light theme
+   is ever wanted; it has never been seen on screen, so treat it as untested. */
 :root {
   --radius: 0.75rem;
   --background: oklch(0.9723 0.008 98.8783);
@@ -113,6 +117,7 @@
 }
 
 .dark {
+  color-scheme: dark;
   --background: oklch(0.2002 0 0);
   --foreground: oklch(0.9128 0.0228 101.3697);
   --card: oklch(0.235 0 0);
