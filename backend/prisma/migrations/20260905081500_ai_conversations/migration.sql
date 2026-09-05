@@ -1,7 +1,6 @@
--- Hand-written, not generated. `prisma migrate dev` cannot be used in this repo:
--- the TimescaleDB migrations in db/migrations touch the events table, Prisma
--- reads that as drift, and its only remedy is to reset the database. New tables
--- go in as SQL, get applied, and are marked resolved.
+-- Hand-written. `prisma migrate dev` reads the TimescaleDB objects in
+-- db/migrations as drift and would reset the database, so new tables go in as
+-- SQL, get applied, then are marked resolved.
 
 CREATE TYPE "AiRole" AS ENUM ('USER', 'ASSISTANT');
 

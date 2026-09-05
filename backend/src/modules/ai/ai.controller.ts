@@ -1,15 +1,10 @@
 import type { Request, Response } from "express";
-import { AppError } from "@/utils/app-error.ts";
 import * as AiService from "./ai.service.ts";
 import { askSchema } from "./ai.types.ts";
+import { paramOf, userIdOf } from "@/utils/request-scope.ts";
 
-const siteIdOf = (req: Request): string => {
-  const siteId = req.params.siteId as string;
-  if (!siteId) throw AppError.validation("Site ID is required");
-  return siteId;
-};
+const siteIdOf = (req: Request): string => paramOf(req, "siteId", "Site ID");
 
-// POST /:siteId/ask
 export const ask = async (req: Request, res: Response) => {
   const parsed = askSchema.safeParse(req.body);
   if (!parsed.success) {
@@ -18,13 +13,12 @@ export const ask = async (req: Request, res: Response) => {
 
   const result = await AiService.ask(
     siteIdOf(req),
-    req.user!.userId,
+    userIdOf(req),
     parsed.data.question,
     parsed.data.conversationId
   );
 
-  // SQL the model wrote twice and the database refused twice is a real answer
-  // to give the user, not a server fault — 422, not 500.
+  // SQL the model got wrong twice is an answer, not a server fault.
   const status = result.kind === "error" ? 422 : 200;
 
   return res.status(status).json({
@@ -33,27 +27,24 @@ export const ask = async (req: Request, res: Response) => {
   });
 };
 
-// GET /:siteId/conversations
 export const listConversations = async (req: Request, res: Response) => {
-  const data = await AiService.listConversations(siteIdOf(req), req.user!.userId);
+  const data = await AiService.listConversations(siteIdOf(req), userIdOf(req));
   return res.status(200).json({ status: "success", data });
 };
 
-// DELETE /:siteId/conversations/:conversationId
 export const deleteConversation = async (req: Request, res: Response) => {
   await AiService.deleteConversation(
     siteIdOf(req),
-    req.user!.userId,
+    userIdOf(req),
     req.params.conversationId as string
   );
   return res.status(204).send();
 };
 
-// GET /:siteId/conversations/:conversationId
 export const getConversation = async (req: Request, res: Response) => {
   const data = await AiService.getConversation(
     siteIdOf(req),
-    req.user!.userId,
+    userIdOf(req),
     req.params.conversationId as string
   );
   return res.status(200).json({ status: "success", data });

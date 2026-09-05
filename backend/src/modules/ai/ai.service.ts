@@ -15,38 +15,31 @@ import {
   type ModelReply,
 } from "./ai.types.ts";
 
-// Free tiers are slow under load; 20s is generous but bounded.
+// Free tiers are slow under load.
 const AI_TIMEOUT_MS = 20_000;
 
-// How many past statements to re-run when a thread is opened. Each one can hold
-// a connection for up to the runner's 5s statement_timeout, on a pool of 2 that
-// asks also share — so this is a latency and starvation budget, not a display
-// preference. Older answers in a long thread show their SQL without rows.
+// Statements re-run when a thread opens. Each can hold one of the pool's 2
+// connections for the runner's full 5s, so this is a starvation budget, not a
+// display choice. Older answers in a long thread show SQL without rows.
 const REPLAY_LIMIT = 4;
 
-// Prompts live in .md files so they can be read and edited as prose rather than
-// as escaped template literals. Read once at startup: they never change
-// while the process runs, and a missing file should fail loudly at boot rather
-// than on the first question.
-//
+// Prompts are .md files so they read as prose, not escaped template literals.
+// Read at startup, so a missing file fails at boot, not on the first question.
 // Production runs the TypeScript source (see the Dockerfile CMD), so this path
-// resolves the same in dev and in the container. Switching the container to run
-// the bundled dist/ would mean copying these files alongside it.
+// resolves the same either way. Serving dist/ would need these copied along.
 const readPrompt = (file: string) =>
   fs.readFileSync(path.join(import.meta.dirname, file), "utf8");
 
-// Call #1 turns a question into SQL; call #2 turns the resulting rows into a
-// sentence. Neither model does the other's job.
+// Call #1 turns a question into SQL. Call #2 turns rows into a sentence.
 const SQL_TEMPLATE = readPrompt("sql.prompt.md");
 const SUMMARY_TEMPLATE = readPrompt("summary.prompt.md");
 
-// Rows sent to the summariser. Enough to describe a top-N answer, few enough
-// that a 1000-row result cannot blow up the request.
+// Enough to describe a top-N answer, few enough that 1000 rows cannot bloat
+// the request.
 const SUMMARY_ROW_LIMIT = 20;
 
 export const buildSystemPrompt = (now = new Date()): string =>
-  // The HTML comment block is a note to whoever edits the file, not instructions
-  // for the model, so it never reaches the provider.
+  // The HTML comment block is a note to editors, not the model.
   stripNotes(
     SQL_TEMPLATE.replaceAll("{{TODAY}}", now.toISOString().slice(0, 10))
   );
@@ -54,8 +47,6 @@ export const buildSystemPrompt = (now = new Date()): string =>
 const stripNotes = (text: string) =>
   text.replace(/<!--[\s\S]*?-->\s*/g, "").trim();
 
-// repairError is the message from a failed validation or execution. Handing the
-// model its own error back is the one retry allowed before we give up.
 const buildMessages = (
   question: string,
   history: ChatTurn[] = [],
@@ -64,9 +55,8 @@ const buildMessages = (
   { role: "system" as const, content: buildSystemPrompt() },
   ...history,
   { role: "user" as const, content: question },
-  // The rejected statement goes back with the error. Without it the model is
-  // asked to fix SQL it cannot see, and at temperature 0 it tends to reproduce
-  // exactly the statement that just failed.
+  // The rejected statement goes back with the error. Without it the model must
+  // fix SQL it cannot see, and at temperature 0 it just reproduces it.
   ...(repair
     ? [
         {
@@ -86,12 +76,9 @@ export const aiEnabled = (): boolean =>
 
 type Message = { role: "system" | "user" | "assistant"; content: string };
 
-// One fetch against an OpenAI-compatible /chat/completions. No SDK, no provider
-// abstraction — Groq, Cerebras, OpenRouter and Gemini all speak this shape, so
-// switching provider is three env vars.
-// json: true asks the provider for a JSON object, which call #1 needs. Call #2
-// returns prose, and Groq rejects json_object unless the word "json" appears in
-// the messages, so the format is a parameter rather than a constant.
+// ponytail: one fetch, no SDK. Every OpenAI-compatible provider speaks this
+// shape, so switching is three env vars. json is a parameter because call #2
+// returns prose, and Groq rejects json_object unless "json" is in the messages.
 const complete = async (
   messages: Message[],
   { json = true }: { json?: boolean } = {}
@@ -107,7 +94,7 @@ const complete = async (
     body: JSON.stringify({
       model: env.AI_MODEL,
       messages,
-      temperature: 0, // same question, same SQL — also makes the cache worth having
+      temperature: 0, // same question, same SQL
       ...(json && { response_format: { type: "json_object" as const } }),
     }),
     signal: AbortSignal.timeout(AI_TIMEOUT_MS),
@@ -119,7 +106,7 @@ const complete = async (
       status: res.status,
       body,
     });
-    // 429 is a free-tier cap, not our bug — say so rather than a blanket 500.
+    // A free-tier cap, not our bug, so pass it through rather than a 500.
     if (res.status === 429) {
       throw new AppError(429, "AI is out of budget right now, try again later");
     }
@@ -134,7 +121,7 @@ const complete = async (
   return content;
 };
 
-// Models fence JSON even when told not to. Cheaper to strip it than to retry.
+// Models fence JSON even when told not to. Cheaper to strip than to retry.
 const stripFence = (text: string): string =>
   text
     .trim()
@@ -151,7 +138,7 @@ const parseReply = (content: string): ModelReply | undefined => {
   }
 };
 
-// Call #1: question in, SQL out. This model never sees a database row.
+// Question in, SQL out. This model never sees a database row.
 export const generateQuery = async (
   question: string,
   history: ChatTurn[] = [],
@@ -163,8 +150,8 @@ export const generateQuery = async (
   const reply = parseReply(content);
   if (reply) return reply;
 
-  // One retry, with its own broken output handed back. A second failure is a
-  // model that cannot follow the contract — stop, don't spend a third request.
+  // One retry with its own broken output handed back. A second failure means
+  // the model cannot follow the contract, so stop rather than pay again.
   logger.warn("[ai.service] unparseable reply, retrying once", { content });
   const retry = parseReply(
     await complete([
@@ -182,8 +169,7 @@ export const generateQuery = async (
   throw AppError.internal("AI returned an unusable response");
 };
 
-// Validate, then run. Both failure modes come back the same way, because the
-// caller does the same thing with either: hand the message to the model once.
+// Both failure modes return the same shape, since the caller treats them alike.
 type Attempt =
   | { ok: true; result: Awaited<ReturnType<typeof runQuery>> }
   | { ok: false; error: string; repairable: boolean };
@@ -208,12 +194,9 @@ const attempt = async (sql: string, siteId: string): Promise<Attempt> => {
   }
 };
 
-// Call #2: rows in, prose out. This model sees database content and cannot
-// write SQL; the model that writes SQL never sees a row. That split is what
-// makes a poisoned pathname or referrer worthless to an attacker.
-//
-// Failure here is never fatal. The table is the answer; the sentence is a
-// courtesy, so a rate-limited or slow provider costs the prose, not the result.
+// Rows in, prose out. This model cannot write SQL, and the one that writes SQL
+// never sees a row. That split makes a poisoned pathname worthless to an
+// attacker. Failure is never fatal: the table is the answer, prose is extra.
 const summarize = async (
   question: string,
   sql: string,
@@ -247,8 +230,7 @@ const summarize = async (
   }
 };
 
-// The whole ask, in order. Ownership is checked before the model is called —
-// no site, no request, no token spend (notes §2).
+// Ownership is checked before the model is called, so no site, no token spend.
 export const ask = async (
   siteId: string,
   userId: string,
@@ -261,18 +243,22 @@ export const ask = async (
 
   await verifySiteOwnership(siteId, userId);
 
-  // A conversation id from the client is checked against the same user and
-  // site, so it cannot be used to read or extend someone else's thread.
-  const conversation = conversationId
+  // Resolved first: the id decides whether there is history to send, and it is
+  // checked against this user and site so it cannot reach someone else's thread.
+  const existing = conversationId
     ? await AiRepository.getConversationForUser(conversationId, userId, siteId)
-    : await AiRepository.createConversation(userId, siteId, question);
-  if (!conversation) throw AppError.notFound("Conversation");
+    : null;
+  if (conversationId && !existing) throw AppError.notFound("Conversation");
 
-  const history = conversationId
-    ? await AiRepository.recentTurns(conversation.id)
-    : [];
+  const history = existing ? await AiRepository.recentTurns(existing.id) : [];
 
+  // Before the thread is created, or a provider timeout would leave a
+  // title-only row in the sidebar.
   const outcome = await answer(siteId, question, history);
+
+  const conversation =
+    existing ?? (await AiRepository.createConversation(userId, siteId, question));
+
   await AiRepository.saveTurn(conversation.id, question, {
     conversationId: conversation.id,
     ...outcome,
@@ -302,8 +288,7 @@ const answer = async (
     return { kind: "error", sql: reply.sql, error: first.error };
   }
 
-  // One repair attempt with the rejection handed back. A second failure stops
-  // here — a third LLM request buys nothing but free-tier budget.
+  // One repair attempt. A third request buys nothing but free-tier budget.
   logger.warn("[ai.service] repairing rejected sql", {
     sql: reply.sql,
     error: first.error,
@@ -347,10 +332,8 @@ export const getConversation = async (
 
   const messages = await AiRepository.listMessages(conversationId);
 
-  // Rows are re-run, never stored (notes §7). Storing them would put
-  // visitor-derived data in a second table that outlives the retention policy
-  // on events; re-running costs one ~20ms query and cannot go stale. Only the
-  // most recent statements are replayed, so opening an old thread stays cheap.
+  // Re-run, never stored. Storing rows would put visitor data in a table that
+  // outlives the retention policy on events, and a re-run cannot go stale.
   const replayable = messages
     .filter((m) => m.sql && !m.error)
     .slice(-REPLAY_LIMIT);

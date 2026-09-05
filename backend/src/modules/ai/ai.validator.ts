@@ -1,17 +1,15 @@
 import pgQuery from "libpg-query";
 
-// Deliberately redundant with the ai_readonly role. The role is the wall; this
-// is the fast, legible rejection that produces an error the model can repair
-// from — and it catches the things a role cannot, like pg_catalog reads, which
-// every Postgres role is allowed to do.
+// Redundant with the ai_readonly role on purpose. The role is the wall. This
+// returns an error the model can repair from, and catches what a role cannot,
+// such as pg_catalog reads, which every Postgres role may do.
 //
-// Regex cannot do this job: statement splitting, comment tricks and CTE writes
-// all walk straight through it. Parse to an AST or don't bother.
+// Regex cannot do this. Statement splitting, comment tricks and CTE writes all
+// walk through it. Parse to an AST or do not bother.
 
 const ALLOWED_RELATIONS = new Set(["ask_hourly", "ask_daily"]);
 
-// Numeric, date and string work only. Everything not listed is rejected, so a
-// new Postgres function is safe-by-default rather than exposed-by-default.
+// Allowlist, so a new Postgres function is safe by default rather than exposed.
 // This is what stops pg_sleep, pg_read_file, dblink and query_to_xml.
 const ALLOWED_FUNCTIONS = new Set([
   // aggregates
@@ -31,13 +29,16 @@ const ALLOWED_FUNCTIONS = new Set([
   "left", "right", "position", "strpos", "regexp_replace",
 ]);
 
+// The date/time family plus its _N precision variants. CURRENT_USER,
+// SESSION_USER, CURRENT_ROLE and friends identify the connection instead of
+// answering a question about traffic, so they stay out.
+const ALLOWED_VALUE_FUNCTION_OPS = /^SVFOP_(CURRENT_(DATE|TIME|TIMESTAMP)|LOCALTIME|LOCALTIMESTAMP)(_N)?$/;
+
 export type Verdict = { ok: true } | { ok: false; reason: string };
 
-// libpg-query is the real Postgres grammar compiled to WASM, and the module has
-// to be loaded before the first parse. Memoised, so this costs once per process.
-// It matters that this is awaited rather than skipped: an unloaded parser throws
-// on every statement, which reads as "the validator is working" while actually
-// rejecting valid SQL.
+// The WASM grammar must load before the first parse. Memoised, so it costs
+// once per process. Await it: an unloaded parser throws on every statement,
+// which looks like the validator working while it rejects valid SQL.
 let loaded: Promise<unknown> | undefined;
 const ready = () => (loaded ??= pgQuery.loadModule());
 
@@ -45,7 +46,7 @@ type Node = Record<string, unknown>;
 
 const funcName = (body: Node): string => {
   const parts = (body.funcname ?? []) as { String?: { sval?: string } }[];
-  // pg_catalog.pg_sleep(...) — take the last part, check the qualifier separately
+  // Joined whole, so the caller can check qualifier and bare name separately.
   return parts.map((p) => p.String?.sval ?? "").join(".");
 };
 
@@ -61,7 +62,7 @@ export const validateSql = async (sql: string): Promise<Verdict> => {
 
   const stmts = tree.stmts ?? [];
   if (stmts.length !== 1) {
-    // Kills "SELECT 1; DROP TABLE events" before the database ever sees it.
+    // Stops "SELECT 1; DROP TABLE events" before the database sees it.
     return { ok: false, reason: `expected exactly one statement, got ${stmts.length}` };
   }
 
@@ -71,10 +72,9 @@ export const validateSql = async (sql: string): Promise<Verdict> => {
     return { ok: false, reason: `only SELECT is allowed, got ${rootType ?? "nothing"}` };
   }
 
-  // CTE names are legal relation references, but only inside the query that
-  // declares them. Collecting them tree-wide let a nested `WITH events AS (...)`
-  // whitelist the real events hypertable for a sibling reference outside its
-  // scope, so scope is tracked as the walk descends.
+  // A CTE name is a legal relation only inside the query declaring it. Collect
+  // them tree-wide and a nested `WITH events AS (...)` would allow the real
+  // events hypertable for a sibling outside its scope, so scope descends here.
   let reason: string | undefined;
 
   const inspect = (node: unknown, ctes: ReadonlySet<string>): void => {
@@ -124,6 +124,16 @@ export const validateSql = async (sql: string): Promise<Verdict> => {
         }
         if (!ALLOWED_RELATIONS.has(relname) && !scope.has(relname)) {
           reason = `relation "${relname}" does not exist — only ask_hourly and ask_daily do`;
+          return;
+        }
+      }
+
+      // CURRENT_USER and friends are keywords, not calls. They parse to
+      // SQLValueFunction and would walk straight past ALLOWED_FUNCTIONS.
+      if (type === "SQLValueFunction") {
+        const op = String(body.op ?? "");
+        if (!ALLOWED_VALUE_FUNCTION_OPS.test(op)) {
+          reason = `${op.replace(/^SVFOP_/, "").toLowerCase()} is not allowed`;
           return;
         }
       }
