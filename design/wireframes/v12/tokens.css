@@ -1,0 +1,45 @@
+/* Lifted from frontend/app/globals.css .dark — the comps must be the app's
+   own palette, or choosing between them decides nothing. */
+:root {
+  --bg: oklch(0.1585 0 0);
+  --panel: oklch(0.2135 0 0);
+  --raised: oklch(0.2603 0 0);
+  --seam: oklch(0.2685 0 0);
+  --ink: oklch(0.9128 0.0228 101.3697);
+  --accent: oklch(0.6832 0.2107 38.6427);
+  --powder: oklch(0.8192 0.0304 204.4701);
+  --success: oklch(0.75 0.15 155);
+  --ease: cubic-bezier(0.23, 1, 0.32, 1);
+  --sans: "DM Sans", ui-sans-serif, system-ui, sans-serif;
+  --display: "Bricolage Grotesque", ui-sans-serif, system-ui, sans-serif;
+  --mono: "JetBrains Mono", ui-monospace, monospace;
+}
+
+* { box-sizing: border-box; margin: 0; }
+body {
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--sans);
+  -webkit-font-smoothing: antialiased;
+}
+a { color: inherit; text-decoration: none; }
+
+.fig {
+  font-family: var(--display);
+  font-weight: 600;
+  letter-spacing: -0.03em;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+.meta {
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: color-mix(in oklab, var(--ink) 50%, transparent);
+  white-space: nowrap;
+}
+.mono { font-family: var(--mono); font-variant-numeric: tabular-nums; }
+.num { font-variant-numeric: tabular-nums; }
+.up { color: var(--success); }
+.dn { color: oklch(0.68 0.19 25); }

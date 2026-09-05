@@ -1,0 +1,92 @@
+/* The shell every page shares: rail, page header, tab row. Written once so the
+   seven comps cannot drift, which is the failure the app itself had. */
+
+export const logo = `<svg viewBox="0 0 24 16" width="21" fill="none" stroke="var(--accent)" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><polyline points="1,11 5,11 8,3 12,14 15,8 18,8 20,5 23,5"/></svg>`;
+
+const ICON = {
+  sites: `<path d="M10 3a7 7 0 1 0 0 14 7 7 0 0 0 0-14Z"/><path d="M3 10h14M10 3c2.5 3 2.5 11 0 14M10 3C7.5 6 7.5 14 10 17"/>`,
+  docs: `<path d="M5 3h7l3 3v11H5z"/><path d="M8 9h5M8 12h5"/>`,
+  account: `<circle cx="10" cy="7.5" r="3"/><path d="M4.5 16a5.5 5.5 0 0 1 11 0"/>`,
+  out: `<path d="M8 4H5v12h3"/><path d="M12 13l3-3-3-3M15 10H8"/>`,
+};
+const icon = (k) =>
+  `<svg viewBox="0 0 20 20" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">${ICON[k]}</svg>`;
+
+export const SHELL_CSS = `
+.app{display:grid;grid-template-columns:214px 1fr;min-height:100vh}
+.rail{background:var(--bg);border-right:1px solid var(--seam);padding:16px 12px;display:flex;flex-direction:column;position:sticky;top:0;height:100vh}
+.brand{display:flex;align-items:center;gap:9px;padding:2px 8px 18px;font-size:13.5px;font-weight:600;letter-spacing:-0.02em}
+.nav{display:flex;flex-direction:column;gap:2px}
+.nav a{display:flex;align-items:center;gap:10px;padding:7px 10px;border-radius:6px;font-size:13.5px;color:color-mix(in oklab,var(--ink) 52%,transparent);position:relative}
+.nav a.on{background:var(--panel);color:var(--ink)}
+.nav a.on::before{content:"";position:absolute;left:0;top:50%;translate:0 -50%;width:2px;height:15px;border-radius:2px;background:var(--accent)}
+.nav a.on svg{color:var(--accent)}
+.col{max-width:1120px;margin:0 auto;padding:26px 32px 64px;width:100%}
+.col.narrow{max-width:660px}
+.head{display:flex;align-items:baseline;gap:13px}
+.head h1{font-family:var(--display);font-weight:600;letter-spacing:-0.03em;font-size:25px}
+.sub{font-family:var(--mono);font-size:12px;color:color-mix(in oklab,var(--ink) 42%,transparent)}
+.st{margin-left:auto;display:flex;align-items:center;gap:7px;font-size:12px;color:var(--success)}
+.st i{width:6px;height:6px;border-radius:50%;background:currentColor}
+.lede{margin-top:7px;font-size:13.5px;line-height:1.55;color:color-mix(in oklab,var(--ink) 55%,transparent);max-width:62ch}
+.bar{display:flex;align-items:center;gap:10px;margin:20px 0 18px}
+.tabs{display:flex;gap:3px}
+.tabs a{padding:6px 11px;border-radius:6px;font-size:13px;color:color-mix(in oklab,var(--ink) 48%,transparent)}
+.tabs a.on{background:var(--panel);color:var(--ink)}
+.seg{display:flex;gap:2px;margin-left:auto;background:var(--panel);border:1px solid var(--seam);border-radius:7px;padding:2px}
+.seg span{padding:5px 11px;border-radius:5px;font-size:11.5px;font-weight:500;color:color-mix(in oklab,var(--ink) 48%,transparent)}
+.seg span.on{background:var(--accent);color:var(--bg)}
+.card{background:var(--panel);border:1px solid var(--seam);border-radius:11px}
+.ch{display:flex;align-items:baseline;justify-content:space-between;gap:12px;padding:15px 18px;border-bottom:1px solid var(--seam)}
+.ch b{font-size:14px;font-weight:500}
+.ch p{font-size:12.5px;color:color-mix(in oklab,var(--ink) 50%,transparent);margin-top:4px}
+.cb{padding:18px}
+.btn{display:inline-flex;align-items:center;gap:7px;border-radius:7px;padding:7px 13px;font-size:13px;font-weight:500;border:1px solid var(--seam);background:var(--panel);color:var(--ink);cursor:pointer}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--bg)}
+.btn.ghost{background:transparent}
+.btn.danger{background:transparent;border-color:color-mix(in oklab,oklch(0.63 0.21 25) 45%,transparent);color:oklch(0.72 0.17 25)}
+label.f{display:block;margin-bottom:16px}
+label.f .lb{display:block;font-size:12.5px;font-weight:500;margin-bottom:6px}
+label.f input{width:100%;background:var(--bg);border:1px solid var(--seam);border-radius:7px;padding:9px 11px;color:var(--ink);font-family:inherit;font-size:13.5px}
+label.f input::placeholder{color:color-mix(in oklab,var(--ink) 30%,transparent)}
+label.f .hint{display:block;margin-top:6px;font-size:12px;color:color-mix(in oklab,var(--ink) 44%,transparent)}
+pre{background:var(--bg);border:1px solid var(--seam);border-radius:8px;padding:13px 14px;overflow:auto;font-family:var(--mono);font-size:11.5px;line-height:1.65;color:color-mix(in oklab,var(--ink) 82%,transparent)}
+pre .t{color:var(--powder)}
+pre .a{color:var(--accent)}
+.kv{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:11px 0;border-bottom:1px solid color-mix(in oklab,var(--seam) 60%,transparent);font-size:13px}
+.kv:last-child{border-bottom:0}
+.kv .k{color:color-mix(in oklab,var(--ink) 50%,transparent)}
+.kv .v{font-family:var(--mono);font-size:11.5px;background:var(--bg);border:1px solid var(--seam);border-radius:5px;padding:3px 8px}
+`;
+
+export const shell = (title, css, body) => `<!doctype html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>${title}</title>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,500;12..96,600;12..96,700&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="tokens.css">
+<style>${SHELL_CSS}${css}</style></head><body>${body}</body></html>`;
+
+export const rail = (on) => `
+<aside class="rail">
+  <div class="brand">${logo}<span>Pulse Analytics</span></div>
+  <nav class="nav">
+    <a class="${on === "sites" ? "on" : ""}">${icon("sites")}<span>Sites</span></a>
+    <a class="${on === "docs" ? "on" : ""}">${icon("docs")}<span>Docs</span></a>
+  </nav>
+  <div style="flex:1"></div>
+  <nav class="nav">
+    <a class="${on === "account" ? "on" : ""}">${icon("account")}<span>Account</span></a>
+    <a>${icon("out")}<span>Log out</span></a>
+  </nav>
+</aside>`;
+
+export const siteHead = (tab) => `
+<div class="head"><h1>Acme Docs</h1><span class="sub">example.com</span><span class="st"><i></i>Receiving</span></div>
+<div class="bar">
+  <div class="tabs">
+    ${["Analytics", "Ask AI", "Setup", "Settings"].map((t) => `<a class="${t === tab ? "on" : ""}">${t}</a>`).join("")}
+  </div>
+  ${tab === "Analytics" ? `<div class="seg"><span class="on">7D</span><span>30D</span><span>90D</span></div>` : ""}
+</div>`;

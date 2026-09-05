@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>v12 — Pulse app design</title>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500&family=Bricolage+Grotesque:opsz,wght@12..96,600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="tokens.css">
+<style>
+  body{padding:40px 32px 72px}
+  h1{font-family:var(--display);font-weight:600;letter-spacing:-0.03em;font-size:25px;margin-bottom:7px}
+  p.lede{color:color-mix(in oklab,var(--ink) 55%,transparent);font-size:14px;line-height:1.6;max-width:74ch;margin-bottom:12px}
+  h2{font-size:12px;font-weight:500;letter-spacing:.07em;text-transform:uppercase;color:color-mix(in oklab,var(--ink) 45%,transparent);margin:34px 0 14px}
+  .grid{display:grid;gap:20px;grid-template-columns:repeat(auto-fill,minmax(340px,1fr))}
+  a.card{display:block;background:var(--panel);border:1px solid var(--seam);border-radius:12px;overflow:hidden;transition:border-color .15s var(--ease)}
+  a.card:hover{border-color:color-mix(in oklab,var(--accent) 45%,transparent)}
+  .frame{height:250px;overflow:hidden;border-bottom:1px solid var(--seam);background:var(--bg)}
+  iframe{width:1440px;height:1000px;border:0;transform:scale(.28);transform-origin:0 0;pointer-events:none}
+  .cap{padding:14px 16px}
+  .cap b{display:block;font-size:14px;font-weight:500;margin-bottom:5px}
+  .cap span{font-size:12.5px;line-height:1.55;color:color-mix(in oklab,var(--ink) 52%,transparent)}
+  .old a{color:color-mix(in oklab,var(--ink) 50%,transparent);font-size:13px;margin-right:16px;text-decoration:underline;text-underline-offset:3px}
+</style></head><body>
+<h1>Pulse — app design, v12</h1>
+<p class="lede">Every screen in the direction you picked: B's measured column and card treatment as the base, A's instrument density on the analytics screen. Same palette, same fonts, real numbers from the local database. Click any screen to open it full size.</p>
+<h2>Screens</h2>
+<div class="grid">
+  <a class="card" href="d-analytics.html"><div class="frame"><iframe src="d-analytics.html" scrolling="no"></iframe></div>
+    <div class="cap"><b>Analytics</b><span>A's instrument density inside B's column: sparkline and delta per metric, a chart that owns the fold, five breakdowns as tables with share tracks.</span></div></a>
+  <a class="card" href="e-sites.html"><div class="frame"><iframe src="e-sites.html" scrolling="no"></iframe></div>
+    <div class="cap"><b>Sites</b><span>Cards that answer "is it healthy and busy" — a week of shape on each, not a tracking id. The teaching empty state is shown below the cards here so you can see both; in the app it is one or the other.</span></div></a>
+  <a class="card" href="f-setup.html"><div class="frame"><iframe src="f-setup.html" scrolling="no"></iframe></div>
+    <div class="cap"><b>Setup</b><span>Leads with whether it worked. The waiting strip flips to the dashboard when the first event lands.</span></div></a>
+  <a class="card" href="g-settings.html"><div class="frame"><iframe src="g-settings.html" scrolling="no"></iframe></div>
+    <div class="cap"><b>Settings</b><span>Two ordinary cards and one that is not, marked by its own edge rather than a red heading alone.</span></div></a>
+  <a class="card" href="h-ask.html"><div class="frame"><iframe src="h-ask.html" scrolling="no"></iframe></div>
+    <div class="cap"><b>Ask AI</b><span>The query it ran sits under the answer rather than behind a disclosure — showing the SQL is the feature's whole claim.</span></div></a>
+  <a class="card" href="i-add-site.html"><div class="frame"><iframe src="i-add-site.html" scrolling="no"></iframe></div>
+    <div class="cap"><b>Add site</b><span>Two fields, with the snippet they are about to get shown beside them.</span></div></a>
+  <a class="card" href="j-account.html"><div class="frame"><iframe src="j-account.html" scrolling="no"></iframe></div>
+    <div class="cap"><b>Account</b><span>Password rules resolve as you type instead of failing after submit.</span></div></a>
+</div>
+<h2>The three earlier directions</h2>
+<p class="old"><a href="a-instrument.html">A — Instrument</a><a href="b-focused.html">B — Focused</a><a href="c-workbench.html">C — Workbench</a></p>
+</body></html>
