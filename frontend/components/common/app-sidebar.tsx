@@ -3,11 +3,10 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { IoMdLogOut } from "react-icons/io";
-import { MdLocalActivity } from "react-icons/md";
 import { PiBookOpenTextBold, PiGlobeSimpleBold } from "react-icons/pi";
 import { RiUserSmileLine } from "react-icons/ri";
 
-import { Button } from "@/components/ui/button";
+import { PulseLogo } from "@/components/landing/shared";
 import {
   Sidebar,
   SidebarContent,
@@ -16,8 +15,6 @@ import {
   SidebarGroupContent,
   SidebarHeader,
   SidebarMenu,
-  SidebarMenuButton,
-  SidebarMenuItem,
 } from "@/components/ui/sidebar";
 import { useAuth } from "@/contexts/auth.context";
 
@@ -36,6 +33,38 @@ const ACCOUNT = {
   icon: RiUserSmileLine,
 };
 
+/** A rail entry. Selected reads as a lit surface with the accent marking its
+    edge — the same treatment the product panel on the landing uses. */
+function NavLink({
+  title,
+  url,
+  icon: Icon,
+  active,
+}: (typeof NAV)[number] & { active: boolean }) {
+  return (
+    <Link
+      href={url}
+      aria-current={active ? "page" : undefined}
+      className={`relative flex items-center gap-2.5 rounded-md px-2.5 py-[7px] text-[13px] transition-colors duration-150 ease-[var(--ease-out)] ${
+        active
+          ? "bg-muted text-foreground"
+          : "text-foreground/50 hover:bg-foreground/[0.05] hover:text-foreground/90"
+      }`}
+    >
+      {active && (
+        <span
+          aria-hidden
+          className="absolute top-1/2 left-0 h-3.5 w-0.5 -translate-y-1/2 rounded-full bg-primary"
+        />
+      )}
+      <Icon
+        className={`size-4 shrink-0 ${active ? "text-primary" : "text-current"}`}
+      />
+      <span className="min-w-0 flex-1 truncate">{title}</span>
+    </Link>
+  );
+}
+
 export function AppSidebar() {
   const router = useRouter();
   const pathname = usePathname();
@@ -46,47 +75,46 @@ export function AppSidebar() {
     router.push("/login");
   };
 
-  const item = ({ title, url, icon: Icon }: (typeof NAV)[number]) => (
-    <SidebarMenuItem key={title}>
-      <SidebarMenuButton asChild isActive={pathname?.startsWith(url)}>
-        <Link href={url}>
-          <Icon className="size-5" />
-          <span>{title}</span>
-        </Link>
-      </SidebarMenuButton>
-    </SidebarMenuItem>
-  );
-
   return (
     <Sidebar className="border-none">
-      <SidebarContent className="flex flex-col gap-0">
-        <SidebarHeader className="p-4 text-lg font-semibold">
+      <SidebarContent className="flex flex-col gap-0 bg-background">
+        <SidebarHeader className="px-4 py-4">
           <Link
             href="/dashboard/sites"
-            className="flex items-center gap-2 transition-opacity hover:opacity-80"
+            className="flex items-center gap-2.5 transition-opacity hover:opacity-80"
           >
-            <MdLocalActivity className="size-5 text-secondary" />
-            <span>Pulse Analytics</span>
+            <PulseLogo size={20} />
+            <span className="truncate text-[13px] font-semibold tracking-[-0.02em]">
+              Pulse Analytics
+            </span>
           </Link>
         </SidebarHeader>
 
-        <SidebarGroup className="flex-1 py-4">
+        <SidebarGroup className="flex-1 px-3 py-2">
           <SidebarGroupContent>
-            <SidebarMenu>{NAV.map(item)}</SidebarMenu>
+            <SidebarMenu className="gap-0.5">
+              {NAV.map((item) => (
+                <NavLink
+                  key={item.title}
+                  {...item}
+                  active={!!pathname?.startsWith(item.url)}
+                />
+              ))}
+            </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
 
         {/* Account and logout are the same errand, so they sit together. */}
-        <SidebarFooter className="mt-auto gap-1 p-4">
-          <SidebarMenu>{item(ACCOUNT)}</SidebarMenu>
-          <Button
+        <SidebarFooter className="mt-auto gap-0.5 border-t border-[var(--seam)] px-3 py-3">
+          <NavLink {...ACCOUNT} active={!!pathname?.startsWith(ACCOUNT.url)} />
+          <button
+            type="button"
             onClick={handleLogout}
-            variant="ghost"
-            className="w-full cursor-pointer justify-start"
+            className="flex cursor-pointer items-center gap-2.5 rounded-md px-2.5 py-[7px] text-[13px] text-foreground/50 transition-colors duration-150 ease-[var(--ease-out)] hover:bg-foreground/[0.05] hover:text-foreground/90"
           >
-            <IoMdLogOut className="mr-2 size-5" />
-            <span>Logout</span>
-          </Button>
+            <IoMdLogOut className="size-4 shrink-0" />
+            <span>Log out</span>
+          </button>
         </SidebarFooter>
       </SidebarContent>
     </Sidebar>

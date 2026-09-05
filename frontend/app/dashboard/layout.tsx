@@ -27,15 +27,15 @@ export default function DashboardLayout({
   // rather than a bare word, which used to land as a flash of unstyled page.
   if (isLoading) {
     return (
-      <div className="flex h-dvh w-full gap-2 bg-sidebar p-2">
-        <div className="hidden w-64 shrink-0 flex-col gap-3 p-4 md:flex">
+      <div className="flex h-dvh w-full bg-background">
+        <div className="hidden w-64 shrink-0 flex-col gap-3 border-r border-[var(--seam)] p-4 md:flex">
           <Skeleton className="h-6 w-40" />
           <Skeleton className="mt-4 h-8 w-full" />
           <Skeleton className="h-8 w-full" />
         </div>
-        <div className="flex-1 rounded-xl bg-background p-6">
+        <div className="flex-1 p-6">
           <Skeleton className="h-8 w-48" />
-          <Skeleton className="mt-6 h-64 w-full rounded-xl" />
+          <Skeleton className="mt-6 h-64 w-full" />
         </div>
       </div>
     );
@@ -47,15 +47,17 @@ export default function DashboardLayout({
 
   return (
     <SidebarProvider>
-      <div className="flex h-dvh w-full bg-sidebar">
+      {/* Charcoal ground, panel-coloured content: the rail is the darkest
+          surface in the app, the way it is in the panel on the landing.
+          It was the other way round, so the navigation read as the
+          foreground and the data read as a hole cut out of it. */}
+      <div className="flex h-dvh w-full bg-background">
         <AppSidebar />
-        <div className="flex-1 p-2">
-          <div className="flex h-full flex-col rounded-xl bg-background">
-            <SiteHeader />
-            <main className="hide-scrollbar flex flex-1 overflow-y-auto p-0 md:p-3">
-              {children}
-            </main>
-          </div>
+        <div className="flex min-w-0 flex-1 flex-col border-l border-[var(--seam)] bg-background">
+          <SiteHeader />
+          <main className="hide-scrollbar flex flex-1 flex-col overflow-y-auto">
+            {children}
+          </main>
         </div>
       </div>
     </SidebarProvider>

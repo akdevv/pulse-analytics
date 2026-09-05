@@ -86,6 +86,7 @@
   --accent-foreground: oklch(0.2002 0 0);
   --destructive: oklch(0.5783 0.2301 28.5639);
   --success: oklch(0.58 0.13 152);
+  --seam: oklch(0.86 0.02 101);
   --border: oklch(0.86 0.02 101);
   --input: oklch(0.86 0.02 101);
   --ring: oklch(0.6832 0.2107 38.6427);
@@ -134,6 +135,9 @@
   --accent-foreground: oklch(0.9128 0.0228 101.3697);
   --destructive: oklch(0.6256 0.1933 23.0261);
   --success: oklch(0.75 0.15 155);
+  /* The hairline between panels: ink at 8%, the value the product panel
+     on the landing uses for the same seams. */
+  --seam: color-mix(in oklab, oklch(0.9128 0.0228 101.3697) 8%, transparent);
   --border: oklch(0.29 0 0);
   --input: oklch(0.29 0 0);
   --ring: oklch(0.6832 0.2107 38.6427);
@@ -153,15 +157,124 @@
   --destructive-foreground: oklch(0.2002 0 0);
 }
 
-/* Horizontal bar fill for the ranked lists (pages, referrers, geo, events,
-   devices). Set --bar to the chart token the card is keyed to; the lighter
-   end is derived so a new hue never needs a second value picked by hand. */
-.bar-fill {
-  background: linear-gradient(
-    90deg,
-    var(--bar, var(--chart-1)) 0%,
-    color-mix(in oklch, var(--bar, var(--chart-1)) 62%, white) 100%
-  );
+/* ── Dashboard instrument ─────────────────────────────────────
+   The app runs the same system the landing's product panel does, which
+   is the one place this dashboard was ever drawn: panels are cells in a
+   hairline grid rather than cards floating on a ground, the rail sits
+   darker than the content it frames, and figures are set in the display
+   face. Values are the panel's, kept here so twelve components cannot
+   drift apart. */
+
+/* The seam. Panels butt against each other and the ground shows through
+   as a hairline, so a dashboard reads as one instrument rather than as
+   a column of separate objects. */
+.seam {
+  display: grid;
+  gap: 1px;
+  background: var(--seam);
+}
+
+/* A cell in that grid: no border and no radius of its own — the seam
+   draws every edge it has. */
+.panel {
+  background: var(--card);
+  min-width: 0;
+}
+
+/* Panels that stand alone rather than in a seam grid still need an edge. */
+.panel-standalone {
+  background: var(--card);
+  border: 1px solid var(--seam);
+  border-radius: var(--radius);
+}
+
+/* Title row: what the panel is on the left, what its numbers are on the
+   right. The unit belongs in the header so it does not repeat on rows. */
+.panel-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.875rem 1.25rem;
+  border-bottom: 1px solid var(--seam);
+}
+.panel-title {
+  font-size: 13px;
+  letter-spacing: -0.01em;
+  color: color-mix(in oklab, var(--foreground) 90%, transparent);
+}
+
+/* Meta: ranges, units, column labels, counts. Mono because these label
+   measurements, and small caps tracking so they recede under the value
+   they belong to. */
+.meta {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: color-mix(in oklab, var(--foreground) 45%, transparent);
+  white-space: nowrap;
+}
+
+/* Every figure the eye is meant to land on. Bricolage, because the app
+   had been setting its numbers in the body face while the landing set
+   the same numbers in the display one. */
+.figure {
+  font-family: "Bricolage Grotesque", ui-sans-serif, system-ui, sans-serif;
+  font-weight: 600;
+  letter-spacing: -0.03em;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+
+/* A ranked row. The bar is the row's own background scaled to its share,
+   not a rule underneath it — so the list reads as a distribution at a
+   glance and still reads as a list up close. Set --share (0..1). */
+.rank-row {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  overflow: hidden;
+  border-radius: 4px;
+  padding: 7px 8px;
+  text-align: left;
+  font-size: 12px;
+  width: 100%;
+}
+.rank-row::before {
+  content: "";
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: calc(var(--share, 0) * 100%);
+  border-radius: 4px;
+  background: var(--bar, var(--chart-1));
+  opacity: calc(0.09 + var(--share, 0) * 0.1);
+  transition: opacity 200ms var(--ease-out);
+}
+.rank-row::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 4px;
+  background: color-mix(in oklab, var(--foreground) 5%, transparent);
+  opacity: 0;
+  transition: opacity 150ms var(--ease-out);
+}
+.rank-row:hover::after {
+  opacity: 1;
+}
+.rank-row > * {
+  position: relative;
+}
+/* The share earns its space only once asked for. */
+.rank-share {
+  opacity: 0;
+  transition: opacity 150ms var(--ease-out);
+}
+.rank-row:hover .rank-share {
+  opacity: 1;
 }
 
 @layer base {

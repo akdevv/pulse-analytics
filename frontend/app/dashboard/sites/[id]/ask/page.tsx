@@ -7,9 +7,11 @@ import { SiteTabs } from "@/components/sites/site-tabs";
 export default function AskPage() {
   const { id } = useParams<{ id: string }>();
   return (
-    <div className="space-y-5">
+    <>
       <SiteTabs />
-      <AskPanel siteId={id} />
-    </div>
+      <div className="p-5">
+        <AskPanel siteId={id} />
+      </div>
+    </>
   );
 }

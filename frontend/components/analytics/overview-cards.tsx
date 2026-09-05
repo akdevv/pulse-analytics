@@ -1,85 +1,97 @@
 "use client";
 
-import { Eye, Users, Activity } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { formatCompact } from "@/lib/format";
 import type { OverviewStats } from "@/lib/types/analytics.types";
 
 const STATS = [
-  {
-    key: "totalPageviews" as keyof OverviewStats,
-    label: "Pageviews",
-    icon: Eye,
-    accent: "var(--chart-1)",
-  },
-  {
-    key: "totalSessions" as keyof OverviewStats,
-    label: "Sessions",
-    icon: Activity,
-    accent: "var(--chart-2)",
-  },
-  {
-    key: "totalVisitors" as keyof OverviewStats,
-    label: "Unique Visitors",
-    icon: Users,
-    accent: "var(--chart-5)",
-  },
-] as const;
+  { key: "totalPageviews", label: "Pageviews" },
+  { key: "totalSessions", label: "Sessions" },
+  { key: "totalVisitors", label: "Visitors" },
+] as const satisfies readonly { key: keyof OverviewStats; label: string }[];
 
 interface Props {
   data?: OverviewStats;
   isLoading: boolean;
   error: Error | null;
+  /** Sessions open right now. Not a window total, so it reads in powder. */
+  activeSessions?: number;
+  activeLoading: boolean;
 }
 
-export function OverviewCards({ data, isLoading, error }: Props) {
+function Cell({
+  label,
+  children,
+  pip = false,
+}: {
+  label: string;
+  children: React.ReactNode;
+  pip?: boolean;
+}) {
+  return (
+    <div className="panel px-5 py-4">
+      <p className="meta flex items-center gap-2">
+        {pip && (
+          <span className="relative flex size-1.5 shrink-0">
+            <span className="absolute inline-flex size-full animate-ping rounded-full bg-secondary opacity-60" />
+            <span className="relative inline-flex size-1.5 rounded-full bg-secondary" />
+          </span>
+        )}
+        {label}
+      </p>
+      <div className="mt-3">{children}</div>
+    </div>
+  );
+}
+
+/**
+ * The window's totals, and beside them the one figure that is not a total.
+ *
+ * "Active now" used to head a panel of its own that restated the dashboard in
+ * miniature. It belongs here, in the row the eye already reads first, tinted
+ * away from the accent so it is not mistaken for a fourth window total.
+ */
+export function OverviewCards({
+  data,
+  isLoading,
+  error,
+  activeSessions,
+  activeLoading,
+}: Props) {
   if (error) {
     return (
-      <p className="text-sm text-destructive">
+      <p className="panel px-5 py-4 text-sm text-destructive">
         Failed to load overview: {error.message}
       </p>
     );
   }
 
   return (
-    <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-      {STATS.map(({ key, label, icon: Icon, accent }) => (
-        <div
-          key={key}
-          className="relative overflow-hidden rounded-xl border border-border bg-card p-6 transition-all duration-200 hover:border-border/80 hover:shadow-lg"
-        >
-          {/* Ambient glow */}
-          <div
-            className="pointer-events-none absolute -top-10 -right-10 size-36 rounded-full blur-3xl"
-            style={{ background: accent, opacity: 0.08 }}
-          />
-          <div className="relative flex items-start justify-between gap-4">
-            <div className="min-w-0">
-              <p
-                className="text-[11px] font-bold tracking-[0.12em] uppercase"
-                style={{ color: accent, opacity: 0.8 }}
-              >
-                {label}
-              </p>
-              {isLoading ? (
-                <Skeleton className="mt-2.5 h-10 w-28 rounded-lg" />
-              ) : (
-                <p className="mt-1 text-[2.75rem] leading-none font-bold tracking-tight tabular-nums">
-                  {formatCompact(data?.[key] ?? 0)}
-                </p>
-              )}
-            </div>
-            <div
-              className="mt-0.5 shrink-0 rounded-xl p-2.5"
-              style={{
-                background: `color-mix(in oklch, ${accent} 8%, transparent)`,
-              }}
+    <div className="seam grid grid-cols-2 lg:grid-cols-4">
+      {STATS.map(({ key, label }, i) => (
+        <Cell key={key} label={label}>
+          {isLoading ? (
+            <Skeleton className="h-[30px] w-24" />
+          ) : (
+            <p
+              className="figure pa-fade-in text-[30px]"
+              style={{ ["--pa-delay" as string]: `${i * 70}ms` }}
             >
-              <Icon className="size-[18px]" style={{ color: accent }} />
-            </div>
-          </div>
-        </div>
+              {formatCompact(data?.[key] ?? 0)}
+            </p>
+          )}
+        </Cell>
       ))}
+
+      <Cell label="Active now" pip>
+        {activeLoading ? (
+          <Skeleton className="h-[30px] w-16" />
+        ) : (
+          <p className="figure pa-fade-in text-[30px] text-secondary">
+            {(activeSessions ?? 0).toLocaleString()}
+          </p>
+        )}
+      </Cell>
     </div>
   );
 }

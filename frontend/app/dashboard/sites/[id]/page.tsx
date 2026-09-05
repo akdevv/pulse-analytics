@@ -168,7 +168,7 @@ export default function SiteAnalyticsPage() {
     overview?.totalVisitors === 0;
 
   return (
-    <div className="space-y-5">
+    <div className="flex flex-col">
       <SiteTabs>
         <DateRangeBar
           preset={preset}
@@ -178,46 +178,53 @@ export default function SiteAnalyticsPage() {
         />
       </SiteTabs>
 
-      <RealtimeWidget
-        data={realtime ?? undefined}
-        isLoading={realtimeLoading}
-        error={realtimeError}
-      />
-
       {hasNoEvents ? (
-        <NoEvents
-          domain={site?.domain}
-          preset={preset}
-          setupHref={`/dashboard/sites/${id}/setup`}
-        />
+        <div className="p-5">
+          <NoEvents
+            domain={site?.domain}
+            preset={preset}
+            setupHref={`/dashboard/sites/${id}/setup`}
+          />
+        </div>
       ) : (
-        <>
+        // One seam grid, not a column of cards: the panels butt against each
+        // other and the ground shows through as a hairline, so the page reads
+        // as one instrument.
+        <div className="seam grid flex-1 grid-cols-1 border-b border-[var(--seam)]">
           <OverviewCards
             data={overview}
             isLoading={overviewLoading}
             error={overviewError}
+            activeSessions={realtime?.activeSessions}
+            activeLoading={realtimeLoading}
           />
 
           <TimeseriesChart
             data={timeseries}
             isLoading={timeseriesLoading}
             error={timeseriesError}
+            interval={interval}
           />
 
-          <div className="grid grid-cols-1 gap-5 lg:grid-cols-2">
+          <div className="seam grid grid-cols-1 lg:grid-cols-[1.4fr_1fr]">
             <TopPagesChart
               data={pages}
               isLoading={pagesLoading}
               error={pagesError}
             />
+            <RealtimeWidget
+              data={realtime ?? undefined}
+              isLoading={realtimeLoading}
+              error={realtimeError}
+            />
+          </div>
+
+          <div className="seam grid grid-cols-1 lg:grid-cols-3">
             <ReferrersChart
               data={referrers}
               isLoading={referrersLoading}
               error={referrersError}
             />
-          </div>
-
-          <div className="grid grid-cols-1 gap-5 lg:grid-cols-2">
             <DevicesChart
               data={devices}
               isLoading={devicesLoading}
@@ -233,7 +240,7 @@ export default function SiteAnalyticsPage() {
             isLoading={eventsLoading}
             error={eventsError}
           />
-        </>
+        </div>
       )}
     </div>
   );

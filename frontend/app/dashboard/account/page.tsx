@@ -79,145 +79,146 @@ export default function AccountPage() {
   };
 
   return (
-    <div className="max-w-2xl space-y-6 p-1">
-      {/* Header */}
-      <div className="min-w-0">
-        <h1 className="text-xl font-semibold tracking-tight">Account</h1>
-        <p className="truncate text-sm text-muted-foreground">
-          Manage your profile and password.
-        </p>
+    <>
+      <div className="flex items-center gap-3 border-b border-[var(--seam)] px-5 py-4">
+        <h1 className="figure text-[20px]">Account</h1>
+        <span className="font-mono text-[11px] text-foreground/45">
+          {user.email}
+        </span>
       </div>
 
-      {/* Profile */}
-      <Card className="py-0">
-        <CardHeader className="border-b px-5 pt-5 pb-4">
-          <CardTitle className="text-sm font-semibold">Profile</CardTitle>
-          <CardDescription className="text-xs">
-            Update your name and email address.
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-5 px-5 py-5">
-          <div className="space-y-2">
-            <Label htmlFor="name" className="text-xs font-medium">
-              Name
-            </Label>
-            <Input
-              id="name"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              placeholder="John Doe"
-              className="h-9 text-sm"
-            />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="email" className="text-xs font-medium">
-              Email
-            </Label>
-            <Input
-              id="email"
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="you@example.com"
-              className="h-9 text-sm"
-            />
-          </div>
-          <div className="flex justify-end pt-1">
-            <Button
-              size="sm"
-              onClick={handleSaveProfile}
-              disabled={savingProfile || !profileDirty}
-            >
-              {savingProfile ? "Saving..." : "Save Changes"}
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
+      <div className="max-w-2xl space-y-5 p-5">
+        {/* Profile */}
+        <Card className="py-0">
+          <CardHeader className="border-b px-5 pt-5 pb-4">
+            <CardTitle className="text-sm font-semibold">Profile</CardTitle>
+            <CardDescription className="text-xs">
+              Update your name and email address.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-5 px-5 py-5">
+            <div className="space-y-2">
+              <Label htmlFor="name" className="text-xs font-medium">
+                Name
+              </Label>
+              <Input
+                id="name"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                placeholder="John Doe"
+                className="h-9 text-sm"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="email" className="text-xs font-medium">
+                Email
+              </Label>
+              <Input
+                id="email"
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="you@example.com"
+                className="h-9 text-sm"
+              />
+            </div>
+            <div className="flex justify-end pt-1">
+              <Button
+                size="sm"
+                onClick={handleSaveProfile}
+                disabled={savingProfile || !profileDirty}
+              >
+                {savingProfile ? "Saving..." : "Save Changes"}
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
 
-      {/* Password */}
-      <Card className="py-0">
-        <CardHeader className="border-b px-5 pt-5 pb-4">
-          <CardTitle className="text-sm font-semibold">Password</CardTitle>
-          <CardDescription className="text-xs">
-            Must be at least 8 characters, with an uppercase letter and a
-            number.
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-5 px-5 py-5">
-          <div className="space-y-2">
-            <Label htmlFor="password" className="text-xs font-medium">
-              New Password
-            </Label>
-            <PasswordInput
-              id="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              placeholder="Min. 8 characters"
-              className="h-9 text-sm"
-            />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="confirmPassword" className="text-xs font-medium">
-              Confirm Password
-            </Label>
-            <PasswordInput
-              id="confirmPassword"
-              value={confirmPassword}
-              onChange={(e) => setConfirmPassword(e.target.value)}
-              placeholder="Repeat password"
-              className="h-9 text-sm"
-            />
-          </div>
-          <div className="flex justify-end pt-1">
-            <Button
-              size="sm"
-              onClick={handleChangePassword}
-              disabled={savingPassword || !password || !confirmPassword}
-            >
-              {savingPassword ? "Saving..." : "Change Password"}
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
+        {/* Password */}
+        <Card className="py-0">
+          <CardHeader className="border-b px-5 pt-5 pb-4">
+            <CardTitle className="text-sm font-semibold">Password</CardTitle>
+            <CardDescription className="text-xs">
+              Must be at least 8 characters, with an uppercase letter and a
+              number.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-5 px-5 py-5">
+            <div className="space-y-2">
+              <Label htmlFor="password" className="text-xs font-medium">
+                New Password
+              </Label>
+              <PasswordInput
+                id="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="Min. 8 characters"
+                className="h-9 text-sm"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="confirmPassword" className="text-xs font-medium">
+                Confirm Password
+              </Label>
+              <PasswordInput
+                id="confirmPassword"
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                placeholder="Repeat password"
+                className="h-9 text-sm"
+              />
+            </div>
+            <div className="flex justify-end pt-1">
+              <Button
+                size="sm"
+                onClick={handleChangePassword}
+                disabled={savingPassword || !password || !confirmPassword}
+              >
+                {savingPassword ? "Saving..." : "Change Password"}
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
 
-      {/* Details */}
-      <Card className="py-0">
-        <CardHeader className="border-b px-5 pt-5 pb-4">
-          <CardTitle className="text-sm font-semibold">
-            Account Details
-          </CardTitle>
-          <CardDescription className="text-xs">
-            Read-only information about this account.
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4 px-5 py-5">
-          <div className="space-y-1">
-            <p className="text-xs text-muted-foreground">User ID</p>
-            <code className="font-mono text-xs break-all">{user.id}</code>
-          </div>
-          <div className="space-y-1">
-            <p className="text-xs text-muted-foreground">Status</p>
-            <p className="flex items-center gap-1.5 text-sm">
-              {user.isVerified ? (
-                <>
-                  <GoCheckCircleFill className="size-3.5 text-success" />
-                  Verified
-                </>
-              ) : (
-                "Unverified"
-              )}
-            </p>
-          </div>
-          {user.lastLoginAt && (
+        {/* Details */}
+        <Card className="py-0">
+          <CardHeader className="border-b px-5 pt-5 pb-4">
+            <CardTitle className="text-sm font-semibold">
+              Account Details
+            </CardTitle>
+            <CardDescription className="text-xs">
+              Read-only information about this account.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4 px-5 py-5">
             <div className="space-y-1">
-              <p className="text-xs text-muted-foreground">Last Login</p>
-              <p className="text-sm">
-                {new Date(user.lastLoginAt).toLocaleString()}
+              <p className="text-xs text-muted-foreground">User ID</p>
+              <code className="font-mono text-xs break-all">{user.id}</code>
+            </div>
+            <div className="space-y-1">
+              <p className="text-xs text-muted-foreground">Status</p>
+              <p className="flex items-center gap-1.5 text-sm">
+                {user.isVerified ? (
+                  <>
+                    <GoCheckCircleFill className="size-3.5 text-success" />
+                    Verified
+                  </>
+                ) : (
+                  "Unverified"
+                )}
               </p>
             </div>
-          )}
-        </CardContent>
-      </Card>
-    </div>
+            {user.lastLoginAt && (
+              <div className="space-y-1">
+                <p className="text-xs text-muted-foreground">Last Login</p>
+                <p className="text-sm">
+                  {new Date(user.lastLoginAt).toLocaleString()}
+                </p>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      </div>
+    </>
   );
 }

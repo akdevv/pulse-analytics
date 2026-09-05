@@ -21,11 +21,11 @@ export function SiteTabs({ children }: { children?: React.ReactNode }) {
   const base = `/dashboard/sites/${id}`;
 
   return (
-    <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border">
+    <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[var(--seam)] px-5 py-3">
       <div className="flex min-h-9 items-center gap-2">{children}</div>
       <nav
         aria-label="Site sections"
-        className="-mb-px flex gap-1 overflow-x-auto"
+        className="-mb-3 flex gap-1 overflow-x-auto"
       >
         {TABS.map(({ label, segment }) => {
           const href = `${base}${segment}`;
@@ -35,15 +35,15 @@ export function SiteTabs({ children }: { children?: React.ReactNode }) {
               key={label}
               href={href}
               aria-current={isActive ? "page" : undefined}
-              className={`relative shrink-0 px-3 pb-2.5 text-sm font-medium transition-colors ${
+              className={`relative shrink-0 px-3 pb-3 text-[13px] transition-colors duration-150 ease-[var(--ease-out)] ${
                 isActive
                   ? "text-foreground"
-                  : "text-muted-foreground hover:text-foreground"
+                  : "text-foreground/45 hover:text-foreground/90"
               }`}
             >
               {label}
               {isActive && (
-                <span className="absolute right-0 bottom-0 left-0 h-0.5 rounded-full bg-foreground" />
+                <span className="absolute right-0 bottom-0 left-0 h-0.5 bg-primary" />
               )}
             </Link>
           );

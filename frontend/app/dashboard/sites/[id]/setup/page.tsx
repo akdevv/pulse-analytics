@@ -80,27 +80,29 @@ export default function SiteSetupPage() {
 
   if (isLoading) {
     return (
-      <div className="space-y-6 p-1">
+      <>
         <SiteTabs />
-        <div className="grid gap-3 sm:grid-cols-3">
-          {Array.from({ length: 3 }).map((_, i) => (
-            <Skeleton key={i} className="h-20 rounded-xl" />
-          ))}
+        <div className="space-y-5 p-5">
+          <div className="seam grid sm:grid-cols-3">
+            {Array.from({ length: 3 }).map((_, i) => (
+              <Skeleton key={i} className="h-20" />
+            ))}
+          </div>
+          <Skeleton className="h-40" />
+          <Skeleton className="h-40" />
         </div>
-        <Skeleton className="h-40 rounded-xl" />
-        <Skeleton className="h-40 rounded-xl" />
-      </div>
+      </>
     );
   }
 
   if (error || !site) {
     return (
-      <div className="space-y-6 p-1">
+      <>
         <SiteTabs />
-        <p className="text-sm text-destructive">
+        <p className="p-5 text-sm text-destructive">
           {getErrorMessage(error, "Site not found.")}
         </p>
-      </div>
+      </>
     );
   }
 
@@ -108,133 +110,134 @@ export default function SiteSetupPage() {
   const curlCmd = getCurlCommand(site.trackingId, site.domain);
 
   return (
-    <div className="space-y-6 p-1">
+    <>
       <SiteTabs />
+      <div className="space-y-5 p-5">
+        {/* Stat Cards */}
+        <div className="grid gap-3 sm:grid-cols-3">
+          <Card className="overflow-hidden py-0">
+            <CardContent className="p-4">
+              <p className="text-[11px] font-medium tracking-widest text-muted-foreground uppercase">
+                Tier
+              </p>
+              <p className="mt-2 text-sm font-semibold capitalize">
+                {site.rateLimitTier.toLowerCase()}
+              </p>
+            </CardContent>
+          </Card>
 
-      {/* Stat Cards */}
-      <div className="grid gap-3 sm:grid-cols-3">
-        <Card className="overflow-hidden py-0">
-          <CardContent className="p-4">
-            <p className="text-[11px] font-medium tracking-widest text-muted-foreground uppercase">
-              Tier
-            </p>
-            <p className="mt-2 text-sm font-semibold capitalize">
-              {site.rateLimitTier.toLowerCase()}
-            </p>
+          <Card className="overflow-hidden py-0">
+            <CardContent className="p-4">
+              <p className="text-[11px] font-medium tracking-widest text-muted-foreground uppercase">
+                Created
+              </p>
+              <p className="mt-2 text-sm font-semibold">
+                {new Date(site.createdAt).toLocaleDateString("en-US", {
+                  month: "short",
+                  day: "numeric",
+                  year: "numeric",
+                })}
+              </p>
+            </CardContent>
+          </Card>
+
+          <Card className="overflow-hidden py-0">
+            <CardContent className="p-4">
+              <p className="text-[11px] font-medium tracking-widest text-muted-foreground uppercase">
+                Last Updated
+              </p>
+              <p className="mt-2 text-sm font-semibold">
+                {new Date(site.updatedAt).toLocaleDateString("en-US", {
+                  month: "short",
+                  day: "numeric",
+                  year: "numeric",
+                })}
+              </p>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Tracking Details */}
+        <Card className="py-0">
+          <CardHeader className="px-5 pt-5 pb-0">
+            <CardTitle className="text-sm font-semibold">
+              Tracking Details
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="px-5 pt-3 pb-2">
+            <dl>
+              {[
+                { label: "Site ID", value: site.id },
+                { label: "Tracking ID", value: site.trackingId },
+                { label: "Domain", value: site.domain },
+              ].map(({ label, value }, i, arr) => (
+                <div
+                  key={label}
+                  className={`flex items-center justify-between py-3 text-sm ${
+                    i < arr.length - 1 ? "border-b" : ""
+                  }`}
+                >
+                  <dt className="text-xs font-medium text-muted-foreground">
+                    {label}
+                  </dt>
+                  <dd className="rounded bg-muted px-2 py-0.5 font-mono text-xs">
+                    {value}
+                  </dd>
+                </div>
+              ))}
+            </dl>
           </CardContent>
         </Card>
 
-        <Card className="overflow-hidden py-0">
-          <CardContent className="p-4">
-            <p className="text-[11px] font-medium tracking-widest text-muted-foreground uppercase">
-              Created
-            </p>
-            <p className="mt-2 text-sm font-semibold">
-              {new Date(site.createdAt).toLocaleDateString("en-US", {
-                month: "short",
-                day: "numeric",
-                year: "numeric",
-              })}
-            </p>
+        {/* Tracking Snippet */}
+        <Card className="py-0">
+          <CardHeader className="px-5 pt-5 pb-4">
+            <div className="flex items-start justify-between gap-4">
+              <div className="space-y-1">
+                <CardTitle className="text-sm font-semibold">
+                  Tracking Snippet
+                </CardTitle>
+                <CardDescription className="text-xs">
+                  Paste this inside the{" "}
+                  <code className="rounded bg-muted px-1 py-0.5 font-mono text-[11px]">
+                    &lt;head&gt;
+                  </code>{" "}
+                  tag of your site.
+                </CardDescription>
+              </div>
+              <CopyButton text={snippet} />
+            </div>
+          </CardHeader>
+          <CardContent className="px-5 pb-5">
+            <pre className="overflow-x-auto rounded-lg border border-border bg-charcoal p-4 text-[11px] leading-relaxed text-ink/80">
+              <code>{snippet}</code>
+            </pre>
           </CardContent>
         </Card>
 
-        <Card className="overflow-hidden py-0">
-          <CardContent className="p-4">
-            <p className="text-[11px] font-medium tracking-widest text-muted-foreground uppercase">
-              Last Updated
-            </p>
-            <p className="mt-2 text-sm font-semibold">
-              {new Date(site.updatedAt).toLocaleDateString("en-US", {
-                month: "short",
-                day: "numeric",
-                year: "numeric",
-              })}
-            </p>
+        {/* Quick Test */}
+        <Card className="py-0">
+          <CardHeader className="px-5 pt-5 pb-4">
+            <div className="flex items-start justify-between gap-4">
+              <div className="space-y-1">
+                <CardTitle className="text-sm font-semibold">
+                  Quick Test
+                </CardTitle>
+                <CardDescription className="text-xs">
+                  Fire a test pageview from your terminal to verify tracking is
+                  working.
+                </CardDescription>
+              </div>
+              <CopyButton text={curlCmd} />
+            </div>
+          </CardHeader>
+          <CardContent className="px-5 pb-5">
+            <pre className="overflow-x-auto rounded-lg border border-border bg-charcoal p-4 text-[11px] leading-relaxed text-ink/80">
+              <code>{curlCmd}</code>
+            </pre>
           </CardContent>
         </Card>
       </div>
-
-      {/* Tracking Details */}
-      <Card className="py-0">
-        <CardHeader className="px-5 pt-5 pb-0">
-          <CardTitle className="text-sm font-semibold">
-            Tracking Details
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="px-5 pt-3 pb-2">
-          <dl>
-            {[
-              { label: "Site ID", value: site.id },
-              { label: "Tracking ID", value: site.trackingId },
-              { label: "Domain", value: site.domain },
-            ].map(({ label, value }, i, arr) => (
-              <div
-                key={label}
-                className={`flex items-center justify-between py-3 text-sm ${
-                  i < arr.length - 1 ? "border-b" : ""
-                }`}
-              >
-                <dt className="text-xs font-medium text-muted-foreground">
-                  {label}
-                </dt>
-                <dd className="rounded bg-muted px-2 py-0.5 font-mono text-xs">
-                  {value}
-                </dd>
-              </div>
-            ))}
-          </dl>
-        </CardContent>
-      </Card>
-
-      {/* Tracking Snippet */}
-      <Card className="py-0">
-        <CardHeader className="px-5 pt-5 pb-4">
-          <div className="flex items-start justify-between gap-4">
-            <div className="space-y-1">
-              <CardTitle className="text-sm font-semibold">
-                Tracking Snippet
-              </CardTitle>
-              <CardDescription className="text-xs">
-                Paste this inside the{" "}
-                <code className="rounded bg-muted px-1 py-0.5 font-mono text-[11px]">
-                  &lt;head&gt;
-                </code>{" "}
-                tag of your site.
-              </CardDescription>
-            </div>
-            <CopyButton text={snippet} />
-          </div>
-        </CardHeader>
-        <CardContent className="px-5 pb-5">
-          <pre className="overflow-x-auto rounded-lg border border-border bg-charcoal p-4 text-[11px] leading-relaxed text-ink/80">
-            <code>{snippet}</code>
-          </pre>
-        </CardContent>
-      </Card>
-
-      {/* Quick Test */}
-      <Card className="py-0">
-        <CardHeader className="px-5 pt-5 pb-4">
-          <div className="flex items-start justify-between gap-4">
-            <div className="space-y-1">
-              <CardTitle className="text-sm font-semibold">
-                Quick Test
-              </CardTitle>
-              <CardDescription className="text-xs">
-                Fire a test pageview from your terminal to verify tracking is
-                working.
-              </CardDescription>
-            </div>
-            <CopyButton text={curlCmd} />
-          </div>
-        </CardHeader>
-        <CardContent className="px-5 pb-5">
-          <pre className="overflow-x-auto rounded-lg border border-border bg-charcoal p-4 text-[11px] leading-relaxed text-ink/80">
-            <code>{curlCmd}</code>
-          </pre>
-        </CardContent>
-      </Card>
-    </div>
+    </>
   );
 }

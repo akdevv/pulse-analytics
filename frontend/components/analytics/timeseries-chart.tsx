@@ -2,140 +2,168 @@
 
 import { Area, AreaChart, CartesianGrid, XAxis, YAxis } from "recharts";
 import { Skeleton } from "@/components/ui/skeleton";
-import { formatTick } from "@/lib/format";
 import {
   ChartContainer,
   ChartTooltip,
   ChartTooltipContent,
   type ChartConfig,
 } from "@/components/ui/chart";
+import { formatTick } from "@/lib/format";
 import type { TimeseriesPoint } from "@/lib/types/analytics.types";
 
 const chartConfig: ChartConfig = {
-  pageviews: {
-    label: "Pageviews",
-    color: "var(--chart-1)",
-  },
-  sessions: {
-    label: "Sessions",
-    color: "var(--chart-2)",
-  },
+  pageviews: { label: "Pageviews", color: "var(--chart-1)" },
+  sessions: { label: "Sessions", color: "var(--chart-2)" },
+};
+
+const TICK = {
+  fontSize: 10,
+  fontFamily: "var(--font-mono)",
+  letterSpacing: "0.08em",
+  fill: "currentColor",
+  fillOpacity: 0.45,
 };
 
 interface Props {
   data?: TimeseriesPoint[];
   isLoading: boolean;
   error: Error | null;
+  /** Hourly buckets need the hour; every label was the same date without it. */
+  interval: "hour" | "day";
 }
 
-export function TimeseriesChart({ data, isLoading, error }: Props) {
-  const chartData = data?.map((d) => ({
-    time: new Date(d.time).toLocaleDateString("en", {
-      month: "short",
-      day: "numeric",
-    }),
-    pageviews: d.pageviews,
-    sessions: d.sessions,
-  }));
+function Legend() {
+  return (
+    <span className="flex items-center gap-3.5">
+      {(["pageviews", "sessions"] as const).map((key) => (
+        <span key={key} className="meta flex items-center gap-1.5">
+          <span
+            className="size-1.5 rounded-full"
+            style={{ background: chartConfig[key].color }}
+          />
+          {chartConfig[key].label}
+        </span>
+      ))}
+    </span>
+  );
+}
+
+export function TimeseriesChart({ data, isLoading, error, interval }: Props) {
+  const chartData = data?.map((d) => {
+    const at = new Date(d.time);
+    return {
+      time:
+        interval === "hour"
+          ? at.toLocaleTimeString("en", { hour: "numeric", hour12: true })
+          : at.toLocaleDateString("en", { month: "short", day: "numeric" }),
+      // The axis is short; the tooltip can afford to say which day too.
+      full: at.toLocaleString("en", {
+        month: "short",
+        day: "numeric",
+        ...(interval === "hour" && { hour: "numeric", hour12: true }),
+      }),
+      pageviews: d.pageviews,
+      sessions: d.sessions,
+    };
+  });
 
   return (
-    <div className="rounded-xl border border-border bg-card p-6">
-      <div className="mb-5 flex items-center justify-between">
-        <h2 className="text-sm font-semibold text-foreground">
-          Traffic Over Time
-        </h2>
-        <div className="flex items-center gap-4">
-          <span className="flex items-center gap-2 text-xs text-muted-foreground">
-            <span
-              className="inline-block size-2.5 rounded-full"
-              style={{ background: "var(--chart-1)" }}
-            />
-            Pageviews
-          </span>
-          <span className="flex items-center gap-2 text-xs text-muted-foreground">
-            <span
-              className="inline-block size-2.5 rounded-full"
-              style={{ background: "var(--chart-2)" }}
-            />
-            Sessions
-          </span>
-        </div>
+    <div className="panel flex flex-col">
+      <div className="panel-head">
+        <span className="panel-title">Traffic</span>
+        <Legend />
       </div>
 
-      {error ? (
-        <p className="text-sm text-destructive">
-          Failed to load timeseries: {error.message}
-        </p>
-      ) : isLoading ? (
-        <Skeleton className="h-[220px] rounded-lg" />
-      ) : !chartData?.length ? (
-        <div className="flex h-[220px] items-center justify-center rounded-lg bg-muted/20">
-          <p className="text-sm text-muted-foreground">
-            No data for this range
+      <div className="px-5 py-4">
+        {error ? (
+          <p className="py-16 text-center text-sm text-destructive">
+            {error.message}
           </p>
-        </div>
-      ) : (
-        <ChartContainer config={chartConfig} className="h-[220px] w-full">
-          <AreaChart
-            data={chartData}
-            margin={{ top: 4, right: 4, left: 0, bottom: 0 }}
-          >
-            <defs>
-              <linearGradient id="pvGrad" x1="0" y1="0" x2="0" y2="1">
-                <stop
-                  offset="5%"
-                  stopColor="var(--chart-1)"
-                  stopOpacity={0.18}
-                />
-                <stop offset="95%" stopColor="var(--chart-1)" stopOpacity={0} />
-              </linearGradient>
-              <linearGradient id="sessGrad" x1="0" y1="0" x2="0" y2="1">
-                <stop
-                  offset="5%"
-                  stopColor="var(--chart-2)"
-                  stopOpacity={0.14}
-                />
-                <stop offset="95%" stopColor="var(--chart-2)" stopOpacity={0} />
-              </linearGradient>
-            </defs>
-            <CartesianGrid vertical={false} strokeOpacity={0.07} />
-            <XAxis
-              dataKey="time"
-              tickLine={false}
-              axisLine={false}
-              tick={{ fontSize: 11, fill: "currentColor", fillOpacity: 0.38 }}
-              interval="preserveStartEnd"
-              minTickGap={40}
-            />
-            <YAxis
-              tickLine={false}
-              axisLine={false}
-              tick={{ fontSize: 11, fill: "currentColor", fillOpacity: 0.38 }}
-              tickFormatter={formatTick}
-              width={40}
-            />
-            <ChartTooltip content={<ChartTooltipContent />} />
-            <Area
-              type="monotone"
-              dataKey="sessions"
-              stroke="var(--chart-2)"
-              strokeWidth={2}
-              fill="url(#sessGrad)"
-              dot={false}
-              activeDot={{ r: 4 }}
-            />
-            <Area
-              type="monotone"
-              dataKey="pageviews"
-              stroke="var(--chart-1)"
-              strokeWidth={2}
-              fill="url(#pvGrad)"
-              dot={false}
-              activeDot={{ r: 4 }}
-            />
-          </AreaChart>
-        </ChartContainer>
-      )}
+        ) : isLoading ? (
+          <Skeleton className="h-[240px]" />
+        ) : !chartData?.length ? (
+          <p className="py-24 text-center text-sm text-foreground/45">
+            No traffic in this range.
+          </p>
+        ) : (
+          <ChartContainer config={chartConfig} className="h-[240px] w-full">
+            <AreaChart
+              data={chartData}
+              margin={{ top: 6, right: 6, left: 0, bottom: 0 }}
+            >
+              <defs>
+                <linearGradient id="pvGrad" x1="0" y1="0" x2="0" y2="1">
+                  <stop
+                    offset="0%"
+                    stopColor="var(--chart-1)"
+                    stopOpacity={0.22}
+                  />
+                  <stop
+                    offset="100%"
+                    stopColor="var(--chart-1)"
+                    stopOpacity={0}
+                  />
+                </linearGradient>
+                <linearGradient id="sessGrad" x1="0" y1="0" x2="0" y2="1">
+                  <stop
+                    offset="0%"
+                    stopColor="var(--chart-2)"
+                    stopOpacity={0.14}
+                  />
+                  <stop
+                    offset="100%"
+                    stopColor="var(--chart-2)"
+                    stopOpacity={0}
+                  />
+                </linearGradient>
+              </defs>
+              <CartesianGrid vertical={false} strokeOpacity={0.07} />
+              <XAxis
+                dataKey="time"
+                tickLine={false}
+                axisLine={false}
+                tick={TICK}
+                interval="preserveStartEnd"
+                minTickGap={44}
+                tickMargin={10}
+              />
+              <YAxis
+                tickLine={false}
+                axisLine={false}
+                tick={TICK}
+                tickFormatter={formatTick}
+                width={38}
+              />
+              <ChartTooltip
+                cursor={{ strokeOpacity: 0.18 }}
+                content={<ChartTooltipContent labelKey="full" />}
+              />
+              <Area
+                type="monotone"
+                dataKey="sessions"
+                stroke="var(--chart-2)"
+                strokeWidth={1.5}
+                strokeOpacity={0.75}
+                fill="url(#sessGrad)"
+                dot={false}
+                activeDot={{ r: 3 }}
+              />
+              {/* The lead series carries the accent's glow, so the two lines
+                  are told apart by weight and light rather than hue alone. */}
+              <Area
+                type="monotone"
+                dataKey="pageviews"
+                stroke="var(--chart-1)"
+                strokeWidth={2}
+                fill="url(#pvGrad)"
+                dot={false}
+                activeDot={{ r: 4 }}
+                style={{ filter: "drop-shadow(0 0 6px var(--pa-accent-glow))" }}
+              />
+            </AreaChart>
+          </ChartContainer>
+        )}
+      </div>
     </div>
   );
 }
