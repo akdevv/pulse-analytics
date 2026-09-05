@@ -7,11 +7,12 @@ import {
   getConversations,
 } from "@/lib/api/ai.api";
 import type { AskResult } from "@/lib/types/ai.types";
+import { getErrorMessage } from "@/lib/utils";
 
 export function useConversations(siteId: string) {
   return useQuery({
     queryKey: ["ai-conversations", siteId],
-    queryFn: () => getConversations(siteId).then((r) => r.data),
+    queryFn: () => getConversations(siteId),
     enabled: !!siteId,
   });
 }
@@ -19,7 +20,7 @@ export function useConversations(siteId: string) {
 export function useConversation(siteId: string, conversationId?: string) {
   return useQuery({
     queryKey: ["ai-conversation", siteId, conversationId],
-    queryFn: () => getConversation(siteId, conversationId!).then((r) => r.data),
+    queryFn: () => getConversation(siteId, conversationId!),
     enabled: !!siteId && !!conversationId,
     // Never refetched while open. New turns are held in local state and shown
     // after this data; a background refetch would return those same turns from
@@ -51,20 +52,15 @@ export function useAsk(siteId: string) {
   >({
     mutationFn: async ({ question, conversationId }) => {
       try {
-        const res = await ask(siteId, question, conversationId);
-        return res.data;
+        return await ask(siteId, question, conversationId);
       } catch (err) {
         // A 422 is SQL the model wrote and the database refused — that is an
         // answer to show, not a failure to swallow. Anything else is a real error.
-        const response = (
-          err as AxiosError<{ data?: AskResult; message?: string }>
-        ).response;
-        if (response?.data?.data?.kind === "error") return response.data.data;
+        const body = (err as AxiosError<{ data?: AskResult }>).response?.data;
+        if (body?.data?.kind === "error") return body.data;
         // Surface the server's own wording ("Too many questions, try again
         // later") rather than axios's "Request failed with status code 429".
-        throw new Error(
-          response?.data?.message ?? (err as Error).message ?? "Ask failed"
-        );
+        throw new Error(getErrorMessage(err, "Ask failed"));
       }
     },
     onSuccess: () => {

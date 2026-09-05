@@ -1,50 +1,46 @@
-import api from "@/lib/api/client";
-import type { DateRangeParams } from "@/lib/types/analytics.types";
+import { apiGet } from "@/lib/api/client";
+import type {
+  DateRangeParams,
+  DeviceStats,
+  EventStat,
+  GeoStat,
+  OverviewStats,
+  PageStat,
+  PropertyStat,
+  RealtimeStats,
+  ReferrerStat,
+  TimeseriesPoint,
+} from "@/lib/types/analytics.types";
 
-export const getOverview = async (siteId: string, params: DateRangeParams) => {
-  return api.get(`analytics/${siteId}/overview`, { params });
-};
+export const getOverview = (siteId: string, params: DateRangeParams) =>
+  apiGet<OverviewStats>(`analytics/${siteId}/overview`, { params });
 
-export const getTimeseries = async (
-  siteId: string,
-  params: DateRangeParams
-) => {
-  return api.get(`analytics/${siteId}/timeseries`, { params });
-};
+export const getTimeseries = (siteId: string, params: DateRangeParams) =>
+  apiGet<TimeseriesPoint[]>(`analytics/${siteId}/timeseries`, { params });
 
-export const getTopPages = async (siteId: string, params: DateRangeParams) => {
-  return api.get(`analytics/${siteId}/pages`, { params });
-};
+export const getTopPages = (siteId: string, params: DateRangeParams) =>
+  apiGet<PageStat[]>(`analytics/${siteId}/pages`, { params });
 
-export const getReferrers = async (siteId: string, params: DateRangeParams) => {
-  return api.get(`analytics/${siteId}/referrers`, { params });
-};
+export const getReferrers = (siteId: string, params: DateRangeParams) =>
+  apiGet<ReferrerStat[]>(`analytics/${siteId}/referrers`, { params });
 
-export const getDevices = async (siteId: string, params: DateRangeParams) => {
-  return api.get(`analytics/${siteId}/devices`, { params });
-};
+export const getDevices = (siteId: string, params: DateRangeParams) =>
+  apiGet<DeviceStats>(`analytics/${siteId}/devices`, { params });
 
-export const getGeo = async (siteId: string, params: DateRangeParams) => {
-  return api.get(`analytics/${siteId}/geo`, { params });
-};
+export const getGeo = (siteId: string, params: DateRangeParams) =>
+  apiGet<GeoStat[]>(`analytics/${siteId}/geo`, { params });
 
-export const getRealtime = async (siteId: string) => {
-  return api.get(`analytics/${siteId}/realtime`);
-};
+export const getRealtime = (siteId: string) =>
+  apiGet<RealtimeStats>(`analytics/${siteId}/realtime`);
 
-export const getCustomEvents = async (
-  siteId: string,
-  params: DateRangeParams
-) => {
-  return api.get(`analytics/${siteId}/events`, { params });
-};
+export const getCustomEvents = (siteId: string, params: DateRangeParams) =>
+  apiGet<EventStat[]>(`analytics/${siteId}/events`, { params });
 
-export const getEventProperties = async (
+export const getEventProperties = (
   siteId: string,
   name: string,
   params: DateRangeParams
-) => {
-  return api.get(`analytics/${siteId}/events/properties`, {
+) =>
+  apiGet<PropertyStat[]>(`analytics/${siteId}/events/properties`, {
     params: { ...params, name },
   });
-};

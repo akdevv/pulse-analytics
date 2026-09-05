@@ -105,25 +105,25 @@ export default function SiteAnalyticsPage() {
       />
 
       <OverviewCards
-        data={overview?.data}
+        data={overview}
         isLoading={overviewLoading}
         error={overviewError}
       />
 
       <TimeseriesChart
-        data={timeseries?.data}
+        data={timeseries}
         isLoading={timeseriesLoading}
         error={timeseriesError}
       />
 
       <div className="grid grid-cols-1 gap-5 lg:grid-cols-2">
         <TopPagesChart
-          data={pages?.data}
+          data={pages}
           isLoading={pagesLoading}
           error={pagesError}
         />
         <ReferrersChart
-          data={referrers?.data}
+          data={referrers}
           isLoading={referrersLoading}
           error={referrersError}
         />
@@ -131,17 +131,17 @@ export default function SiteAnalyticsPage() {
 
       <div className="grid grid-cols-1 gap-5 lg:grid-cols-2">
         <DevicesChart
-          data={devices?.data}
+          data={devices}
           isLoading={devicesLoading}
           error={devicesError}
         />
-        <GeoChart data={geo?.data} isLoading={geoLoading} error={geoError} />
+        <GeoChart data={geo} isLoading={geoLoading} error={geoError} />
       </div>
 
       <EventsChart
         siteId={id}
         dateRange={dateRange}
-        data={events?.data}
+        data={events}
         isLoading={eventsLoading}
         error={eventsError}
       />

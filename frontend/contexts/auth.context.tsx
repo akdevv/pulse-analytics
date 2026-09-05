@@ -1,7 +1,8 @@
 "use client";
 
 import { createContext, useContext, useEffect, useState } from "react";
-import api, { setAccessToken } from "@/lib/api/client";
+import * as authApi from "@/lib/api/auth.api";
+import { setAccessToken } from "@/lib/api/client";
 import type { User } from "@/lib/types/user.types";
 
 interface AuthContextValue {
@@ -21,13 +22,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     // On every page load, try to restore session via the cookie
-    api
-      .post("/auth/refresh")
-      .then((res) => {
-        setAccessToken(res.data.accessToken);
-        return api.get("/auth/me");
+    authApi
+      .refreshSession()
+      .then(({ accessToken }) => {
+        setAccessToken(accessToken);
+        return authApi.getMe();
       })
-      .then((res) => setUser(res.data))
+      .then(setUser)
       .catch(() => {
         setAccessToken(null);
         setUser(null);
@@ -36,28 +37,25 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const login = async (email: string, password: string) => {
-    const res = await api.post("/auth/login", { email, password });
-    setAccessToken(res.data.accessToken);
-    const user = await api.get("/auth/me");
-    setUser(user.data);
+    const { accessToken } = await authApi.login(email, password);
+    setAccessToken(accessToken);
+    setUser(await authApi.getMe());
   };
 
   const register = async (name: string, email: string, password: string) => {
-    const res = await api.post("/auth/register", { name, email, password });
-    setAccessToken(res.data.accessToken);
-    const user = await api.get("/auth/me");
-    setUser(user.data);
+    const { accessToken } = await authApi.register(name, email, password);
+    setAccessToken(accessToken);
+    setUser(await authApi.getMe());
   };
 
   // Re-read the profile after it changes (account page saves)
   const refreshUser = async () => {
-    const res = await api.get("/auth/me");
-    setUser(res.data);
+    setUser(await authApi.getMe());
   };
 
   const logout = async () => {
     try {
-      await api.post("/auth/logout");
+      await authApi.logout();
     } finally {
       setAccessToken(null);
       setUser(null);

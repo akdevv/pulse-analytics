@@ -41,7 +41,7 @@ function PropertyBreakdown({
     name,
     dateRange
   );
-  const rows: PropertyStat[] = data?.data ?? [];
+  const rows: PropertyStat[] = data ?? [];
 
   if (error) {
     return (

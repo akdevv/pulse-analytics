@@ -1,4 +1,4 @@
-import api from "@/lib/api/client";
+import { apiDelete, apiGet, apiPost } from "@/lib/api/client";
 import type {
   AskResult,
   Conversation,
@@ -7,12 +7,12 @@ import type {
 
 // The model call can take a while on a free tier — the client's default 10s
 // timeout is too tight for this one route.
-export const ask = async (
+export const ask = (
   siteId: string,
   question: string,
   conversationId?: string
-): Promise<{ data: AskResult }> =>
-  api.post(
+) =>
+  apiPost<AskResult>(
     `ai/${siteId}/ask`,
     { question, ...(conversationId && { conversationId }) },
     // Worst case is two model calls plus a repair round; leave room for it
@@ -20,20 +20,15 @@ export const ask = async (
     { timeout: 90_000 }
   );
 
-export const getConversations = async (
-  siteId: string
-): Promise<{ data: ConversationSummary[] }> =>
-  api.get(`ai/${siteId}/conversations`);
+export const getConversations = (siteId: string) =>
+  apiGet<ConversationSummary[]>(`ai/${siteId}/conversations`);
 
 // Opening a thread re-runs its stored SQL server-side, so it needs more than
 // the client's 10s default.
-export const getConversation = async (
-  siteId: string,
-  conversationId: string
-): Promise<{ data: Conversation }> =>
-  api.get(`ai/${siteId}/conversations/${conversationId}`, { timeout: 40_000 });
+export const getConversation = (siteId: string, conversationId: string) =>
+  apiGet<Conversation>(`ai/${siteId}/conversations/${conversationId}`, {
+    timeout: 40_000,
+  });
 
-export const deleteConversation = async (
-  siteId: string,
-  conversationId: string
-): Promise<void> => api.delete(`ai/${siteId}/conversations/${conversationId}`);
+export const deleteConversation = (siteId: string, conversationId: string) =>
+  apiDelete(`ai/${siteId}/conversations/${conversationId}`);

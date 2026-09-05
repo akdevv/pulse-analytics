@@ -15,7 +15,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { PasswordInput } from "@/components/common/password-input";
 import { useAuth } from "@/contexts/auth.context";
-import api from "@/lib/api/client";
+import * as authApi from "@/lib/api/auth.api";
+import { getErrorMessage } from "@/lib/utils";
 
 // Mirrors the backend rule in backend/src/modules/auth/auth.types.ts
 function passwordError(password: string, confirm: string) {
@@ -47,11 +48,11 @@ export default function AccountPage() {
   const handleSaveProfile = async () => {
     setSavingProfile(true);
     try {
-      await api.patch("/auth/me", { name, email });
+      await authApi.updateMe({ name, email });
       await refreshUser();
       toast.success("Profile updated.");
-    } catch {
-      toast.error("Failed to update profile. Please try again.");
+    } catch (err) {
+      toast.error(getErrorMessage(err, "Failed to update profile."));
     } finally {
       setSavingProfile(false);
     }
@@ -66,12 +67,12 @@ export default function AccountPage() {
 
     setSavingPassword(true);
     try {
-      await api.patch("/auth/me", { password });
+      await authApi.changePassword(password);
       setPassword("");
       setConfirmPassword("");
       toast.success("Password changed.");
-    } catch {
-      toast.error("Failed to change password. Please try again.");
+    } catch (err) {
+      toast.error(getErrorMessage(err, "Failed to change password."));
     } finally {
       setSavingPassword(false);
     }
