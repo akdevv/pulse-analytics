@@ -77,4 +77,6 @@ export interface PropertyStat {
   key: string;
   value: string;
   count: number;
+  /** How many distinct values this key has in range, before the top-10 cap. */
+  distinctValues: number;
 }

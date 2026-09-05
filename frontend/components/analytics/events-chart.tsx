@@ -72,8 +72,13 @@ function PropertyBreakdown({
     <div className="space-y-3 py-2">
       {groupByKey(rows).map(([key, values]) => (
         <div key={key}>
-          <p className="mb-1 font-mono text-[11px] text-muted-foreground">
+          <p className="mb-1 flex items-baseline gap-2 font-mono text-[11px] text-muted-foreground">
             {key}
+            {values[0] && values[0].distinctValues > values.length ? (
+              <span className="font-sans text-[10px] text-muted-foreground/60">
+                top {values.length} of {values[0].distinctValues}
+              </span>
+            ) : null}
           </p>
           <div className="space-y-1">
             {values.map((row) => (
@@ -87,7 +92,7 @@ function PropertyBreakdown({
                 >
                   {row.value === "" ? "(empty)" : row.value}
                 </span>
-                <span className="shrink-0 tabular-nums text-foreground/60">
+                <span className="shrink-0 text-foreground/60 tabular-nums">
                   {fmt(row.count)}
                 </span>
               </div>
@@ -123,7 +128,7 @@ export function EventsChart({
         <h2 className="text-sm font-semibold text-foreground">Custom Events</h2>
         {data?.length ? (
           <span className="text-xs text-muted-foreground">
-            {data.length} events
+            {data.length} {data.length === 1 ? "event" : "events"}
           </span>
         ) : null}
       </div>
@@ -173,7 +178,7 @@ export function EventsChart({
                       >
                         {row.eventName}
                       </span>
-                      <span className="shrink-0 text-xs tabular-nums text-foreground/80">
+                      <span className="shrink-0 text-xs text-foreground/80 tabular-nums">
                         <span className="font-semibold">{fmt(row.count)}</span>
                         <span className="ml-2 text-muted-foreground">
                           {fmt(row.visitors)}{" "}

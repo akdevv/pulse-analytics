@@ -57,4 +57,5 @@ export interface PropertyStat {
   key: string;
   value: string;
   count: number;
+  distinctValues: number;
 }

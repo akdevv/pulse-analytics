@@ -276,6 +276,21 @@ export async function getCustomEvents(
 // Counts every (key, value) pair across the event's properties in one query,
 // so there is no per-key endpoint.
 //
+// Values are ranked within their own key and capped at 10 each. A flat
+// "top 200 pairs" lets one high-cardinality key (a request id, a timestamp)
+// spend the whole budget and hide every other key, which is exactly the
+// mistake the docs warn people about. Keys are ordered by total volume, so if
+// the outer limit ever bites it drops the least-used key rather than the
+// alphabetically unlucky one. Keys tie on volume constantly, since one event
+// usually carries the same set every time, so a low-cardinality key sorts
+// ahead of a noisy one: three plan values are worth reading, ten request ids
+// are not.
+//
+// Both caps are explicit rather than a bare LIMIT on the flat result. A row
+// limit cuts mid-key, so the last key comes back ragged with no way to tell a
+// partial list from a complete one. 20 keys x 10 values bounds this at 200
+// rows either way.
+//
 // Do not simplify the CASE away. track.types.ts parses `ep` with a bare
 // JSON.parse, so ep=[1,2] lands a non-object in the column and jsonb_each_text
 // throws on it. A WHERE guard does not help: the lateral join runs per row
@@ -287,24 +302,41 @@ export async function getEventProperties(
   to: Date
 ): Promise<PropertyStat[]> {
   return prisma.$queryRaw<PropertyStat[]>`
-    SELECT
-      prop.key      AS key,
-      prop.value    AS value,
-      COUNT(*)::int AS count
-    FROM events e,
-      LATERAL jsonb_each_text(
-        CASE WHEN jsonb_typeof(e."eventProperties") = 'object'
-             THEN e."eventProperties"
-             ELSE '{}'::jsonb
-        END
-      ) AS prop(key, value)
-    WHERE e."siteId"     = ${siteId}
-      AND e."receivedAt" >= ${from}
-      AND e."receivedAt" <  ${to}
-      AND e."eventName"  = ${eventName}
-    GROUP BY prop.key, prop.value
-    ORDER BY prop.key ASC, count DESC
-    LIMIT 200
+    SELECT key, value, count, distinct_values AS "distinctValues"
+    FROM (
+      SELECT
+        key, value, count, distinct_values,
+        DENSE_RANK() OVER (
+          ORDER BY key_total DESC, distinct_values ASC, key ASC
+        ) AS key_rank
+      FROM (
+        SELECT
+          prop.key      AS key,
+          prop.value    AS value,
+          COUNT(*)::int AS count,
+          ROW_NUMBER() OVER (
+            PARTITION BY prop.key
+            ORDER BY COUNT(*) DESC, prop.value ASC
+          ) AS value_rank,
+          SUM(COUNT(*))      OVER (PARTITION BY prop.key)      AS key_total,
+          (COUNT(*)          OVER (PARTITION BY prop.key))::int AS distinct_values
+        FROM events e,
+          LATERAL jsonb_each_text(
+            CASE WHEN jsonb_typeof(e."eventProperties") = 'object'
+                 THEN e."eventProperties"
+                 ELSE '{}'::jsonb
+            END
+          ) AS prop(key, value)
+        WHERE e."siteId"     = ${siteId}
+          AND e."receivedAt" >= ${from}
+          AND e."receivedAt" <  ${to}
+          AND e."eventName"  = ${eventName}
+        GROUP BY prop.key, prop.value
+      ) agg
+      WHERE value_rank <= 10
+    ) ranked
+    WHERE key_rank <= 20
+    ORDER BY key_rank, count DESC, value ASC
   `;
 }
 
