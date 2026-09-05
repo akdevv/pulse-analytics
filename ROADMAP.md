@@ -111,12 +111,16 @@ Both read queries hit raw `events` rather than an aggregate: the continuous aggr
 
 ### 5.3 Docs
 
-Four MDX pages under `/docs` in the dashboard app. Shiki is already installed.
+Shipped as five markdown pages under `frontend/content/docs/v1/`, rendered at
+`/docs` and readable signed out. Shiki was already installed. The SDK reference
+was not in the original four; it turned out the install guides kept reaching for
+signatures that had nowhere to live.
 
 1. **Quickstart.** Create a site, install, verify the first event. Under two minutes.
 2. **Install guides.** Script tag, npm, Astro, Next.js App Router, React/Vite. One block each.
 3. **Tracking events.** `data-pulse-event`, `trackEvent`, the `usePulse` hook, property naming, and never putting personal data in properties.
 4. **How it works.** The pipeline end to end. The page that makes an engineer trust it, and the skeleton of the case study.
+5. **SDK reference.** Signatures, `/track` parameters, rate limits.
 
 Also refresh `sdk/README.md` (it's the npm listing) and rewrite the root README around the live link. Full API reference stays as markdown in the repo. Not worth a docs site.
 

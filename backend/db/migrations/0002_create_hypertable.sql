@@ -1,7 +1,4 @@
--- Converts the events table into a TimescaleDB hypertable.
---
--- migrate_data => TRUE means any existing rows are safely moved into chunks.
--- if_not_exists => TRUE means re-running this is a no-op.
+-- migrate_data moves existing rows into chunks. if_not_exists makes a rerun a no-op.
 
 SELECT create_hypertable(
   'events',

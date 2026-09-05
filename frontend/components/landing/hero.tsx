@@ -52,7 +52,9 @@ export function Hero() {
       <div className="relative z-10 mx-auto max-w-3xl px-6 text-center">
         <Reveal>
           <Link
-            href="/changelog"
+            href="https://github.com/akdevv/pulse-analytics/releases"
+            target="_blank"
+            rel="noreferrer"
             className="group mb-9 inline-flex items-center gap-2.5 rounded-full border border-ink/10 bg-ink/[0.03] px-3 py-1 text-[12px] text-ink/70 backdrop-blur-sm transition-colors duration-150 ease-[var(--ease-out)] hover:border-ink/25 hover:text-ink"
           >
             <span
@@ -97,7 +99,7 @@ export function Hero() {
 
         <Reveal delay={180}>
           <div className="mt-9 flex flex-col items-stretch justify-center gap-2.5 sm:flex-row sm:items-center">
-            <PrimaryButton href="/signup" className="justify-center px-6 py-3">
+            <PrimaryButton href="/register" className="justify-center px-6 py-3">
               Try the demo
             </PrimaryButton>
             <GhostButton href="#how-it-works" className="justify-center">

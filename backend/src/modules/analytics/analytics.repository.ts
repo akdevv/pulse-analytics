@@ -24,15 +24,21 @@ export const getOverview = async (
   from: Date,
   to: Date
 ): Promise<OverviewStats> => {
+  // Raw events, not hourly_pageviews. The rollup's sessions and visitors are
+  // distinct counts within a group, so summing them counts one visitor once
+  // per page they viewed. ponytail: a range-bounded scan on the
+  // (siteId, timestamp) index. If it ever hurts, use approximate distincts
+  // (Toolkit hyperloglog), not sums of exact counts.
   const rows = await prisma.$queryRaw<any[]>`
     SELECT
-      COALESCE(SUM(pageviews), 0)::int AS "totalPageviews",
-      COALESCE(SUM(sessions),  0)::int AS "totalSessions",
-      COALESCE(SUM(visitors),  0)::int AS "totalVisitors"
-      FROM hourly_pageviews
-          WHERE "siteId" = ${siteId}
-            AND bucket >= ${from}
-            AND bucket <  ${to}
+      COUNT(*)                          ::int AS "totalPageviews",
+      COUNT(DISTINCT "sessionId")       ::int AS "totalSessions",
+      COUNT(DISTINCT "visitorId")       ::int AS "totalVisitors"
+    FROM events
+    WHERE "siteId" = ${siteId}
+      AND "eventType" = 'PAGEVIEW'
+      AND "receivedAt" >= ${from}
+      AND "receivedAt" <  ${to}
     `;
   return rows[0];
 };
@@ -43,32 +49,22 @@ export const getTimeseries = async (
   to: Date,
   interval: "hour" | "day"
 ) => {
-  if (interval === "hour") {
-    return prisma.$queryRaw<TimeseriesPoint[]>`
-        SELECT
-          bucket::text          AS time,
-          SUM(pageviews)::int   AS pageviews,
-          SUM(sessions)::int    AS sessions
-        FROM hourly_pageviews
-        WHERE "siteId" = ${siteId}
-          AND bucket >= ${from}
-          AND bucket <  ${to}
-        GROUP BY bucket
-        ORDER BY bucket ASC
-      `;
-  }
+  // pageviews would sum correctly from the rollup, sessions would not (see
+  // getOverview). Both read raw events so the chart's two lines agree.
+  const bucket = interval === "hour" ? "1 hour" : "1 day";
 
   return prisma.$queryRaw<TimeseriesPoint[]>`
       SELECT
-        day::text             AS time,
-        SUM(pageviews)::int   AS pageviews,
-        SUM(sessions)::int    AS sessions
-      FROM daily_pageviews
+        time_bucket(${bucket}::interval, "receivedAt")::text AS time,
+        COUNT(*)::int                                        AS pageviews,
+        COUNT(DISTINCT "sessionId")::int                     AS sessions
+      FROM events
       WHERE "siteId" = ${siteId}
-        AND day >= ${from}
-        AND day <  ${to}
-      GROUP BY day
-      ORDER BY day ASC
+        AND "eventType" = 'PAGEVIEW'
+        AND "receivedAt" >= ${from}
+        AND "receivedAt" <  ${to}
+      GROUP BY 1
+      ORDER BY 1 ASC
     `;
 };
 
@@ -106,7 +102,11 @@ export async function getReferrers(
     WHERE "siteId" = ${siteId}
       AND bucket >= ${from}
       AND bucket <  ${to}
-    GROUP BY referrer
+    -- Group by the expression, not the raw column. Grouping by the plain
+    -- referrer column put NULL and the empty string in separate buckets that
+    -- both rendered as "Direct", so the dashboard showed that row twice with
+    -- the traffic split between the two.
+    GROUP BY 1
     ORDER BY pageviews DESC
     LIMIT ${limit}
   `;
@@ -176,7 +176,7 @@ export async function getGeo(
   `;
 }
 
-// Intentionally hits raw events — aggregates are too stale for "right now".
+// Raw events. The aggregates are too stale for "right now".
 export async function getRealtime(siteId: string): Promise<RealtimeStats> {
   const [summaryRows, pageRows, referrerRows, eventRows] = await Promise.all([
     prisma.$queryRaw<
@@ -243,13 +243,10 @@ export async function getRealtime(siteId: string): Promise<RealtimeStats> {
   };
 }
 
-// Raw events, not an aggregate: both continuous aggregates filter on
-// eventType = 'PAGEVIEW', so custom events are in neither. Ranges use
-// "receivedAt" — the partition column, so chunks are pruned, and the same one
-// the aggregates bucket on, so these numbers agree with the pageview cards.
-//
-// Matches on eventName rather than eventType = 'CUSTOM' because CLICK events
-// carry a name too, and excluding them would just hide events.
+// Raw events. Both continuous aggregates filter on eventType = 'PAGEVIEW', so
+// custom events are in neither. Ranges use "receivedAt", the partition column,
+// so chunks prune and these numbers agree with the pageview cards. Matches on
+// eventName, not eventType = 'CUSTOM', since CLICK events carry names too.
 export async function getCustomEvents(
   siteId: string,
   from: Date,
@@ -273,28 +270,14 @@ export async function getCustomEvents(
   `;
 }
 
-// Counts every (key, value) pair across the event's properties in one query,
-// so there is no per-key endpoint.
+// Every (key, value) pair in one query. Values rank within their own key and
+// cap at 10, keys order by volume. A flat "top 200 pairs" would let one
+// high-cardinality key (a request id) spend the whole budget and hide the
+// rest. Two explicit caps also avoid a row limit cutting a key mid-list.
 //
-// Values are ranked within their own key and capped at 10 each. A flat
-// "top 200 pairs" lets one high-cardinality key (a request id, a timestamp)
-// spend the whole budget and hide every other key, which is exactly the
-// mistake the docs warn people about. Keys are ordered by total volume, so if
-// the outer limit ever bites it drops the least-used key rather than the
-// alphabetically unlucky one. Keys tie on volume constantly, since one event
-// usually carries the same set every time, so a low-cardinality key sorts
-// ahead of a noisy one: three plan values are worth reading, ten request ids
-// are not.
-//
-// Both caps are explicit rather than a bare LIMIT on the flat result. A row
-// limit cuts mid-key, so the last key comes back ragged with no way to tell a
-// partial list from a complete one. 20 keys x 10 values bounds this at 200
-// rows either way.
-//
-// Do not simplify the CASE away. track.types.ts parses `ep` with a bare
-// JSON.parse, so ep=[1,2] lands a non-object in the column and jsonb_each_text
-// throws on it. A WHERE guard does not help: the lateral join runs per row
-// before WHERE filters, so one bad row anywhere in range fails the query.
+// Keep the CASE. track.types.ts parses `ep` with a bare JSON.parse, so ep=[1,2]
+// lands a non-object and jsonb_each_text throws. A WHERE guard cannot help:
+// the lateral join runs per row before WHERE, so one bad row fails the query.
 export async function getEventProperties(
   siteId: string,
   eventName: string,
@@ -337,15 +320,5 @@ export async function getEventProperties(
     ) ranked
     WHERE key_rank <= 20
     ORDER BY key_rank, count DESC, value ASC
-  `;
-}
-
-export async function getRawEvents(siteId: string) {
-  return prisma.$queryRaw<any[]>`
-    SELECT *
-    FROM events
-    WHERE "siteId" = ${siteId}
-    ORDER BY "receivedAt" DESC
-    LIMIT 10
   `;
 }

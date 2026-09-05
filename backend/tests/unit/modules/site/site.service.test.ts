@@ -14,12 +14,11 @@ vi.mock("@/modules/ingestion/track.cache.ts", () => ({
 }));
 vi.mock("@/utils/gen-tracking.ts", () => ({
   generateTrackingId: vi.fn(),
-  generateEmbedCode: vi.fn(),
 }));
 
 import * as repo from "@/modules/site/site.repository.ts";
 import { invalidateSiteCache } from "@/modules/ingestion/track.cache.ts";
-import { generateTrackingId, generateEmbedCode } from "@/utils/gen-tracking.ts";
+import { generateTrackingId } from "@/utils/gen-tracking.ts";
 import {
   createSiteService,
   getSiteByIdService,
@@ -44,8 +43,6 @@ beforeEach(() => {
   vi.clearAllMocks();
 });
 
-// ─── createSiteService ────────────────────────────────────────────────────────
-
 describe("createSiteService", () => {
   it("domain already exists → throws AppError(409)", async () => {
     vi.mocked(repo.findSiteByDomain).mockResolvedValue(mockSite);
@@ -59,10 +56,9 @@ describe("createSiteService", () => {
     ).rejects.toMatchObject({ statusCode: 409 });
   });
 
-  it("new domain → calls generateTrackingId, createSite, returns site and embedCode", async () => {
+  it("new domain → calls generateTrackingId, createSite, returns the site", async () => {
     vi.mocked(repo.findSiteByDomain).mockResolvedValue(null);
     vi.mocked(generateTrackingId).mockReturnValue("pk-new-tid");
-    vi.mocked(generateEmbedCode).mockReturnValue("<script>embed</script>");
     vi.mocked(repo.createSite).mockResolvedValue(mockSite);
 
     const result = await createSiteService({
@@ -72,28 +68,15 @@ describe("createSiteService", () => {
     });
 
     expect(generateTrackingId).toHaveBeenCalled();
-    expect(repo.createSite).toHaveBeenCalled();
-    expect(result).toHaveProperty("site");
-    expect(result).toHaveProperty("embedCode");
-  });
-
-  it("embedCode contains the generated trackingId", async () => {
-    vi.mocked(repo.findSiteByDomain).mockResolvedValue(null);
-    vi.mocked(generateTrackingId).mockReturnValue("pk-new-tid");
-    vi.mocked(generateEmbedCode).mockReturnValue("embed-pk-new-tid");
-    vi.mocked(repo.createSite).mockResolvedValue(mockSite);
-
-    const result = await createSiteService({
-      userId: "user-1",
-      name: "My Site",
-      domain: "example.com",
-    });
-
-    expect(result.embedCode).toContain("pk-new-tid");
+    expect(repo.createSite).toHaveBeenCalledWith(
+      "user-1",
+      "My Site",
+      "example.com",
+      "pk-new-tid"
+    );
+    expect(result).toEqual(mockSite);
   });
 });
-
-// ─── getSiteByIdService ───────────────────────────────────────────────────────
 
 describe("getSiteByIdService", () => {
   it("site not found → throws AppError(404)", async () => {
@@ -112,8 +95,6 @@ describe("getSiteByIdService", () => {
     expect(result).toEqual(mockSite);
   });
 });
-
-// ─── updateSiteService ────────────────────────────────────────────────────────
 
 describe("updateSiteService", () => {
   it("site not owned by user → throws AppError(404)", async () => {
@@ -158,8 +139,6 @@ describe("updateSiteService", () => {
   });
 });
 
-// ─── deleteSiteService ────────────────────────────────────────────────────────
-
 describe("deleteSiteService", () => {
   it("site not found → throws AppError(404)", async () => {
     vi.mocked(repo.getSiteById).mockResolvedValue(null);
@@ -181,8 +160,6 @@ describe("deleteSiteService", () => {
   });
 });
 
-// ─── regenerateTrackingIdService ──────────────────────────────────────────────
-
 describe("regenerateTrackingIdService", () => {
   it("site not found → throws AppError(404)", async () => {
     vi.mocked(repo.getSiteById).mockResolvedValue(null);
@@ -192,19 +169,17 @@ describe("regenerateTrackingIdService", () => {
     ).rejects.toMatchObject({ statusCode: 404 });
   });
 
-  it("found → invalidates old cache, generates new trackingId, returns site and embedCode", async () => {
+  it("found → invalidates old cache, generates new trackingId, returns the site", async () => {
     const newSite = { ...mockSite, trackingId: "pk-new-tid" };
     vi.mocked(repo.getSiteById).mockResolvedValue(mockSite);
     vi.mocked(invalidateSiteCache).mockResolvedValue(undefined);
     vi.mocked(generateTrackingId).mockReturnValue("pk-new-tid");
-    vi.mocked(generateEmbedCode).mockReturnValue("embed-pk-new-tid");
     vi.mocked(repo.updateTrackingId).mockResolvedValue(newSite);
 
     const result = await regenerateTrackingIdService("user-1", "site-1");
 
     expect(invalidateSiteCache).toHaveBeenCalledWith(mockSite.trackingId);
     expect(generateTrackingId).toHaveBeenCalled();
-    expect(result.site).toEqual(newSite);
-    expect(result.embedCode).toContain("pk-new-tid");
+    expect(result).toEqual(newSite);
   });
 });

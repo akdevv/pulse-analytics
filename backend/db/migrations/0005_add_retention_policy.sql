@@ -1,14 +1,6 @@
--- Automatically drops raw event data older than 90 days.
---
--- Why you need this:
---   At 10k RPS, the events table grows by ~864 million rows per day.
---   Without a retention policy, your disk fills up and queries slow down.
---   The continuous aggregates (next migration) preserve the historical
---   stats permanently — so you don't lose analytics history, you just
---   lose the ability to re-query raw individual events after 90 days.
---
--- This policy runs as a background job automatically. TimescaleDB drops
--- entire chunks at a time (not row-by-row DELETE), which is extremely fast.
+-- Drops raw events past 90 days, by chunk rather than row-by-row DELETE.
+-- The continuous aggregates keep the stats, so only the ability to re-query
+-- individual raw events is lost.
 
 SELECT add_retention_policy(
   'events',

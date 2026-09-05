@@ -3,8 +3,8 @@
 # Run:    pnpm load:analytics
 # Prereq: pnpm load:seed  (generates data/users.csv)
 #
-# Target is read from load-test.env → TARGET env var.
-# Each VU: login → overview → timeseries → pages → referrers → devices
+# Target comes from load-test.env (TARGET).
+# Each VU: login, overview, timeseries, pages, referrers, devices
 # Thresholds: p99 < 500ms, 0 auth errors
 
 config:

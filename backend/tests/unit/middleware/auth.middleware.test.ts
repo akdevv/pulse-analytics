@@ -26,8 +26,6 @@ beforeEach(() => {
   vi.clearAllMocks();
 });
 
-// ─── authenticateToken ────────────────────────────────────────────────────────
-
 describe("authenticateToken", () => {
   it("missing Authorization header → throws TOKEN_MISSING AppError", async () => {
     const req = makeReq();

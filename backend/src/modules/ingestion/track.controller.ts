@@ -5,17 +5,15 @@ import type { Request, Response } from "express";
 import { performance } from "perf_hooks";
 import { getCachedSite } from "./track.cache.ts";
 import { checkIpRateLimit, checkSiteRateLimit } from "./track.ratelimit.ts";
-import { buildRawEvent } from "./track.service.ts";
+import { buildRawEvent, hostnameMatchesSite } from "./track.service.ts";
 import { TrackQuerySchema } from "./track.types.ts";
 
 const SLOW_REQUEST_THRESHOLD_MS = 100;
 
-// POST /track
 export const track = async (req: Request, res: Response) => {
   const totalStart = performance.now();
   const timings: Record<string, number> = {};
 
-  // Validate
   const t1 = performance.now();
   const parsed = TrackQuerySchema.safeParse(req.query);
   timings.validation = performance.now() - t1;
@@ -31,7 +29,6 @@ export const track = async (req: Request, res: Response) => {
   const params = parsed.data;
 
   try {
-    // Site Lookup
     const t2 = performance.now();
     const site = await getCachedSite(params.tid);
     timings.siteLookup = performance.now() - t2;
@@ -44,7 +41,6 @@ export const track = async (req: Request, res: Response) => {
       return res.status(204).send();
     }
 
-    // Rate Limiting
     const t2b = performance.now();
     const ip = extractClientIp(req);
     const [siteResult, ipResult] = await Promise.all([
@@ -63,27 +59,30 @@ export const track = async (req: Request, res: Response) => {
       return res.status(204).send();
     }
 
-    // Build event
     const t3 = performance.now();
     const event = buildRawEvent(params, req, site.id);
     timings.buildEvent = performance.now() - t3;
 
-    // DB Write
+    // A public tracking id is not proof of ownership. See hostnameMatchesSite.
+    if (!hostnameMatchesSite(event.urlHostname, site.domain)) {
+      logger.warn("[track] Event rejected — URL does not match the site domain", {
+        tid: params.tid,
+        hostname: event.urlHostname,
+        expected: site.domain,
+        timings: formatTimings(timings),
+      });
+      return res.status(204).send();
+    }
+
     const t4 = performance.now();
 
-    // Enqueue the event
-    enqueue(event);
-    logger.info("[controller] Event queued, returning 204");
-
-    // await insertEvent(event);
+    // Awaited on purpose. Unawaited, a rejection here is an unhandled rejection
+    // and Node exits on those, so one Redis blip would take the API down.
+    await enqueue(event);
     timings.enqueue = performance.now() - t4;
 
     const totalTime = performance.now() - totalStart;
 
-    // Normal log — always fires
-    logger.info(`[TRACK] total: ${totalTime.toFixed(2)}ms`);
-
-    // Slow request alert — fires only when something is unexpectedly slow
     if (totalTime > SLOW_REQUEST_THRESHOLD_MS) {
       logger.warn(`[TRACK] Slow request detected`, {
         totalMs: totalTime.toFixed(2),
@@ -111,7 +110,7 @@ export const track = async (req: Request, res: Response) => {
       { tid: params.tid, timings: formatTimings(timings) }
     );
 
-    // Always 204 — never surface internal errors to the tracked page
+    // Always 204. Never surface internal errors to the tracked page.
     res.status(204).send();
   }
 };

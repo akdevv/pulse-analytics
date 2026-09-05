@@ -5,8 +5,6 @@ import {
   updateUserSchema,
 } from "@/modules/auth/auth.types.ts";
 
-// ─── registerUserSchema ───────────────────────────────────────────────────────
-
 describe("registerUserSchema", () => {
   it("valid input passes", () => {
     const result = registerUserSchema.safeParse({
@@ -71,8 +69,6 @@ describe("registerUserSchema", () => {
   });
 });
 
-// ─── loginUserSchema ──────────────────────────────────────────────────────────
-
 describe("loginUserSchema", () => {
   it("valid input passes", () => {
     const result = loginUserSchema.safeParse({
@@ -98,8 +94,6 @@ describe("loginUserSchema", () => {
     expect(result.success).toBe(false);
   });
 });
-
-// ─── updateUserSchema ─────────────────────────────────────────────────────────
 
 describe("updateUserSchema", () => {
   it("empty object passes (all fields optional)", () => {

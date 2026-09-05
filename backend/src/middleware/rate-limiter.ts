@@ -5,7 +5,7 @@ import rateLimit from "express-rate-limit";
 import { type RedisReply, RedisStore } from "rate-limit-redis";
 import type { RequestHandler } from "express";
 
-// prefix keeps each limiter in its own redis bucket — otherwise they share a counter
+// prefix: without it every limiter shares one redis counter
 const make = (windowMs: number, max: number, prefix: string) =>
   rateLimit({
     windowMs,
@@ -32,8 +32,7 @@ export const authRateLimit: RequestHandler = gate(
   )
 );
 
-// Keyed by user, not IP — a shared office IP shouldn't burn one user's asks,
-// and the route is behind authenticateToken so req.user is always set.
+// Keyed by user, not IP. A shared office IP should not burn one user's asks.
 export const aiRateLimit: RequestHandler = gate(
   rateLimit({
     windowMs: rateLimitConfig.ai.windowMs,
@@ -50,6 +49,57 @@ export const aiRateLimit: RequestHandler = gate(
       status: "error",
       message: "Too many questions, try again later",
     },
+  })
+);
+
+// Deployment-wide daily ceiling. One fixed key, so all instances share it.
+// ponytail: fixed window from the first ask, not rolling 24h. Worst case is a
+// quiet day then a double-rate day across the boundary. Sliding window if so.
+export const aiGlobalRateLimit: RequestHandler = gate(
+  rateLimit({
+    windowMs: rateLimitConfig.ai.globalWindowMs,
+    max: rateLimitConfig.ai.globalMaxAsks,
+    standardHeaders: false,
+    legacyHeaders: false,
+    keyGenerator: () => "global",
+    store: new RedisStore({
+      prefix: "rl:ai:global:",
+      sendCommand: (...args: [string, ...string[]]) =>
+        redis.call(...args) as Promise<RedisReply>,
+    }),
+    message: {
+      status: "error",
+      message: "The demo's daily question budget is spent. Try again tomorrow.",
+    },
+  })
+);
+
+// No model call, but getConversation replays stored SQL on a 2-connection pool.
+export const aiReadRateLimit: RequestHandler = gate(
+  rateLimit({
+    windowMs: rateLimitConfig.ai.readWindowMs,
+    max: rateLimitConfig.ai.maxReads,
+    standardHeaders: true,
+    legacyHeaders: false,
+    keyGenerator: (req) => req.user?.userId ?? "anonymous",
+    store: new RedisStore({
+      prefix: "rl:ai:read:",
+      sendCommand: (...args: [string, ...string[]]) =>
+        redis.call(...args) as Promise<RedisReply>,
+    }),
+    message: { status: "error", message: "Too many requests, slow down" },
+  })
+);
+
+// In-memory, unlike every other limiter here. /health reports a Redis outage,
+// so a Redis-backed store would turn an informative 503 into an opaque 500.
+export const healthRateLimit: RequestHandler = gate(
+  rateLimit({
+    windowMs: rateLimitConfig.health.windowMs,
+    max: rateLimitConfig.health.maxRequests,
+    standardHeaders: true,
+    legacyHeaders: false,
+    message: { status: "error", message: "Too many requests, slow down" },
   })
 );
 

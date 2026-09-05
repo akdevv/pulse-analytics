@@ -7,18 +7,16 @@ import { generateTrackingId } from "@/utils/gen-tracking.ts";
 async function main() {
   console.log("[seed] Starting seeding...");
 
-  // Clear DB
   await prisma.event.deleteMany();
   await prisma.site.deleteMany();
   await prisma.user.deleteMany();
 
   console.log("[seed] Old data cleared.");
 
-  // create 10 users
   const users = [];
   const hashedPswd = await bcrypt.hash("password123", 10);
 
-  for (let i = 0; i <= 10; i++) {
+  for (let i = 0; i < 10; i++) {
     const user = await prisma.user.create({
       data: {
         name: faker.person.fullName(),
@@ -34,14 +32,13 @@ async function main() {
 
   console.log("[seed] 10 users created.");
 
-  // create 50 sites
   const rateTiers = [
     RateLimitTier.FREE,
     RateLimitTier.PRO,
     RateLimitTier.ENTERPRISE,
   ];
 
-  for (let i = 0; i <= 50; i++) {
+  for (let i = 0; i < 50; i++) {
     const randomUser = faker.helpers.arrayElement(users);
 
     await prisma.site.create({

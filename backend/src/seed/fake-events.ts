@@ -75,7 +75,7 @@ async function getSeedSites() {
 async function main() {
   console.log("[seed] Starting fake events seeding...");
 
-  // Clear only events so we can reuse existing users/sites.
+  // Events only, so existing users and sites are reused.
   await prisma.event.deleteMany();
   console.log("[seed] Old events cleared.");
 

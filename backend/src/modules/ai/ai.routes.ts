@@ -1,6 +1,10 @@
 import express, { type Router } from "express";
 import { authenticateToken } from "@/middleware/auth.middleware.ts";
-import { aiRateLimit } from "@/middleware/rate-limiter.ts";
+import {
+  aiGlobalRateLimit,
+  aiRateLimit,
+  aiReadRateLimit,
+} from "@/middleware/rate-limiter.ts";
 import {
   ask,
   deleteConversation,
@@ -10,20 +14,34 @@ import {
 
 const router: Router = express.Router();
 
-// Auth first, then the limiter — it keys on req.user, and an unauthenticated
-// request should never reach a counter, let alone the model.
-router.post("/:siteId/ask", authenticateToken, aiRateLimit, ask);
+// Auth first: the per-user limiter keys on req.user. Global before per-user,
+// so a spent budget does not burn one user's counter on its way to a refusal.
+router.post(
+  "/:siteId/ask",
+  authenticateToken,
+  aiGlobalRateLimit,
+  aiRateLimit,
+  ask
+);
 
-// Reads are cheap and hit no model, so they skip the ask limiter.
-router.get("/:siteId/conversations", authenticateToken, listConversations);
+// No model call, so these skip the ask limiter. getConversation still replays
+// stored SQL on the two-connection AI pool, hence a looser limit, not none.
+router.get(
+  "/:siteId/conversations",
+  authenticateToken,
+  aiReadRateLimit,
+  listConversations
+);
 router.get(
   "/:siteId/conversations/:conversationId",
   authenticateToken,
+  aiReadRateLimit,
   getConversation
 );
 router.delete(
   "/:siteId/conversations/:conversationId",
   authenticateToken,
+  aiReadRateLimit,
   deleteConversation
 );
 

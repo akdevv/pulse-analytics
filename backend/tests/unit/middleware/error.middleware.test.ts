@@ -22,8 +22,6 @@ beforeEach(() => {
   vi.clearAllMocks();
 });
 
-// ─── error middleware ─────────────────────────────────────────────────────────
-
 describe("errorMiddleware", () => {
   it("entity.parse.failed → 400 with Invalid JSON message", () => {
     const err = Object.assign(new Error("invalid json"), {

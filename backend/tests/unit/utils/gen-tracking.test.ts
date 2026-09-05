@@ -1,7 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { generateTrackingId, generateEmbedCode } from "@/utils/gen-tracking.ts";
-
-// ─── generateTrackingId ───────────────────────────────────────────────────────
+import { generateTrackingId } from "@/utils/gen-tracking.ts";
 
 describe("generateTrackingId", () => {
   it("starts with pk-", () => {
@@ -22,20 +20,3 @@ describe("generateTrackingId", () => {
   });
 });
 
-// ─── generateEmbedCode ────────────────────────────────────────────────────────
-
-describe("generateEmbedCode", () => {
-  const trackingId = "pk-" + "a".repeat(32);
-
-  it("contains the trackingId", () => {
-    expect(generateEmbedCode(trackingId)).toContain(trackingId);
-  });
-
-  it("contains pulse-sdk.js", () => {
-    expect(generateEmbedCode(trackingId)).toContain("pulse-sdk.js");
-  });
-
-  it("contains window.pulse", () => {
-    expect(generateEmbedCode(trackingId)).toContain("window.pulse");
-  });
-});

@@ -1,14 +1,8 @@
 #!/usr/bin/env node
 /**
- * Seed script for load tests.
+ * Seeds 5 users, each with one site, into tests/load/data/users.csv.
+ * Idempotent: a 409 on re-run reuses the existing user or site.
  *
- * What it does:
- *   1. Registers 5 fixed test users (idempotent — 409 is fine on re-runs)
- *   2. Logs in each user to get an access token
- *   3. Creates 1 site per user (idempotent — fetches existing site on 409)
- *   4. Writes tests/load/data/users.csv
- *
- * Usage:
  *   pnpm load:seed
  *   TARGET=http://staging.example.com pnpm load:seed
  */
@@ -19,7 +13,7 @@ import { fileURLToPath } from "url";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
-// avoid requiring the caller to manually source load-test.env
+// so the caller need not source load-test.env first
 const envPath = join(__dirname, "load-test.env");
 if (existsSync(envPath)) {
   for (const line of readFileSync(envPath, "utf-8").split("\n")) {
@@ -74,7 +68,7 @@ async function register(user) {
       password: user.password,
     }),
   });
-  // 409 just means the user already exists from a previous run, that's fine
+  // 409 means a previous run created them
   if (res.status !== 200 && res.status !== 201 && res.status !== 409) {
     const body = await res.text();
     throw new Error(
@@ -118,7 +112,7 @@ async function createOrGetSite(token, user) {
   }
 
   if (res.status === 409) {
-    // site already exists, fetch the list and match by domain
+    // already exists, so match it by domain
     const listRes = await fetch(`${TARGET}/api/v1/sites`, {
       headers: { Authorization: `Bearer ${token}` },
     });

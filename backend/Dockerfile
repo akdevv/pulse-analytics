@@ -1,8 +1,8 @@
-FROM node:20-alpine AS base
+FROM node:22-alpine AS base
 RUN npm install -g pnpm
 WORKDIR /app
 
-# Install all deps (tsx is a devDep but needed at runtime — noEmit:true prevents tsc compile)
+# All deps: tsx is a devDep but the CMD needs it at runtime.
 FROM base AS deps
 COPY package.json pnpm-lock.yaml ./
 RUN pnpm install --frozen-lockfile

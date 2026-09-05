@@ -5,6 +5,11 @@ export default defineConfig({
   plugins: [tsconfigPaths()],
   test: {
     environment: "node",
-    include: ["tests/unit/**/*.test.ts"],
+    // Integration files skip themselves when no Postgres answers, so CI with
+    // no database still passes on the unit suite alone.
+    include: ["tests/unit/**/*.test.ts", "tests/integration/**/*.test.ts"],
+    // The integration suite shares one database.
+    fileParallelism: false,
+    testTimeout: 30_000,
   },
 });

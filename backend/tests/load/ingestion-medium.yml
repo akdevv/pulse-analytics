@@ -1,7 +1,7 @@
-# Artillery load test: ingestion /track — Medium
+# Artillery load test: ingestion /track, medium
 # Run: npx artillery run tests/load/ingestion-medium.yml
 # Prereq: data/users.csv must exist (pnpm load:seed)
-# Target: 400 RPS for 60s → p99 < 500ms, error rate < 0.1%
+# Target: 400 RPS for 60s, p99 < 500ms, error rate < 0.1%
 
 config:
   target: "http://localhost:8000"

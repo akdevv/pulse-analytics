@@ -142,7 +142,7 @@ describe("pulse.js", () => {
     expect(p.get("t")).toBe("PAGEVIEW");
     expect(p.get("tid")).toBe(TID);
     expect(p.get("dl")).toBe("https://site.test/pricing");
-    // A pageview carries no event name — the events queries filter on that.
+    // A pageview carries no event name. The events queries filter on that.
     expect(p.get("en")).toBeNull();
   });
 
@@ -173,8 +173,7 @@ describe("pulse.js", () => {
     expect(JSON.parse(p.get("ep")!)).toEqual({ plan: "pro" });
   });
 
-  // Bad JSON in an attribute is the author's typo, not the visitor's fault.
-  // Losing the click entirely would be the worse failure.
+  // Bad JSON is the author's typo. Losing the click is the worse failure.
   it("still sends the event when data-pulse-props is not valid JSON", () => {
     h.click(
       clickOn({
@@ -222,7 +221,7 @@ describe("pulse.js", () => {
     expect(d.log).toHaveBeenCalled();
   });
 
-  // Warnings are a developer's own mistake, so they are never gated on debug.
+  // A warning is the developer's own mistake, so it is never gated on debug.
   it("warns about invalid props even with debug off", () => {
     h.click(
       clickOn({

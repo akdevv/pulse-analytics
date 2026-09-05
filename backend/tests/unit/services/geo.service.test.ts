@@ -17,8 +17,6 @@ beforeEach(() => {
   vi.mocked(Reader.open).mockResolvedValue(mockReader as any);
 });
 
-// ─── lookupGeoIp ──────────────────────────────────────────────────────────────
-
 describe("lookupGeoIp", () => {
   it("null IP → returns empty GeoInfo", async () => {
     const { lookupGeoIp } = await import("@/services/geo.service.ts");

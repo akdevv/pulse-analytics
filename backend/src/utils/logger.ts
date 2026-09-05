@@ -1,26 +1,10 @@
 import env from "@/config/env.ts";
-import { type Request, type Response } from "express";
 
 export enum LogLevel {
   ERROR = "ERROR",
   WARN = "WARN",
   INFO = "INFO",
   DEBUG = "DEBUG",
-}
-
-interface RequestMetadata {
-  [key: string]: unknown;
-  method: string;
-  path: string;
-  ip?: string | undefined;
-  userAgent?: string | undefined;
-  userId?: string | undefined;
-  requestId?: string | undefined;
-}
-
-interface ResponseMetadata extends RequestMetadata {
-  statusCode: number;
-  responseTime: string;
 }
 
 const isDevelopment = env.NODE_ENV === "development";
@@ -79,11 +63,14 @@ function error(
   };
 
   if (err) {
+    // Named fields only. Spreading an error drags in every own property,
+    // which for a Prisma error is the failing query and its parameters.
+    const code = (err as unknown as { code?: unknown }).code;
     errorMeta.error = {
       msg: err.message,
       stack: err.stack || "",
       name: err.name,
-      ...(err as unknown as Record<string, unknown>),
+      ...(typeof code === "string" && { code }),
     };
   }
 
@@ -104,68 +91,10 @@ function debug(msg: string, meta: Record<string, unknown> = {}) {
   }
 }
 
-function logRequest(req: Request, meta: Record<string, unknown> = {}): void {
-  const requestMeta: RequestMetadata = {
-    method: req.method,
-    path: req.path,
-    ip: req.ip || undefined,
-    userAgent: req.get("user-agent") || undefined,
-    userId: (req as any).user?.userId?.toString(),
-    requestId: req.id,
-    ...meta,
-  };
-
-  info("Incoming request", requestMeta);
-}
-
-function logResponse(
-  req: Request,
-  res: Response,
-  responseTime: number,
-  meta: Record<string, unknown> = {}
-): void {
-  const responseMeta: ResponseMetadata = {
-    method: req.method,
-    path: req.path,
-    statusCode: res.statusCode,
-    responseTime: `${responseTime}ms`,
-    userId: (req as any).user?.userId?.toString(),
-    requestId: req.id,
-    ...meta,
-  };
-
-  info("Outgoing response", responseMeta);
-}
-
-function logError(
-  err: Error,
-  req?: Request | null,
-  meta: Record<string, unknown> = {}
-): void {
-  const errorContext: Record<string, unknown> = {
-    ...meta,
-  };
-
-  if (req) {
-    errorContext.request = {
-      method: req.method,
-      path: req.path,
-      ip: req.ip,
-      userId: (req as any).user?.userId?.toString(),
-      requestId: req.id,
-    };
-  }
-
-  error("Application error", err, errorContext);
-}
-
 export default {
   log,
   error,
   warn,
   info,
   debug,
-  logRequest,
-  logResponse,
-  logError,
 };

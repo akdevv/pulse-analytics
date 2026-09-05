@@ -1,4 +1,4 @@
-import { Pool } from "pg";
+import { Pool, type PoolClient } from "pg";
 import * as fs from "fs";
 import * as path from "path";
 import * as dotenv from "dotenv";
@@ -11,8 +11,7 @@ dotenv.config();
 
 const pool = new Pool({ connectionString: process.env.DATABASE_URL });
 
-// Bootstrap the table
-async function ensureTrackingTable(client: any) {
+async function ensureTrackingTable(client: PoolClient) {
   await client.query(`
       CREATE TABLE IF NOT EXISTS schema_migrations (
         filename   TEXT        PRIMARY KEY,
@@ -21,29 +20,26 @@ async function ensureTrackingTable(client: any) {
     `);
 }
 
-// Check what is applied
-async function appliedMigrations(client: any): Promise<Set<string>> {
+async function appliedMigrations(client: PoolClient): Promise<Set<string>> {
   const result = await client.query(`
      SELECT filename FROM schema_migrations ORDER BY filename 
     `);
-  return new Set(result.rows.map((row: any) => row.filename));
+  return new Set<string>(result.rows.map((row) => row.filename));
 }
 
-// Read migration files
 function getMigrationFiles(): string[] {
   const migrationsDir = path.join(__dirname, "migrations");
   return fs
     .readdirSync(migrationsDir)
     .filter((f) => f.endsWith(".sql"))
-    .sort(); // alphabetical = numeric order given our naming convention
+    .sort(); // zero-padded names, so alphabetical == numeric order
 }
 
-// Run single migration
-async function runMigration(client: any, filename: string): Promise<void> {
+async function runMigration(client: PoolClient, filename: string): Promise<void> {
   const filePath = path.join(__dirname, "migrations", filename);
   const sql = fs.readFileSync(filePath, "utf8");
 
-  // Certain TimescaleDB statements must run outside a transaction
+  // These Timescale calls fail inside a transaction block.
   const requiresNoTransaction =
     sql.includes("timescaledb.continuous") ||
     sql.includes("timescaledb.compress") ||
@@ -53,11 +49,9 @@ async function runMigration(client: any, filename: string): Promise<void> {
     sql.includes("refresh_continuous_aggregate");
 
   if (requiresNoTransaction) {
-    // Split into individual statements so each runs in its own autocommit
-    // context — TimescaleDB functions like refresh_continuous_aggregate and
-    // create_hypertable cannot run inside a multi-statement implicit transaction.
     const statements = sql
       .split(/;[ \t]*\n/)
+      // strip leading -- comments so a comment-only fragment isn't queried
       .map((s) => s.replace(/^(--[^\n]*\n\s*)*/m, "").trim())
       .filter((s) => s.length > 0);
 
@@ -68,7 +62,6 @@ async function runMigration(client: any, filename: string): Promise<void> {
       filename,
     ]);
   } else {
-    // Wrap in a transaction — if anything fails, the whole migration rolls back
     await client.query("BEGIN");
     try {
       await client.query(sql);
@@ -90,17 +83,13 @@ async function migrate() {
   const client = await pool.connect();
 
   try {
-    // Step 1: ensure our tracking table exists
     await ensureTrackingTable(client);
 
-    // Step 2: find out what's already been applied
     const applied = await appliedMigrations(client);
     console.log(`[migrate] ${applied.size} migration(s) already applied.`);
 
-    // Step 3: get all migration files from disk
     const files = getMigrationFiles();
 
-    // Step 4: run only what hasn't been applied
     let ranCount = 0;
     for (const filename of files) {
       if (applied.has(filename)) {

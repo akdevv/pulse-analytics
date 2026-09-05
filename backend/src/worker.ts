@@ -9,11 +9,10 @@ import {
 
 logger.info("[worker] Worker process started");
 
-// Initialize the reader
 await initGeoIp();
 startThroughputLogger();
 
-// Graceful shutdown — when you Ctrl+C, finish current jobs before exiting
+// Flush the in-memory batch before exiting, or those events are lost.
 process.on("SIGTERM", async () => {
   logger.info("[worker] SIGTERM received, closing worker...");
   await flushBatch();

@@ -1,7 +1,9 @@
 import { AppError } from "@/utils/app-error.ts";
+import { userIdOf } from "@/utils/request-scope.ts";
 import { redis } from "@/config/redis.ts";
 import jwt from "jsonwebtoken";
-import type { Request, Response } from "express";
+import type { CookieOptions, Request, Response } from "express";
+import env from "@/config/env.ts";
 import {
   getUserById,
   loginUser,
@@ -10,19 +12,31 @@ import {
   updateUserService,
 } from "./auth.service.ts";
 
-// POST /auth/register
+// register, login and logout must pass identical options, or clearCookie will
+// not match the cookie it removes. In production the dashboard calls the API
+// cross-site, which needs sameSite "none", and browsers only accept that with
+// secure. Development is same-site over plain HTTP, so "lax" applies there.
+const isProduction = env.NODE_ENV === "production";
+
+const REFRESH_COOKIE: CookieOptions = {
+  httpOnly: true,
+  sameSite: isProduction ? "none" : "lax",
+  secure: isProduction,
+  path: "/",
+};
+
+const REFRESH_COOKIE_MAX_AGE = 1000 * 60 * 60 * 24 * 30;
+
 export const register = async (req: Request, res: Response) => {
   const { name, email, password } = req.body;
   const result = await registerUser({ name, email, password });
 
   res.cookie("refresh_token", result.refreshToken, {
-    httpOnly: true,
-    sameSite: "strict",
-    maxAge: 1000 * 60 * 60 * 24 * 30, // 30 days
-    secure: process.env.NODE_ENV === "production",
+    ...REFRESH_COOKIE,
+    maxAge: REFRESH_COOKIE_MAX_AGE,
   });
 
-  return res.status(200).json({
+  return res.status(201).json({
     status: "success",
     message: "User registered successfully",
     data: {
@@ -31,16 +45,13 @@ export const register = async (req: Request, res: Response) => {
   });
 };
 
-// POST /auth/login
 export const login = async (req: Request, res: Response) => {
   const { email, password } = req.body;
   const result = await loginUser({ email, password });
 
   res.cookie("refresh_token", result.refreshToken, {
-    httpOnly: true,
-    sameSite: "strict",
-    maxAge: 1000 * 60 * 60 * 24 * 30, // 30 days
-    secure: process.env.NODE_ENV === "production",
+    ...REFRESH_COOKIE,
+    maxAge: REFRESH_COOKIE_MAX_AGE,
   });
 
   return res.status(200).json({
@@ -52,7 +63,6 @@ export const login = async (req: Request, res: Response) => {
   });
 };
 
-// POST /auth/refresh
 export const refreshToken = async (req: Request, res: Response) => {
   const token = req.cookies?.refresh_token;
   if (!token) {
@@ -69,7 +79,6 @@ export const refreshToken = async (req: Request, res: Response) => {
   });
 };
 
-// POST /auth/logout
 export const logout = async (req: Request, res: Response) => {
   const now = Math.floor(Date.now() / 1000);
 
@@ -89,11 +98,7 @@ export const logout = async (req: Request, res: Response) => {
     refreshToken ? denylistToken(refreshToken) : Promise.resolve(),
   ]);
 
-  res.clearCookie("refresh_token", {
-    secure: process.env.NODE_ENV === "production",
-    httpOnly: true,
-    sameSite: "strict",
-  });
+  res.clearCookie("refresh_token", REFRESH_COOKIE);
 
   return res.status(200).json({
     status: "success",
@@ -101,12 +106,8 @@ export const logout = async (req: Request, res: Response) => {
   });
 };
 
-// GET /auth/me
 export const getUser = async (req: Request, res: Response) => {
-  if (!req.user?.userId) {
-    throw AppError.unauthorized();
-  }
-  const user = await getUserById(req.user.userId);
+  const user = await getUserById(userIdOf(req));
   if (!user) {
     throw AppError.notFound("User");
   }
@@ -118,13 +119,9 @@ export const getUser = async (req: Request, res: Response) => {
   });
 };
 
-// PATCH /auth/me
 export const updateUser = async (req: Request, res: Response) => {
-  if (!req.user?.userId) {
-    throw AppError.unauthorized();
-  }
   const { name, email, password } = req.body;
-  const result = await updateUserService(req.user.userId, {
+  const result = await updateUserService(userIdOf(req), {
     name,
     email,
     password,

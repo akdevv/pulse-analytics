@@ -3,6 +3,7 @@ import jwt, { type SignOptions } from "jsonwebtoken";
 import { randomUUID } from "crypto";
 import { config } from "@/config/index.ts";
 import env from "@/config/env.ts";
+import { redis } from "@/config/redis.ts";
 import type { IUserPublic } from "./auth.types.ts";
 import {
   findUserByEmail,
@@ -12,6 +13,10 @@ import {
   updateLastLoginAt,
 } from "./auth.repository.ts";
 import { AppError } from "@/utils/app-error.ts";
+
+// A real cost-12 hash of a value nothing can supply. Only ever compared against.
+const DUMMY_HASH =
+  "$2b$12$C6UzMDM.H6dfI/f/IKcEe.uCLFn6nDVLNIYSVQrRWt/A9k9jXhQnO";
 
 interface RegisterUser {
   email: string;
@@ -35,7 +40,6 @@ export const registerUser = async (
   const hashedPassword = await bcrypt.hash(password, 12);
   const newUser = await createUser(name, email, hashedPassword);
 
-  // Generate tokens
   const { accessToken, refreshToken } = generateTokens(
     newUser.id,
     newUser.email
@@ -52,14 +56,16 @@ export const loginUser = async (user: {
     throw AppError.validation("Email and password are required");
   }
 
+  // One answer for "no such user" and "wrong password". The dummy hash keeps
+  // the timing equal too, since skipping bcrypt would return far faster.
   const userData = await findUserByEmail(email);
-  if (!userData) {
-    throw AppError.notFound("User");
-  }
+  const isPasswordValid = await bcrypt.compare(
+    password,
+    userData?.password ?? DUMMY_HASH
+  );
 
-  const isPasswordValid = await bcrypt.compare(password, userData.password!);
-  if (!isPasswordValid) {
-    throw AppError.validation("Invalid credentials");
+  if (!userData || !isPasswordValid) {
+    throw AppError.unauthorized("Invalid email or password");
   }
 
   const { accessToken, refreshToken } = generateTokens(
@@ -74,10 +80,19 @@ export const loginUser = async (user: {
 export const refreshTokenService = async (
   token: string
 ): Promise<{ accessToken: string }> => {
-  const payload = jwt.verify(token, env.REFRESH_TOKEN_SECRET) as {
+  const payload = jwt.verify(token, env.REFRESH_TOKEN_SECRET, {
+    issuer: config.jwt.issuer,
+    algorithms: [config.jwt.algorithm],
+  }) as {
     userId: string;
     email: string;
+    jti?: string;
   };
+
+  // Refresh checks the denylist too, or logout would only stop access tokens.
+  if (payload.jti && (await redis.exists(`denylist:${payload.jti}`))) {
+    throw AppError.unauthorized("Token revoked");
+  }
 
   const newAccessToken = jwt.sign(
     { userId: payload.userId, email: payload.email, jti: randomUUID() },
@@ -139,7 +154,6 @@ export const updateUserService = async (
     updateData.password = hashedPassword;
   }
 
-  // Check if at least one field is provided
   if (Object.keys(updateData).length === 0) {
     throw AppError.validation(
       "At least one field (name, email, or password) must be provided"

@@ -1,10 +1,15 @@
 import { prisma } from "@/config/prisma.ts";
 import type { ISite } from "./site.types.ts";
 
+// Scoped to the owner. Two accounts tracking the same domain is normal, so
+// the only duplicate worth refusing is one inside a single account.
 export const findSiteByDomain = async (
+  userId: string,
   domain: string
 ): Promise<ISite | null> => {
-  return prisma.site.findUnique({ where: { domain } });
+  return prisma.site.findUnique({
+    where: { userId_domain: { userId, domain } },
+  });
 };
 
 export const createSite = async (

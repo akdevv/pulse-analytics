@@ -9,7 +9,7 @@ services:
     ports:
       - 5432:5432
     volumes:
-      # pg18 images store data in a version-specific subdir; mount the parent
+      # pg18 stores data in a version subdir, so mount the parent
       - postgres_data:/var/lib/postgresql
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres"]

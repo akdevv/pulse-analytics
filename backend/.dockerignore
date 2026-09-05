@@ -1,0 +1,14 @@
+node_modules
+dist
+.git
+.env
+.env.*
+!.env.example
+
+# Downloaded from MaxMind at build time. A stale 65MB copy is slow and wrong.
+data/*.mmdb
+
+tests
+coverage
+*.log
+.DS_Store

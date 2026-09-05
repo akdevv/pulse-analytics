@@ -1,7 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 
-// The worker builds a BullMQ Worker and Queue at import time, so everything it
-// reaches for is stubbed before the import below.
+// The worker builds a Worker and Queue at import time, so stub first.
 vi.mock("bullmq", () => ({
   Worker: class {
     on() {}
@@ -73,10 +72,10 @@ beforeEach(() => {
 });
 
 describe("enrichEvent", () => {
-  // Keeps the docs' "collects nothing that identifies a person" claim true.
+  // Backs the docs' "collects nothing that identifies a person" claim.
   it("does not carry the IP address through to the stored event", async () => {
     const enriched = await enrichEvent(makeRaw());
-    expect(enriched.ipAddress).toBeNull();
+    expect(enriched).not.toHaveProperty("ipAddress");
   });
 
   it("still resolves geo from the real IP before dropping it", async () => {
@@ -97,7 +96,7 @@ describe("enrichEvent", () => {
 
     const enriched = await enrichEvent(makeRaw({ ipAddress: null }));
 
-    expect(enriched.ipAddress).toBeNull();
+    expect(enriched).not.toHaveProperty("ipAddress");
     expect(enriched.country).toBeNull();
   });
 

@@ -9,7 +9,6 @@ vi.mock("@/modules/analytics/analytics.repository.ts", () => ({
   getDevices: vi.fn(),
   getGeo: vi.fn(),
   getRealtime: vi.fn(),
-  getRawEvents: vi.fn(),
 }));
 
 import * as analyticsRepo from "@/modules/analytics/analytics.repository.ts";
@@ -31,8 +30,6 @@ beforeEach(() => {
   vi.clearAllMocks();
 });
 
-// ─── resolveDateRange ─────────────────────────────────────────────────────────
-
 describe("resolveDateRange", () => {
   it("no args → toDate ≈ now, fromDate ≈ 7 days ago", () => {
     const before = Date.now();
@@ -49,13 +46,45 @@ describe("resolveDateRange", () => {
   });
 
   it("custom from/to strings → correct Date objects", () => {
-    const { fromDate, toDate } = resolveDateRange("2024-01-01", "2024-01-31");
-    expect(fromDate).toEqual(new Date("2024-01-01"));
-    expect(toDate).toEqual(new Date("2024-01-31"));
+    const from = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+    const to = new Date(Date.now() - 2 * 24 * 60 * 60 * 1000);
+    const range = resolveDateRange(from.toISOString(), to.toISOString());
+    expect(range.fromDate).toEqual(from);
+    expect(range.toDate).toEqual(to);
+  });
+
+  // The schema checks only that the date parses, so an unclamped ?from is a
+  // full hypertable scan from any signed-in account.
+  it("clamps a from date beyond the lookback ceiling", () => {
+    const { fromDate } = resolveDateRange("1900-01-01");
+    const yearAgo = Date.now() - 365 * 24 * 60 * 60 * 1000;
+    expect(Math.abs(fromDate.getTime() - yearAgo)).toBeLessThan(1000);
+  });
+
+  it("clamps a to date in the future back to now", () => {
+    const { toDate } = resolveDateRange(undefined, "2999-01-01");
+    expect(Math.abs(toDate.getTime() - Date.now())).toBeLessThan(1000);
+  });
+
+  // A reversed window scans nothing and reads as "no data", not as bad input.
+  it("falls back to the default span when from is after to", () => {
+    const { fromDate, toDate } = resolveDateRange(
+      new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString(),
+      new Date(Date.now() - 10 * 24 * 60 * 60 * 1000).toISOString()
+    );
+    expect(fromDate.getTime()).toBeLessThan(toDate.getTime());
+    const sevenDaysMs = 7 * 24 * 60 * 60 * 1000;
+    expect(
+      Math.abs(toDate.getTime() - fromDate.getTime() - sevenDaysMs)
+    ).toBeLessThan(1000);
+  });
+
+  it("ignores an unparseable date rather than producing Invalid Date", () => {
+    const { fromDate, toDate } = resolveDateRange("not-a-date", "also-bad");
+    expect(Number.isNaN(fromDate.getTime())).toBe(false);
+    expect(Number.isNaN(toDate.getTime())).toBe(false);
   });
 });
-
-// ─── verifySiteOwnership ──────────────────────────────────────────────────────
 
 describe("verifySiteOwnership", () => {
   it("site found → returns site", async () => {
@@ -76,8 +105,6 @@ describe("verifySiteOwnership", () => {
     );
   });
 });
-
-// ─── analytics service functions ──────────────────────────────────────────────
 
 describe("getOverview", () => {
   it("calls verifySiteOwnership first, then delegates to repository", async () => {

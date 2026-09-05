@@ -10,6 +10,8 @@ Track pageviews and custom events on any site with a tiny SDK, ingest them throu
 ![TypeScript](https://img.shields.io/badge/TypeScript-007ACC?logo=typescript&logoColor=white)
 ![License](https://img.shields.io/badge/License-MIT-green)
 
+**[Documentation](./frontend/content/docs/v1)** — quickstart, install guides, event tracking, how it works, SDK reference. Served at `/docs` when the frontend is running.
+
 </div>
 
 ---
@@ -43,12 +45,15 @@ The hot path is deliberately thin: the ingestion endpoint validates, rate-limits
 | [`sdk/`](./sdk) | [`@akdevv/pulse`](https://www.npmjs.com/package/@akdevv/pulse) — lightweight JS/TS SDK with a React hook. Published on npm. |
 | [`backend/`](./backend) | Express 5 API + BullMQ worker pipeline. Auth (JWT + refresh tokens), site management, event ingestion, analytics queries. |
 | [`frontend/`](./frontend) | Next.js dashboard — auth, site management, and analytics charts (Recharts + shadcn/ui). |
+| [`frontend/content/docs/`](./frontend/content/docs) | The docs, as markdown. Rendered at `/docs`, readable signed out. |
 
 ## Features
 
 - **SDK**: pageview + custom event tracking, no cookies, SPA route-change aware, React hook (`usePulse`)
 - **Ingestion**: Redis-backed rate limiting, Zod validation, async enrichment (device via ua-parser, geo via MaxMind), batched TimescaleDB writes
 - **Analytics API**: pageviews, visitors, top pages, referrers, devices, and geo breakdowns over time ranges
+- **Custom events**: named events with properties, via `trackEvent` or a `data-pulse-event` attribute, with per-property breakdowns
+- **Ask box**: a plain-English question becomes validated read-only SQL over two site-scoped views, run as a restricted Postgres role
 - **Dashboard**: multi-site support, per-site analytics views, dark mode
 - **Testing**: Vitest unit/integration suite + Artillery load-test scripts (`backend/tests/load/`)
 
@@ -77,6 +82,8 @@ pnpm install
 pnpm dev
 ```
 
+Then follow the [quickstart](./frontend/content/docs/v1) — or read it at `/docs` once the frontend is up.
+
 Drop the SDK into any site:
 
 ```ts
@@ -92,10 +99,12 @@ Pulse.init({
 
 Core pipeline (SDK → ingestion → worker → TimescaleDB → dashboard) works end-to-end locally. Remaining plan (see [`notes/next-steps.md`](./notes/next-steps.md)):
 
+- [x] AI-powered queries — natural language → validated SQL over your analytics data (see [`notes/ai-query.md`](./notes/ai-query.md))
+- [x] Custom event tracking — `trackEvent`, `data-pulse-event`, property breakdowns
+- [x] Docs at `/docs`
 - [ ] Public demo site wired to the live backend
-- [ ] 10k RPS sustained load test (Artillery scripts ready in `backend/tests/load/`)
+- [ ] Sustained load test (Artillery scripts in `backend/tests/load/`; k6 for the real run)
 - [ ] Load-test case study write-up
-- [ ] AI-powered queries — natural language → validated SQL over your analytics data
 
 ## License
 

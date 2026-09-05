@@ -5,13 +5,16 @@ import { Reader, ReaderModel } from "@maxmind/geoip2-node";
 import path from "path";
 
 let reader: ReaderModel | null = null;
+// Without this, a missing database makes Reader.open retry and log on every
+// event the worker enriches. One attempt, one log line, then geo stays empty.
+let readerFailed = false;
 
-// In-memory cache — key is IP string, value is the geo result
 const geoCache = new Map<string, GeoInfo>();
 const GEO_CACHE_MAX_SIZE = 10_000;
 
 async function getReader() {
   if (reader) return reader;
+  if (readerFailed) return null;
 
   try {
     const dbPath = path.resolve(env.GEOIP_DB_PATH);
@@ -19,6 +22,7 @@ async function getReader() {
     logger.info("[GeoIP] Database loaded successfully");
     return reader;
   } catch (err) {
+    readerFailed = true;
     logger.error(
       "[GeoIP] Failed to load database — geo lookups will be skipped",
       err instanceof Error ? err : new Error(String(err))
@@ -27,7 +31,6 @@ async function getReader() {
   }
 }
 
-// Call this once on worker startup to warm up the reader
 export async function initGeoIp(): Promise<void> {
   await getReader();
 }
@@ -43,13 +46,11 @@ export async function lookupGeoIp(ipAddress: string | null): Promise<GeoInfo> {
   if (!ipAddress) return empty;
   const ip = normalizeIp(ipAddress);
 
-  // Skip private/loopback IPs
   if (isPrivateIp(ip)) {
     logger.debug(`[GeoIP] Skipping private IP: ${ip}`);
     return empty;
   }
 
-  // Check cache first
   const cached = geoCache.get(ip);
   if (cached) {
     logger.debug(`[GeoIP] Cache HIT for ${ip}`);
@@ -71,7 +72,6 @@ export async function lookupGeoIp(ipAddress: string | null): Promise<GeoInfo> {
       region: res.subdivisions?.[0]?.names?.en ?? null,
     };
 
-    // Store in cache, clear if size limit hit
     if (geoCache.size >= GEO_CACHE_MAX_SIZE) {
       logger.info(
         `[GeoIP] Cache full (${GEO_CACHE_MAX_SIZE} entries), clearing`
@@ -82,15 +82,14 @@ export async function lookupGeoIp(ipAddress: string | null): Promise<GeoInfo> {
 
     return result;
   } catch (err) {
-    // MaxMind throws if the IP isn't in the database — treat as unknown
+    // MaxMind throws when the IP is not in the database. Treat as unknown.
     logger.debug(`[GeoIP] No data for IP ${ip}: ${err}`);
     return empty;
   }
 }
 
 function normalizeIp(ip: string): string {
-  // Docker and some proxies send IPv4 addresses in IPv6 format
-  // ::ffff:192.168.1.1 → 192.168.1.1
+  // Docker and some proxies send IPv4 as ::ffff:192.168.1.1
   if (ip.startsWith("::ffff:")) {
     return ip.slice(7);
   }

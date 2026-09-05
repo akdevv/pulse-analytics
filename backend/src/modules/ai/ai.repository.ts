@@ -1,9 +1,8 @@
 import { prisma } from "@/config/prisma.ts";
 import type { AskResult, ChatTurn } from "./ai.types.ts";
 
-// Conversations are always fetched with the owner in the predicate — never
-// fetched then checked, so a wrong id reads as "not found" rather than leaking
-// that it exists.
+// Owner in the predicate, never fetch-then-check, so a wrong id reads as
+// "not found" rather than confirming the row exists.
 export const getConversationForUser = async (
   conversationId: string,
   userId: string,
@@ -27,8 +26,7 @@ export const listMessages = async (conversationId: string) =>
     orderBy: { createdAt: "asc" },
   });
 
-// deleteMany, not delete: the owner is part of the predicate, so a wrong id
-// deletes nothing instead of throwing and confirming the row exists. Messages
+// deleteMany, not delete, so the owner can be part of the predicate. Messages
 // go with it via onDelete: Cascade.
 export const deleteConversation = async (
   conversationId: string,
@@ -47,12 +45,10 @@ export const createConversation = async (
   question: string
 ) =>
   prisma.conversation.create({
-    // The first question is the title. Renaming can come later if anyone cares.
+    // ponytail: first question is the title. Add renaming if anyone asks.
     data: { userId, siteId, title: question.slice(0, 80) },
   });
 
-// Prior turns for the model. Read from the database, never from the client —
-// a caller cannot rewrite its own history to talk the model into something.
 export const recentTurns = async (
   conversationId: string,
   limit = 6
@@ -76,13 +72,11 @@ export const saveTurn = async (
   question: string,
   result: AskResult
 ) => {
-  // The assistant row is the audit log: the SQL is always stored, the rows
-  // never are. Re-run the query to see rows again.
+  // This row is the audit log. SQL is always stored, rows never are.
   const assistant =
     result.kind === "query"
       ? {
-          // The summary is the stored answer when there is one: reopening a
-          // thread then reads like the conversation it was, not a row count.
+          // Stored so a reopened thread reads as prose, not a row count.
           content: result.summary ?? `Returned ${result.rowCount} row(s).`,
           sql: result.sql,
           rowCount: result.rowCount,
@@ -92,10 +86,8 @@ export const saveTurn = async (
         ? { content: result.error, sql: result.sql, error: result.error }
         : { content: result.reply };
 
-  // Timestamps are set here, not by CURRENT_TIMESTAMP. Inside one transaction
-  // Postgres gives every row the transaction's start time, so both rows would
-  // share a createdAt and the ordering of a replayed thread would be arbitrary
-  // — the answer could render above its own question.
+  // Set here, not by CURRENT_TIMESTAMP: inside one transaction Postgres gives
+  // every row the same start time, so an answer could sort above its question.
   const askedAt = new Date();
   const answeredAt = new Date(askedAt.getTime() + 1);
 

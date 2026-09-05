@@ -1,8 +1,8 @@
 import type { Request, Response } from "express";
 import { AnalyticsQuerySchema } from "./analytics.types.ts";
 import * as AnalyticsService from "./analytics.service.ts";
-import * as AnalyticsRepository from "./analytics.repository.ts";
 import { AppError } from "@/utils/app-error.ts";
+import { siteScope } from "@/utils/request-scope.ts";
 
 const parseQuery = (req: Request) => {
   const result = AnalyticsQuerySchema.safeParse(req.query);
@@ -12,12 +12,8 @@ const parseQuery = (req: Request) => {
   return { error: null, data: result.data };
 };
 
-// GET /:siteId/overview
 export const getOverview = async (req: Request, res: Response) => {
-  const siteId = req.params.siteId as string;
-  if (!siteId) throw AppError.validation("Site ID is required");
-
-  const userId = req.user!.userId;
+  const { siteId, userId } = siteScope(req);
 
   const { error, data } = parseQuery(req);
   if (error) return res.status(400).json({ error });
@@ -36,12 +32,8 @@ export const getOverview = async (req: Request, res: Response) => {
   });
 };
 
-// GET /:siteId/timeseries
 export const getTimeseries = async (req: Request, res: Response) => {
-  const siteId = req.params.siteId as string;
-  if (!siteId) throw AppError.validation("Site ID is required");
-
-  const userId = req.user!.userId;
+  const { siteId, userId } = siteScope(req);
 
   const { error, data } = parseQuery(req);
   if (error) return res.status(400).json({ error });
@@ -61,12 +53,8 @@ export const getTimeseries = async (req: Request, res: Response) => {
   });
 };
 
-// GET /:siteId/pages
 export const getTopPages = async (req: Request, res: Response) => {
-  const siteId = req.params.siteId as string;
-  if (!siteId) throw AppError.validation("Site ID is required");
-
-  const userId = req.user!.userId;
+  const { siteId, userId } = siteScope(req);
 
   const { error, data } = parseQuery(req);
   if (error) return res.status(400).json({ error });
@@ -86,12 +74,8 @@ export const getTopPages = async (req: Request, res: Response) => {
   });
 };
 
-// GET /:siteId/referrers
 export const getReferrers = async (req: Request, res: Response) => {
-  const siteId = req.params.siteId as string;
-  if (!siteId) throw AppError.validation("Site ID is required");
-
-  const userId = req.user!.userId;
+  const { siteId, userId } = siteScope(req);
 
   const { error, data } = parseQuery(req);
   if (error) return res.status(400).json({ error });
@@ -111,12 +95,8 @@ export const getReferrers = async (req: Request, res: Response) => {
   });
 };
 
-// GET /:siteId/devices
 export const getDevices = async (req: Request, res: Response) => {
-  const siteId = req.params.siteId as string;
-  if (!siteId) throw AppError.validation("Site ID is required");
-
-  const userId = req.user!.userId;
+  const { siteId, userId } = siteScope(req);
 
   const { error, data } = parseQuery(req);
   if (error) return res.status(400).json({ error });
@@ -135,12 +115,8 @@ export const getDevices = async (req: Request, res: Response) => {
   });
 };
 
-// GET /:siteId/geo
 export const getGeo = async (req: Request, res: Response) => {
-  const siteId = req.params.siteId as string;
-  if (!siteId) throw AppError.validation("Site ID is required");
-
-  const userId = req.user!.userId;
+  const { siteId, userId } = siteScope(req);
 
   const { error, data } = parseQuery(req);
   if (error) return res.status(400).json({ error });
@@ -159,12 +135,8 @@ export const getGeo = async (req: Request, res: Response) => {
   });
 };
 
-// GET /:siteId/realtime
 export const getRealtime = async (req: Request, res: Response) => {
-  const siteId = req.params.siteId as string;
-  if (!siteId) throw AppError.validation("Site ID is required");
-
-  const userId = req.user!.userId;
+  const { siteId, userId } = siteScope(req);
 
   const result = await AnalyticsService.getRealtime(siteId, userId);
 
@@ -175,14 +147,10 @@ export const getRealtime = async (req: Request, res: Response) => {
   });
 };
 
-// GET /:siteId/realtime/stream  (SSE)
 export const streamRealtime = async (req: Request, res: Response) => {
-  const siteId = req.params.siteId as string;
-  if (!siteId) throw AppError.validation("Site ID is required");
+  const { siteId, userId } = siteScope(req);
 
-  const userId = req.user!.userId;
-
-  // Verify ownership before flushing headers (can throw — Express 5 forwards it)
+  // Before headers are flushed, while a throw can still become a 4xx.
   await AnalyticsService.verifySiteOwnership(siteId, userId);
 
   res.setHeader("Content-Type", "text/event-stream");
@@ -197,7 +165,8 @@ export const streamRealtime = async (req: Request, res: Response) => {
 
   const push = async () => {
     try {
-      const result = await AnalyticsRepository.getRealtime(siteId);
+      // Service, not repository. The shared cache lives there.
+      const result = await AnalyticsService.getCachedRealtime(siteId);
       send({ status: "success", data: result });
     } catch {
       send({ status: "error", message: "Failed to fetch realtime data" });
@@ -213,28 +182,8 @@ export const streamRealtime = async (req: Request, res: Response) => {
   });
 };
 
-// GET /:siteId/raw
-export const getRawEvents = async (req: Request, res: Response) => {
-  const siteId = req.params.siteId as string;
-  if (!siteId) throw AppError.validation("Site ID is required");
-
-  const userId = req.user!.userId;
-
-  const result = await AnalyticsService.getRawEvents(siteId, userId);
-
-  return res.status(200).json({
-    status: "success",
-    message: "Fetched raw events",
-    data: { siteId, result },
-  });
-};
-
-// GET /:siteId/events
 export const getCustomEvents = async (req: Request, res: Response) => {
-  const siteId = req.params.siteId as string;
-  if (!siteId) throw AppError.validation("Site ID is required");
-
-  const userId = req.user!.userId;
+  const { siteId, userId } = siteScope(req);
 
   const { error, data } = parseQuery(req);
   if (error) return res.status(400).json({ error });
@@ -254,12 +203,8 @@ export const getCustomEvents = async (req: Request, res: Response) => {
   });
 };
 
-// GET /:siteId/events/properties?name=signup_completed
 export const getEventProperties = async (req: Request, res: Response) => {
-  const siteId = req.params.siteId as string;
-  if (!siteId) throw AppError.validation("Site ID is required");
-
-  const userId = req.user!.userId;
+  const { siteId, userId } = siteScope(req);
 
   const { error, data } = parseQuery(req);
   if (error) return res.status(400).json({ error });

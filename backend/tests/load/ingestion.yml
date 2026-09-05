@@ -3,11 +3,11 @@
 # Run:    pnpm load:ingestion
 # Prereq: pnpm load:seed  (generates data/users.csv)
 #
-# Target is read from load-test.env → TARGET env var.
-# Phases: warm (10 RPS) → ramp (10→100 RPS) → sustained (100 RPS)
+# Target comes from load-test.env (TARGET).
+# Phases: warm 10 RPS, ramp 10 to 100 RPS, sustained 100 RPS
 # Thresholds: p99 < 200ms, error rate < 0.5%
 #
-# Event mix: 70% PAGEVIEW · 20% CLICK · 10% CUSTOM
+# Event mix: 70% PAGEVIEW, 20% CLICK, 10% CUSTOM
 # Each VU gets a random IP so every request gets its own rate-limit bucket.
 
 config:

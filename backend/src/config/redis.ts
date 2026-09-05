@@ -8,7 +8,7 @@ export const redis = new Redis({
   ...(env.REDIS_PASSWORD && { password: env.REDIS_PASSWORD }),
   maxRetriesPerRequest: 3,
 
-  // Exponential backoff up to 3s, give up after 10 attempts
+  // linear backoff capped at 3s, give up after 10 attempts
   retryStrategy(times) {
     if (times > 10) {
       logger.error("[redis] max reconnection attempts reached");
