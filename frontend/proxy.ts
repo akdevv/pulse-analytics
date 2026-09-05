@@ -7,11 +7,16 @@ export function proxy(req: NextRequest) {
 
   const { pathname } = req.nextUrl;
 
+  // Paths that bounce a signed-in user to the dashboard.
   const publicPaths = ["/", "/login", "/register"];
   const isPublicPath = publicPaths.includes(pathname);
 
+  // Docs read the same signed in or out, so they are open to anyone and
+  // redirect nobody.
+  const isDocsPath = pathname === "/docs" || pathname.startsWith("/docs/");
+
   // unauthenticated user
-  if (!token && !isPublicPath) {
+  if (!token && !isPublicPath && !isDocsPath) {
     return NextResponse.redirect(new URL("/login", req.url));
   }
 
