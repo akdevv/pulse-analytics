@@ -15,15 +15,29 @@ const envSchema = z.object({
   REFRESH_TOKEN_EXPIRY: z.string().default("30d"),
 
   DATABASE_URL: z.string().min(1),
+  AI_DATABASE_URL: z.string().optional(),
+
+  // AI query feature. Any OpenAI-compatible /chat/completions endpoint —
+  // Groq, Cerebras, OpenRouter, Gemini. Swapping provider is a config edit.
+  // Without AI_API_KEY the feature is off and the rest of the API boots fine.
+  AI_BASE_URL: z.string().default("https://api.groq.com/openai/v1"),
+  AI_API_KEY: z.string().optional(),
+  AI_MODEL: z.string().default("openai/gpt-oss-120b"),
 
   REDIS_HOST: z.string().default("localhost"),
   REDIS_PORT: z.coerce.number().default(6379),
   REDIS_PASSWORD: z.string().optional(),
 
+  // Left unset, this follows NODE_ENV: off in development, on everywhere else.
+  // An explicit "true" turns limiting back on locally when you want to test it.
+  // The optional lives inside the preprocess: an empty value in .env arrives as
+  // "" rather than undefined, so it has to be normalised before the enum runs.
   RATE_LIMIT_ENABLED: z
-    .enum(["true", "false"])
-    .default("true")
-    .transform((v) => v === "true"),
+    .preprocess(
+      (v) => (v === "" ? undefined : v),
+      z.enum(["true", "false"]).optional()
+    )
+    .transform((v) => (v === undefined ? undefined : v === "true")),
 
   GEOIP_DB_PATH: z.string().default("./data/GeoLite2-City.mmdb"),
 
@@ -40,4 +54,8 @@ if (!parsed.success) {
   process.exit(1);
 }
 
-export default parsed.data;
+export default {
+  ...parsed.data,
+  RATE_LIMIT_ENABLED:
+    parsed.data.RATE_LIMIT_ENABLED ?? parsed.data.NODE_ENV !== "development",
+};

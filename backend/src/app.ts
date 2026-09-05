@@ -10,6 +10,7 @@ import { requestId } from "@/middleware/request-id.ts";
 import env from "@/config/env.ts";
 
 // Routes
+import aiRoutes from "@/modules/ai/ai.routes.ts";
 import analyticsRoutes from "@/modules/analytics/analytics.routes.ts";
 import authRoutes from "@/modules/auth/auth.routes.ts";
 import healthRoutes from "@/modules/health/health.routes.ts";
@@ -54,6 +55,7 @@ app.use(
 const apiRoute = express.Router();
 
 // Routes
+apiRoute.use("/ai", restrictedCors, aiRoutes);
 apiRoute.use("/analytics", restrictedCors, analyticsRoutes);
 apiRoute.use("/auth", restrictedCors, authRoutes);
 apiRoute.use("/health", healthRoutes);
