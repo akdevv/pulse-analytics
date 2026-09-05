@@ -1,26 +1,40 @@
 import { AppError } from "@/utils/app-error.ts";
 import { getSiteForUser } from "./analytics.repository.ts";
-import { type DateRange } from "./analytics.types.ts";
+import { type DateRange, type RealtimeStats } from "./analytics.types.ts";
 import * as analyticsRepository from "./analytics.repository.ts";
+import { redis } from "@/config/redis.ts";
+import logger from "@/utils/logger.ts";
 
-// ---------- Helpers -------------------
+const DAY_MS = 24 * 60 * 60 * 1000;
+const DEFAULT_RANGE_MS = 7 * DAY_MS;
 
-/**
- * Resolve `from` / `to` query strings into Date objects.
- * Defaults: from = 7 days ago, to = now.
- */
+// The schema only checks that from/to parse as dates, so without this a
+// `?from=1900-01-01` scans the whole hypertable. A year is past the retention
+// policy, so nothing real is cut off.
+const MAX_LOOKBACK_MS = 365 * DAY_MS;
+
+// Defaults to the last 7 days. Clamped to a valid, bounded, non-future window.
 export function resolveDateRange(from?: string, to?: string): DateRange {
-  const toDate = to ? new Date(to) : new Date();
-  const fromDate = from
-    ? new Date(from)
-    : new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
-  return { fromDate, toDate };
+  const now = Date.now();
+  const floor = now - MAX_LOOKBACK_MS;
+
+  const parse = (value: string | undefined): number | undefined => {
+    if (!value) return undefined;
+    const parsed = Date.parse(value);
+    return Number.isNaN(parsed) ? undefined : parsed;
+  };
+
+  // Future dates return nothing anyway, so clamp to now.
+  const to_ = Math.min(parse(to) ?? now, now);
+  const from_ = Math.max(parse(from) ?? to_ - DEFAULT_RANGE_MS, floor);
+
+  // A reversed window scans nothing and reads as "no data" instead of bad input.
+  const fromDate =
+    from_ < to_ ? new Date(from_) : new Date(Math.max(to_ - DEFAULT_RANGE_MS, floor));
+
+  return { fromDate, toDate: new Date(to_) };
 }
 
-/**
- * Verify the requesting user owns the site.
- * Throws 403 if not.
- */
 export const verifySiteOwnership = async (siteId: string, userId: string) => {
   const site = await getSiteForUser(siteId, userId);
   if (!site) {
@@ -29,8 +43,6 @@ export const verifySiteOwnership = async (siteId: string, userId: string) => {
 
   return site;
 };
-
-// ---------- Service Functions ---------
 
 export const getOverview = async (
   siteId: string,
@@ -103,12 +115,38 @@ export async function getGeo(
 
 export async function getRealtime(siteId: string, userId: string) {
   await verifySiteOwnership(siteId, userId);
-  return analyticsRepository.getRealtime(siteId);
+  return getCachedRealtime(siteId);
 }
 
-export async function getRawEvents(siteId: string, userId: string) {
-  await verifySiteOwnership(siteId, userId);
-  return analyticsRepository.getRawEvents(siteId);
+// getRealtime fires four raw-hypertable queries, and every open SSE stream
+// repeats them every 5 seconds against a pool of five connections. One entry
+// per site collapses that however many people watch. The TTL stays under the
+// stream interval so the numbers still move at the rate the UI expects.
+// ponytail: Redis, since the API runs as more than one container.
+const REALTIME_CACHE_TTL_SECONDS = 4;
+
+export async function getCachedRealtime(
+  siteId: string
+): Promise<RealtimeStats> {
+  const key = `realtime:${siteId}`;
+
+  try {
+    const cached = await redis.get(key);
+    if (cached) return JSON.parse(cached) as RealtimeStats;
+  } catch (err) {
+    // A cache that is down is not an outage. Fall through to the database.
+    logger.warn("[analytics] realtime cache read failed", { err, siteId });
+  }
+
+  const fresh = await analyticsRepository.getRealtime(siteId);
+
+  try {
+    await redis.setex(key, REALTIME_CACHE_TTL_SECONDS, JSON.stringify(fresh));
+  } catch (err) {
+    logger.warn("[analytics] realtime cache write failed", { err, siteId });
+  }
+
+  return fresh;
 }
 
 export async function getCustomEvents(

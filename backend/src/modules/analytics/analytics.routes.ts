@@ -9,7 +9,6 @@ import {
   getGeo,
   getRealtime,
   streamRealtime,
-  getRawEvents,
   getCustomEvents,
   getEventProperties,
 } from "./analytics.controller.ts";
@@ -30,6 +29,5 @@ router.get(
   authenticateToken,
   getEventProperties
 );
-router.get("/:siteId/raw", authenticateToken, getRawEvents);
 
 export default router;

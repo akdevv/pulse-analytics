@@ -10,8 +10,7 @@ export const AnalyticsQuerySchema = z.object({
   to: dateString,
   interval: z.enum(["hour", "day"]).default("day"),
   limit: z.coerce.number().int().min(1).max(100).default(10),
-  // Only /events/properties reads this. Event names are free text up to 255
-  // chars, so they travel as a query param rather than a path segment.
+  // Free text up to 255 chars, so it travels as a query param, not a path segment.
   name: z.string().max(255).optional(),
 });
 
@@ -21,8 +20,6 @@ export interface DateRange {
   fromDate: Date;
   toDate: Date;
 }
-
-// ─── Response shapes ───────────
 
 export interface OverviewStats {
   totalPageviews: number;
