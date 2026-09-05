@@ -1,298 +1,322 @@
-# Pulse Analytics — Roadmap
+# Pulse Analytics roadmap
 
-Everything in one place: what we're building, the two tests that decide whether it's finished, what's missing today, and the schedule.
-
-Day-to-day checklist is `todos.md` (gitignored). This file is the plan.
+What's left, in the order it gets done. Day-to-day checklist is `todos.md` (gitignored).
 
 ---
 
-## 1. What this is
+## 1. Where it stands
 
-Privacy-friendly web analytics: a hosted dashboard plus a tiny SDK. No cookies, no third parties. A tiny SDK posts events to an ingestion endpoint that does almost nothing — validate, rate-limit, enqueue — while a worker enriches and batch-writes into TimescaleDB, and a Next.js dashboard reads the aggregates back out.
+Privacy-friendly web analytics: hosted dashboard plus a tiny SDK. No cookies, no third parties. The SDK posts events to an endpoint that only validates, rate-limits and enqueues. A worker enriches them and batch-writes to TimescaleDB. A Next.js dashboard reads the aggregates.
 
-It was built to learn how a high-throughput ingestion pipeline fits together. That objective is met. What's left is making it a tool rather than a repo.
-
-### Where it stands
+It was built to learn how a high-throughput pipeline fits together. That worked. What's left is making it a tool instead of a repo.
 
 | Piece | State |
 |---|---|
-| SDK | `@akdevv/pulse` on npm (v0.1.4). Pageviews, SPA route changes, custom events, React hook. |
-| Ingestion | Redis rate limiting, Zod validation, BullMQ enqueue. Works. |
-| Worker | UA parsing, GeoIP, batched writes. Works. |
-| Analytics API | Overview, timeseries, pages, referrers, devices, geo, realtime SSE. Works. |
-| Dashboard | Auth, sites, per-site analytics, setup page. Functional, unpolished. |
-| Custom events | Ingested and stored. **Never displayed anywhere.** |
-| Docs | An SDK README. Nothing else. |
-| Deployment | None. Local docker only. |
-| Load testing | Configs written, never run. |
+| SDK | `@akdevv/pulse` v0.1.4 on npm. Pageviews, SPA routes, custom events, React hook |
+| Ingestion | Rate limit, Zod validation, BullMQ enqueue. Works |
+| Worker | UA parsing, GeoIP, batched writes. Works |
+| Analytics API | Overview, timeseries, pages, referrers, devices, geo, realtime SSE. Works |
+| AI queries | Built 5 Sept. Cost control and tests still open |
+| Dashboard | Auth, sites, analytics, setup page. Works, unpolished |
+| Custom events | Stored. **Never displayed anywhere** |
+| Docs | An SDK README. Nothing else |
+| Deployment | None. Local docker only |
+| Load testing | Configs written, never run |
 
 ---
 
 ## 2. Definition of done
 
-Two tests. Both have to pass, or the project isn't finished in any sense worth claiming.
+Two tests. Both pass or the project isn't finished.
 
-**Test 1 — a real developer can adopt it.** Someone lands on the site, signs up, installs it on a live site (`akdevv.com` is the guinea pig), and sees their pageviews and button clicks in the dashboard, using only the documentation. No repo spelunking, no asking the author.
+**Test 1, a real developer can adopt it.** Someone lands on the site, signs up, installs Pulse on a live site (`akdevv.com` is the guinea pig) and sees pageviews and button clicks, using only the docs. No repo spelunking, no asking me.
 
-**Test 2 — the throughput claim is verified.** A number we measured ourselves, under stated conditions, with graphs and a method someone else could repeat.
+**Test 2, the throughput claim is verified.** A number I measured, under stated conditions, with graphs and a method someone else could repeat.
 
-Everything below serves one of those two.
-
----
-
-## 3. Test 1 — the adoption walkthrough
-
-The journey, as the dev experiences it, with what's missing at each step.
-
-### Step 1 — land on the site, understand what it is
-
-Currently: a landing page, no docs link, no live demo.
-
-Missing:
-- Docs, linked from the nav
-- A "see it live" link to the demo dashboard so they can judge it before signing up
-
-### Step 2 — sign up, create a site
-
-Currently: works. Register, create a site with a name and domain, get a tracking ID.
-
-Missing: nothing important. This step is fine.
-
-### Step 3 — install the snippet
-
-Currently: the setup page shows a `<script>` tag with `data-tid` and `data-host`, and a curl command for a smoke test.
-
-For `akdevv.com` specifically — an Astro site — the snippet goes in the `<head>` of the base layout. Astro is multi-page by default, so every navigation is a real page load and fires its own pageview. The SPA route-change logic only matters if View Transitions are enabled.
-
-Missing:
-- **Framework install guides.** "Paste it in `<head>`" is not enough. Astro, Next.js App Router, plain HTML, and React/Vite each need five lines of specific instruction.
-- **The npm path is undocumented in the app.** `npm i @akdevv/pulse` then `Pulse.init({ siteId, apiHost })` is the better route for a framework site, and the setup page never mentions it exists.
-- **CSP note.** A site with a strict Content-Security-Policy needs the API host in `script-src` and `connect-src`. Right now it just silently fails.
-- **Confirm the published npm build matches `sdk/src`.** v0.1.4 was published before recent changes; republish if it drifted.
-
-### Step 4 — verify it's working
-
-Currently: nothing. You paste the snippet, then go stare at the dashboard and hope.
-
-Missing:
-- **A "waiting for your first event" state on the setup page** that polls and flips to "connected" when the first event lands. This is the single highest-value missing piece in the whole flow — it's the moment the dev decides whether the tool works.
-- A troubleshooting list: wrong tracking ID, ad blocker, CSP, snippet in `<body>`, domain mismatch.
-
-### Step 5 — track button clicks
-
-Currently: `Pulse.trackEvent('name', { props })` exists in the SDK and the payload reaches the database.
-
-Missing, and this is the big one:
-- **Automatic click tracking.** Real tools let you add `data-pulse-event="hire_me_click"` to a button and be done. A delegated click listener in the SDK is about twenty lines and removes the need to write JavaScript on an Astro site at all.
-- **Custom events are invisible.** The events are stored, and there is no endpoint, no query, and no UI that shows them. `eventName` appears nowhere in the analytics module. So today: the dev tracks a click, the click is saved, and they can never see it. This has to be built:
-  - `GET /analytics/:siteId/events` — event names with counts over a range
-  - Breakdown by property value for a single event name
-  - A card in the dashboard, and the events showing up in the realtime widget
-
-### Step 6 — read reports over time
-
-Currently: overview cards, timeseries, top pages, referrers, devices, geo, realtime. Solid coverage for pageviews.
-
-Missing:
-- Custom events (above)
-- Nothing else blocking. Comparison to previous period would be nice, and is not required to pass Test 1.
-
-### The pass condition for Test 1
-
-`akdevv.com` running Pulse in production, `data-pulse-event` on at least one real button, and the dashboard showing pageviews, referrers, and named click events from real visitors — installed by following the docs, not from memory.
+Everything below serves one of those.
 
 ---
 
-## 4. Documentation
+## 3. The four phases
 
-Without docs, it reads as a repo. With them, it reads as a tool. Four pages, written as MDX in the dashboard app under `/docs` (Shiki is already installed for code highlighting).
+| # | Phase | Why here |
+|---|---|---|
+| 1 | Finish AI queries | Mostly built. Close it while it's still in my head |
+| 2 | Test 1, real adoption | Nothing is provable until it runs somewhere public |
+| 3 | Test 2, load on AWS | Needs a deployed, tuned system to point at |
+| 4 | UI/UX polish and nice-to-haves | Blocks nothing. Eats unlimited time if allowed |
 
-1. **Quickstart** — create a site, install the snippet, verify the first event. Under two minutes end to end.
-2. **Install guides** — script tag, npm + `Pulse.init`, Astro, Next.js App Router, React/Vite. Copy-pasteable, one block each.
-3. **Tracking events** — `data-pulse-event` attributes, `Pulse.trackEvent`, the `usePulse` hook, property naming, what not to put in properties (nothing personal).
-4. **How it works** — the pipeline end to end: why the hot path only validates and enqueues, what the worker does, how the aggregates are built. This is the page that makes an engineer trust the tool, and it doubles as the case-study skeleton.
-
-Plus: `sdk/README.md` refreshed (it's the npm listing page) and the root `README.md` rewritten around the live link and real numbers.
-
-Reference material — the full API surface, the tracking parameters — goes in the repo as markdown. Not worth building a docs site for.
+Phases 1 to 3 are the product working and the numbers proving it. Phase 4 is paint. Don't paint early.
 
 ---
 
-## 5. Test 2 — verifying the 10k RPS claim
+## 4. Phase 1, finish AI queries
 
-The claim being tested: **10,000 events per second, sustained, accepted and stored without loss.** A number without conditions attached is marketing, so the finished claim names the hardware, the duration, the latency percentiles, and the error rate.
+Built 5 Sept: the `ai` module, the Ask tab, the `ai_conversations` migration, and `0008_ai_readonly.sql` (read-only role plus two site-scoped views). Architecture lives in `notes/ai-query.md`. That's the reference, not this file.
+
+Provider is any OpenAI-compatible `/chat/completions` endpoint, set by `AI_BASE_URL`, `AI_API_KEY`, `AI_MODEL`. Without a key the feature is off and the API still boots, which deployment needs.
+
+Left to do:
+
+- **Commit and apply `0008_ai_readonly.sql`** everywhere, and point `AI_DATABASE_URL` at the `ai_readonly` role. On the app's own role the feature is not safe.
+- **Validator tests.** It's a security boundary: write statements, DDL, CTE writes, cross-site reads, missing `LIMIT`, stacked statements. The one suite that isn't optional.
+- **Per-user rate limit** on `/ask`.
+- **Question cache**, `sha256(normalized question + siteId)` to SQL. Repeat questions cost nothing.
+- **Global daily budget** with a clean "out of questions today" state instead of a raw provider error.
+- **Ask panel error states**: validator rejection, timeout, empty result.
+
+Skipped on purpose: SSE streaming, and a second LLM call turning rows into prose. Answers are a table plus the SQL. More honest anyway.
+
+---
+
+## 5. Phase 2, Test 1
+
+Deploy it, document it, then install it on a real site by following those docs and fix what that exposes.
+
+### 5.1 Deploy
+
+Nothing downstream works without a public URL. Four processes: API, worker, Postgres **with TimescaleDB**, Redis. Hosts and cost in §8.
+
+- Node 22 image (`backend/Dockerfile` is still `node:20-alpine`)
+- GeoIP downloaded at build time with a MaxMind key
+- Migrations run, Prisma plus `db/migrate.ts`, including `0008`
+- Worker as a second service, same image, different start command
+- Frontend on Vercel, `NEXT_PUBLIC_API_URL` at the live API
+- Real secrets, CORS locked to the frontend domain, `RATE_LIMIT_ENABLED=true`
+- Health check green from the public internet, not just from the box
+
+### 5.2 The adoption journey
+
+**1. Land on the site.** No docs link, no live demo today. Needs both, in the nav.
+
+**2. Sign up, create a site.** Works. Nothing missing.
+
+**3. Install the snippet.** The setup page gives a `<script>` tag with `data-tid` and `data-host` plus a curl smoke test. On `akdevv.com` (Astro) it goes in the base layout `<head>`. Astro is multi-page, so every navigation is a real page load and fires its own pageview. SPA route detection only matters with View Transitions on.
+
+Missing:
+- **Framework install guides.** "Paste it in `<head>`" is not enough. Astro, Next.js App Router, plain HTML, React/Vite, five lines each.
+- **The npm path.** `npm i @akdevv/pulse` then `Pulse.init({ siteId, apiHost })` is better for a framework site, and the setup page never says it exists.
+- **CSP note.** A strict policy needs the API host in `script-src` and `connect-src`. Today it fails silently.
+- **Check the published build matches `sdk/src`.** v0.1.4 predates recent changes. Republish if it drifted.
+
+**4. Verify it works.** Currently you paste the snippet, stare at the dashboard and hope.
+- **A "waiting for your first event" state** on the setup page that polls and flips to connected. Highest-value missing piece in the flow. It's the moment the dev decides whether the tool works.
+- Troubleshooting list: wrong tracking ID, ad blocker, CSP, snippet in `<body>`, domain mismatch.
+
+**5. Track button clicks.** `Pulse.trackEvent(name, props)` works and the payload reaches the database. Two gaps:
+- **Automatic click tracking.** `data-pulse-event="hire_me_click"` on a button, done. A delegated listener in the SDK is roughly twenty lines and means no JavaScript on an Astro site.
+- **Custom events are invisible.** They're stored, but `eventName` appears nowhere in the analytics module. The dev tracks a click, it saves, they never see it. Needs `GET /analytics/:siteId/events` with counts over a range, a breakdown by property value, a dashboard card, and events in the realtime widget.
+
+**6. Read reports.** Pageview coverage is solid. Only custom events block Test 1. Period comparison would be nice, not required.
+
+### 5.3 Docs
+
+Four MDX pages under `/docs` in the dashboard app. Shiki is already installed.
+
+1. **Quickstart.** Create a site, install, verify the first event. Under two minutes.
+2. **Install guides.** Script tag, npm, Astro, Next.js App Router, React/Vite. One block each.
+3. **Tracking events.** `data-pulse-event`, `trackEvent`, the `usePulse` hook, property naming, and never putting personal data in properties.
+4. **How it works.** The pipeline end to end. The page that makes an engineer trust it, and the skeleton of the case study.
+
+Also refresh `sdk/README.md` (it's the npm listing) and rewrite the root README around the live link. Full API reference stays as markdown in the repo. Not worth a docs site.
+
+### 5.4 While it's fresh
+
+- Integration tests, four flows: auth, ingestion, site isolation, analytics shapes. `supertest` is installed and unused.
+- GitHub Actions: typecheck, lint, test on push.
+- Sort out `main` vs `rebuild`. The portfolio links at `main`, and `main` is still the old implementation.
+
+### Pass condition
+
+`akdevv.com` running Pulse in production, `data-pulse-event` on a real button, and the dashboard showing pageviews, referrers and named click events from real visitors. Installed by following the docs, not from memory.
+
+---
+
+## 6. Phase 3, Test 2
+
+The claim: **10,000 events per second, sustained, accepted and stored without loss.** A number with no conditions attached is marketing, so the write-up names the hardware, the duration, the percentiles and the error rate.
 
 ### What has to be true
 
-- Sustained for 30 minutes, not a 30-second spike. Degradation over time is the thing being looked for.
-- 429s and connection errors are failures, not successes. Rate limiting is disabled or set to a test tier for the run — **and the write-up says so plainly.** The per-site tiers max out at 100k/min, which is well under 600k/min, so the run cannot be done with them on.
-- The queue drains after the run. A backlog that never clears means the worker is the real ceiling and the endpoint was just writing cheques Redis couldn't cash.
-- **Rows in equal rows out.** Sent 18 million events, `SELECT count(*)` returns 18 million. This is the strongest evidence in the whole exercise — it proves the pipeline, not just the endpoint.
+- Sustained 30 minutes, not a 30-second spike. I'm looking for degradation over time.
+- 429s and connection errors are failures. Rate limiting goes off for the run, **and the write-up says so plainly.** Site tiers cap at 100k/min, well under the 600k/min needed.
+- The queue drains afterwards. A backlog that never clears means the worker is the real ceiling.
+- **Rows in equal rows out.** Sent 18 million, `count(*)` returns 18 million. Strongest evidence in the exercise. It proves the pipeline, not just the endpoint.
 
-### Doing it in tiers
+### Tiers
 
-**Tier 0 — laptop ceiling (free, half a day).** One API process, docker Postgres and Redis, load generated on the same machine. Establish where a single instance breaks and what breaks first: event loop, Redis round-trips, worker batch writes, or the connection pool. Note that the generator competes with the target for CPU here, so this number is a floor, not a result.
+**Tier 0, laptop (free, half a day).** One API process, docker Postgres and Redis, load from the same machine. Find what breaks first: event loop, Redis round-trips, batch writes, or the pool. The generator competes for CPU, so this is a floor, not a result.
 
-**Tier 1 — one cloud box, honest generation (a few dollars).** Target on its own instance; load generated from separate instances in the same region. Artillery is Node-based and struggles to produce serious load from one machine — for the real runs use `k6` or `bombardier`, which will saturate a NIC before they saturate a CPU. Same test as Tier 0, without the contention. This is the number that goes on the portfolio if Tier 2 doesn't happen.
+**Tier 1, one cloud box (a few dollars).** Target on its own instance, load from separate instances in the same region. Artillery is Node-based and can't push serious load from one machine, so use `k6` or `bombardier`. This is the number that goes on the portfolio if Tier 2 doesn't happen.
 
-**Tier 2 — the actual 10k claim (a day, tens of dollars, torn down after).** Several API instances behind a load balancer, Redis and Timescale sized for it, and three to five generator instances in the same region driving traffic together. One box cannot honestly produce 10k RPS.
+**Tier 2, the real claim (a day, tens of dollars).** Several API instances, Redis and Timescale sized for it, three to five generators driving traffic together. One box cannot honestly produce 10k RPS.
 
-Money-wise this is much smaller than it sounds: a handful of instances for a few hours, deleted the same day. The expensive version is leaving it running.
+AWS is the rig for Tiers 1 and 2. It's the one place with enough same-region capacity on demand, and it dies the same evening. It is not where the demo lives (§8).
 
-### What to record, live
+### Record live
 
-p50/p95/p99 latency measured at the generator, error rate by status code, throughput accepted, Redis queue depth over time, worker batch-write lag, CPU and memory on every box, and row count in the database before and after.
+p50/p95/p99 at the generator, error rate by status code, accepted throughput, Redis queue depth, worker write lag, CPU and memory per box, row counts before and after.
 
-Screenshot the graphs while they run. They cannot be reconstructed afterwards, and they are the case study.
+Screenshot the graphs during the run. They can't be reconstructed later, and they are the case study.
 
-### The pass condition for Test 2
+### Write-up
 
-Either 10k RPS sustained for 30 minutes with the queue draining and row counts matching — claim verified, publish it — or a lower number that we actually hit, published with the same rigour and the ceiling explained. **Both outcomes are a pass.** "It handled 3,200 RPS on a single 2-vCPU instance, and here's what broke first" is a better portfolio artifact than an unverified 10k.
+Architecture and why the hot path is thin, the method in enough detail to repeat, results with graphs, what broke first and what changed, cost per million events.
 
-What isn't acceptable is the current state: the number on the portfolio with nothing behind it.
+### Pass condition
 
----
+Either 10k RPS for 30 minutes with the queue draining and row counts matching, or a lower number I actually hit, published with the same rigour and the ceiling explained. **Both are a pass.** "3,200 RPS on a single 2-vCPU instance, and here's what broke first" beats an unverified 10k.
 
-## 6. What we're skipping
-
-Written down so it stops being reconsidered.
-
-- AWS, Terraform, ECS, "microservices". It's an API and a worker. Call it that.
-- Comprehensive test coverage. Four integration flows: auth, ingestion, site isolation, analytics shapes.
-- Mobile app, email verification, billing, multi-region, the Go rewrite.
-- A dedicated docs site. Four pages in the app is enough.
-- Self-hosting as a pitch. It runs in docker and always will, but the product being shown is the hosted dashboard. No self-host guide, no "deploy your own" button.
-- Any feature not already in the repo, except: AI SQL queries, custom-event reporting, and `data-pulse-event` click tracking.
+What isn't acceptable is today: the number on the portfolio with nothing behind it.
 
 ---
 
-## 7. Hosting and cost
+## 7. Phase 4, polish and nice-to-haves
 
-Two environments, and they are not the same machine.
+Last, and time-boxed to two days. This phase has no natural end, so it gets a hard one.
 
-- **The demo** — always up, tiny traffic, has to look instant when someone opens the link. Optimised for costing nothing.
-- **The load rig** — exists for a few hours, gets hammered, then gets deleted. Optimised for being honest.
+- **Pick the visual direction first**, spacing, type scale, colour, then apply it everywhere. Piecemeal tweaks won't fix "feels cheap".
+- Skeletons instead of layout jumps.
+- Empty states that teach. A new site with no events should explain what to do.
+- Visible errors. Failed queries currently vanish.
+- Charts: axis formatting, tooltips, sensible number and date rendering.
+- Mobile. The dashboard is desktop-only.
+- Onboarding path: new user, site created, snippet installed, first event.
+- Period comparison if there's time.
 
-Never point a load test at the demo box. A free-tier box will fall over, and sustained egress on a free account is how accounts get suspended.
+### Demo mode, also the exit plan
 
-### What the backend actually needs
+Nobody browsing a portfolio registers an account to look at a dashboard, so the demo link is what most visitors see. And one day I'll stop maintaining the box. The link should keep working.
 
-Four things running: the API, the worker, Postgres **with the TimescaleDB extension**, and Redis. That extension requirement rules out most free managed Postgres — Neon and Supabase don't offer TimescaleDB, and without hypertables and continuous aggregates half the project stops existing. Timescale Cloud has no permanent free tier, only a trial. So the realistic shape is one small box running everything from the compose file already in the repo.
+A `/demo` route reading a **snapshot of real data**. After `akdevv.com` has sent traffic for a week, export that window to JSON fixtures and serve the dashboard from them. Real numbers, frozen.
 
-### Free options for keeping it alive
+Three rules, all non-negotiable:
+
+- **Label it.** "Demo, snapshot data, September 2026", on the page. Frozen real data, stated as such, reads as honest. Live-looking fake numbers read as a lie the moment someone asks.
+- **No dead ends.** Read-only. No create-site form that doesn't create. Disable, don't fake.
+- **Don't fake the ask box.** It runs SQL against a real database. Either disable it with a note, or pre-record real questions with the SQL and rows they returned, labelled as recorded.
+
+The backend stays live through September and while the project is being shown. Test 1 needs it, and the pipeline is the part worth demonstrating. After that it can be shut down and nothing on the portfolio breaks. What survives: the demo link, the npm package, the repo, the case study, the graphs.
+
+---
+
+## 8. Hosting and cost
+
+Two environments, not the same machine.
+
+- **The demo.** Always up, tiny traffic, has to feel instant. Optimised for costing nothing.
+- **The load rig.** AWS, a few hours, then deleted. Optimised for being honest.
+
+Never point a load test at the demo box. A free-tier box falls over, and sustained egress on a free account gets accounts suspended.
+
+### What the backend needs
+
+API, worker, Postgres **with TimescaleDB**, Redis. That extension rules out most free managed Postgres. Neon and Supabase don't offer it, and without hypertables and continuous aggregates half the project stops existing. Timescale Cloud has a trial, no free tier. So: one small box running the compose file already in the repo.
 
 | Option | Cost | Reality |
 |---|---|---|
-| **Oracle Cloud Always Free** (ARM Ampere, 4 cores / 24 GB) | $0 forever | Best fit. One VM runs the whole compose file with room to spare. Costs: account signup is fussy, ARM capacity in a given region can be unavailable for a while, and you're managing a VM — Caddy or nginx for TLS, and it's on you when it falls over. Confirm the TimescaleDB image has an arm64 build for the tag you're on. |
-| **Google Cloud free tier** (e2-micro, 1 GB) | $0 forever | 1 GB is tight for Postgres + Redis + two Node processes. Doable with swap and small buffers, not comfortable. |
-| **Fly.io** | ~$5–7/mo | Machines auto-stop when idle and wake on request, so the bill tracks usage. Cleanest developer experience of the paid options. Cold start on the first hit after idle — mildly bad for a demo link. |
-| **Hetzner CX22** | ~$5/mo | Boring, reliable, generous. What I'd pick if Oracle's ARM capacity won't cooperate. |
-| **Render / Railway free tiers** | $0–5 | Render's free web services sleep and take ~50 s to wake, and background workers aren't free — the worker is half this system. Railway's free allowance is a credit, not a tier. Both are poor fits here. |
+| **Oracle Always Free** (ARM, 4 cores / 24 GB) | $0 | Best fit, runs the whole compose file easily. Signup is fussy, ARM capacity can be unavailable, and it's a VM you manage. Check the TimescaleDB tag has an arm64 build |
+| **GCP free tier** (e2-micro, 1 GB) | $0 | Tight for Postgres, Redis and two Node processes. Doable with swap, not comfortable |
+| **Fly.io** | ~$5–7/mo | Auto-stops when idle so the bill tracks usage. Cold start on the first hit is bad for a demo link |
+| **Hetzner CX22** | ~$5/mo | Boring and reliable. My pick if Oracle's capacity won't cooperate |
+| **Render / Railway** | $0–5 | Render free services sleep ~50 s and workers aren't free. Railway's allowance is a credit. Poor fits |
 
-**Recommendation:** Oracle Always Free, with Hetzner as the fallback if capacity blocks you. Frontend on Vercel free. Demo subdomain off `akdevv.com`, TLS via Caddy. Target: **$0/month, all in.**
+**Plan:** Oracle Always Free, Hetzner as fallback. Frontend on Vercel. Demo subdomain off `akdevv.com`, TLS via Caddy. Target **$0/month**.
 
-### The AI query feature — free tier
+### AI provider, free tier
 
-No paid key. SQL generation against a fixed schema is a narrow task: given the exact column list and two examples, a small free model does it about as well as an expensive one. The interesting engineering here is the sandbox around the generated SQL — read-only role, site-scoped view, validator, statement timeout — and none of that changes with the model behind it.
-
-Pick from, roughly in order:
+No paid key. Generating SQL against a fixed schema is narrow work. Given the exact columns and two examples, a small free model does it about as well as an expensive one. The engineering worth showing is the sandbox around the SQL: read-only role, site-scoped views, validator, statement timeout. None of that changes with the model.
 
 | Provider | Free allowance | Notes |
 |---|---|---|
-| **Google AI Studio (Gemini)** | Generous daily request cap on the Flash models | Best quality-per-zero-dollars. Free-tier prompts may be used for training — fine for public demo analytics, not for anything private |
-| **Groq** | Daily request and token caps | Open models, very fast. Good fit for a demo where response speed is visible |
-| **Cerebras** | Daily caps | Same shape as Groq, also very fast |
-| **OpenRouter** | `:free` model variants, rate limited | One endpoint, many models. Easiest place to A/B two models |
-| **Cloudflare Workers AI** | Daily neuron allowance | Worth a look if anything else ends up on Cloudflare |
-| **Local via Ollama** | Free forever | A 7B coder model handles this fine, but on a CPU-only demo box a response takes tens of seconds. Fine on a laptop, poor for a live demo |
+| **Google AI Studio** | Generous daily cap on Flash | Best quality per zero dollars. Free-tier prompts may train the model. Fine for demo analytics |
+| **Groq** | Daily request and token caps | Open models, very fast. Good when response speed is visible |
+| **Cerebras** | Daily caps | Same shape as Groq, also fast |
+| **OpenRouter** | `:free` variants, rate limited | One endpoint, many models. Easiest place to A/B |
+| **Cloudflare Workers AI** | Daily neuron allowance | Worth a look if anything lands on Cloudflare |
+| **Ollama, local** | Free | A 7B coder model handles this, but tens of seconds on a CPU-only box. Laptop only |
 
-**Build against the OpenAI-compatible chat-completions shape.** Groq, Cerebras, OpenRouter and Gemini all speak it, so the provider becomes three environment variables — base URL, key, model — and switching when a free tier changes its terms is a config edit, not a rewrite. One `fetch`, not an abstraction layer.
+Built against the OpenAI-compatible shape, so switching provider is three env vars, not a rewrite. One `fetch`, no abstraction layer. Structured output: ask for JSON, parse, validate with Zod, retry once. Provider JSON-schema modes are a bonus, not a dependency.
 
-Structured output: ask for JSON, parse it, validate with Zod, retry once on a parse failure. Provider-specific JSON-schema modes are a bonus, not a dependency.
+Every allowance in that table moves. Check before building.
 
-Free tiers are rate limited per day, and the ask box is public, so the per-user rate limit and the question cache stop being cost control and start being availability control. In demo mode, cap it globally and fall back to the pre-recorded example questions when the day's budget is gone.
+### Load test burn
 
-Verify current limits before building — every allowance in this table moves.
-
-### The load test burn
-
-Rough, on-demand, one region, everything torn down the same day. Verify current prices before committing — these move.
+On-demand, one region, torn down the same day. Prices move, check first.
 
 | Item | Shape | Approx |
 |---|---|---|
 | API instances | 3 × 2-vCPU ARM | ~$0.25/hr |
-| Data layer | 1 × 4-vCPU for Postgres + Redis | ~$0.20/hr |
-| Load generators | 4 × 4-vCPU, **spot** | ~$0.20/hr |
-| Storage, transfer | Same-AZ traffic, small EBS | pennies |
+| Data layer | 1 × 4-vCPU, Postgres + Redis | ~$0.20/hr |
+| Generators | 4 × 4-vCPU, **spot** | ~$0.20/hr |
+| Storage, transfer | Same-AZ, small EBS | pennies |
 
-So roughly **$0.60–0.70/hr for the whole rig**, meaning the actual 30-minute run costs well under a dollar. The money goes on the fumbling around it — expect a full day of setup, mistakes and reruns.
+About **$0.65/hr for the rig**, so the 30-minute run costs under a dollar. The money goes on the fumbling around it. Expect a full day of setup, mistakes and reruns.
 
-**Budget $30–50 for the entire load-testing exercise.** Guardrails: a billing alert before you launch anything, spot instances for generators, no load balancer (point generators straight at instance IPs — ALB charges scale with traffic and will surprise you at 10k RPS), and `terraform destroy` or the console equivalent the same evening. The one genuinely expensive mistake is leaving it running overnight.
-
-### Total
+**Budget $30–50 for the whole exercise.** Guardrails: billing alert before launching anything, spot generators, no load balancer (point generators at instance IPs, ALB charges scale with traffic and will surprise you at 10k RPS), and tear it down the same evening. The expensive mistake is leaving it running overnight.
 
 | | |
 |---|---|
-| Demo, monthly | **$0** — free-tier host, free-tier model |
+| Demo, monthly | **$0**, free host, free model |
 | Load testing, one-off | **$30–50** budgeted, likely less |
 | Domain | Already owned |
 
 ---
 
-### Demo mode — the exit plan
+## 9. Skipping
 
-Two problems solved by one feature. Nobody browsing a portfolio will register an account to look at a dashboard, so the demo link is what most visitors actually see. And eventually you'll stop wanting to maintain a box — when that day comes, the link should keep working instead of rotting.
+Written down so it stops coming back.
 
-So: a `/demo` route reading a **snapshot of real data**. Once akdevv.com has been sending traffic for a week, export that window to JSON fixtures and serve the dashboard from them. Real numbers from real visitors, frozen in time.
-
-Rules, all three non-negotiable:
-
-- **Label it.** "Demo — snapshot data, September 2026", visible on the page. Frozen real data, stated as such, reads as honest engineering. Live-looking fabricated numbers read as a lie the moment someone asks "is this live?"
-- **No dead ends.** Read-only. No create-site form that doesn't create, no settings that don't save. Disable them, don't fake them.
-- **Don't fake the ask box.** It executes SQL against a real database. In snapshot mode either disable it with a note, or pre-record a few real questions with the SQL they generated and the rows they returned, labelled as recorded.
-
-Order of operations: backend stays live through the September window and while the project is being actively shown — Test 1 can't pass without it, and the ingestion pipeline is the part worth demonstrating. Demo mode gets built during the UI days because it pays off immediately. Then the backend can be shut down whenever it stops being worth the upkeep, and nothing on the portfolio breaks.
-
-What survives a shutdown: the demo link, the npm package, the repo, the case study, the load-test graphs. That's the whole portfolio entry.
+- AWS as a permanent home. It's the load rig for a day. No Terraform, no ECS, no microservices. It's an API and a worker.
+- Full test coverage. Four integration flows plus the AI validator suite.
+- Mobile app, email verification, billing, multi-region, the Go rewrite.
+- A dedicated docs site. Four pages in the app is enough.
+- Self-hosting as a pitch. It runs in docker and always will, but the product is the hosted dashboard.
+- SSE streaming and prose answers in the AI feature.
+- Any feature not already in the repo, except custom-event reporting and `data-pulse-event` click tracking.
 
 ---
 
-## 8. Schedule
+## 10. Schedule
 
-**10 Sept — workable.** **15 Sept — presentable.**
+**10 Sept workable. 15 Sept presentable.**
 
-| Date | Work |
-|---|---|
-| **Sept 4** | Accounts first: LLM key with a spend cap, MaxMind license key, hosting account, DNS for the demo subdomain. Then AI SQL backend — migration, validator, runner, `/ask` endpoint. |
-| **Sept 5** | AI SQL frontend, rate limit, cache, validator tests. Custom events: endpoint plus dashboard card. `data-pulse-event` click tracking in the SDK, republish to npm. |
-| **Sept 6** | Deploy day, all of it. Node 22 image, GeoIP at build time, Timescale + Redis + API + worker, migrations, Vercel, secrets, CORS, health check green from the public internet. |
-| **Sept 7** | Docs — four pages. Setup page "waiting for first event" state. Then install Pulse on `akdevv.com` **by following the docs**, and fix whatever that exposes. |
-| **Sept 8** | Load testing: Tier 0 then Tier 1. Record everything, screenshot the graphs. |
-| **Sept 9** | Tune what the load exposed — batch size, worker concurrency, pool. Integration tests. CI workflow. Sort out `main` vs `rebuild`. |
-| **Sept 10** | **Checkpoint.** Test 1 passes. A real load number exists. Cut anything unfinished here rather than carrying it into the UI days. |
-| **Sept 11–13** | UI: one visual direction applied everywhere, loading skeletons, empty states that teach, visible errors, chart polish, mobile, onboarding path. Plus demo mode — export a week of real akdevv.com traffic to fixtures and serve `/demo` from them, labelled and read-only. |
-| **Sept 14** | Tier 2 load run if it's happening, then the case study: architecture, method, results, what broke first, cost per million events. |
-| **Sept 15** | README, portfolio entry — `github`, `image`, `demo`, `wip` off — and the description rewritten to the number we actually measured. Click every link as a stranger would. |
+| Date | Phase | Work |
+|---|---|---|
+| **Sept 5** | 1 | Finish AI: apply `0008`, validator tests, rate limit, cache, daily budget, Ask panel errors |
+| **Sept 6** | 2 | Deploy day. Node 22 image, GeoIP at build time, Timescale, Redis, API, worker, migrations, Vercel, secrets, CORS, health check green from outside |
+| **Sept 7** | 2 | Custom events: endpoint, dashboard card, realtime widget. `data-pulse-event` in the SDK, republish to npm |
+| **Sept 8** | 2 | Four docs pages. Setup page "waiting for first event" state |
+| **Sept 9** | 2 | Install on `akdevv.com` **by following the docs**, fix what that exposes. Integration tests, CI, `main` vs `rebuild` |
+| **Sept 10** | | **Checkpoint. Test 1 passes**, or it gets cut down until it does. Nothing unfinished travels past this line |
+| **Sept 11** | 3 | Tier 0 on the laptop, tune batch size, worker concurrency, pool. Stand up the AWS rig, run Tier 1 |
+| **Sept 12** | 3 | Tier 2 if it happens. Capture every graph live. Tear the rig down that evening |
+| **Sept 13** | 3 | Case study: architecture, method, results, what broke first, cost per million events |
+| **Sept 14** | 4 | Visual direction everywhere, skeletons, empty and error states, charts, mobile, onboarding. Demo mode from a week of real fixtures |
+| **Sept 15** | 4 | README, portfolio entry (`github`, `image`, `demo`, `wip` off), description rewritten to the measured number. Click every link as a stranger would |
+
+If polish is unfinished on the 15th, it ships unfinished.
 
 ---
 
-## 9. Known traps
+## 11. Known traps
 
 | Trap | Fix |
 |---|---|
-| `GeoLite2-City.mmdb` is 66 MB and gitignored — the deployed image has no GeoIP | MaxMind key, download at build time. If it fights back, ship with geo off and hide the card |
-| `backend/Dockerfile` is on `node:20-alpine`; README says ≥22 and Prisma 7 wants it | Bump before deploying |
+| `0008_ai_readonly.sql` uncommitted, so `AI_DATABASE_URL` falls back to the app role | Commit, run everywhere, verify `ai_readonly` cannot write |
+| `GeoLite2-City.mmdb` is 66 MB and gitignored, so the image has no GeoIP | MaxMind key, download at build. If it fights back, ship geo off and hide the card |
+| `backend/Dockerfile` is on `node:20-alpine`, README says 22+ and Prisma 7 wants it | Bump before deploying |
 | The worker is a separate process, not a thread of the API | Second service, same image, different start command |
-| Free-tier Redis (10k commands/day) won't survive demo traffic, let alone load tests | Redis container alongside the API |
-| `origin/main` is still the old implementation — `rebuild` is 23 ahead, 57 behind | The portfolio links here. Sort it out before the 15th |
-| Site rate-limit tiers cap at 100k/min — below 10k RPS | Disable for load runs, and say so in the write-up |
-| Artillery is Node-based and can't generate 10k RPS | `k6` or `bombardier` for the real runs |
-| Continuous aggregates refresh hourly | Drop `schedule_interval` once real traffic exists |
-| npm `@akdevv/pulse` v0.1.4 may lag `sdk/src` | Diff and republish before telling anyone to install it |
-| An LLM key with no spend cap | Set the cap on day one |
+| Free-tier Redis (10k commands/day) won't survive demo traffic | Redis container next to the API |
+| `origin/main` is still the old implementation, `rebuild` is 23 ahead, 57 behind | The portfolio links here. Fix before the 15th |
+| Site rate-limit tiers cap at 100k/min, below 10k RPS | Disable for load runs, say so in the write-up |
+| Artillery can't generate 10k RPS | `k6` or `bombardier` for real runs |
+| Continuous aggregates refresh hourly | Drop `schedule_interval` once real traffic exists. At 10k RPS real-time aggregation live-computes ~36M rows per query |
+| npm v0.1.4 may lag `sdk/src` | Diff and republish before telling anyone to install it |
+| Free AI keys still have daily caps, and the ask box is public | Global budget plus per-user limit before it goes public |
 
 ---
 
-## 10. After the 15th
+## 12. After the 15th
 
-Not before: the sustained Tier 2 run if it didn't happen, comparison-to-previous-period in the dashboard, alerting, and a public roadmap. All of it optional. The two tests are the finish line.
+Tier 2 if it didn't happen, period comparison, alerting, a public roadmap. All optional. The two tests are the finish line.
