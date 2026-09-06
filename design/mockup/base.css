@@ -1,0 +1,135 @@
+/* Lifted from frontend/app/globals.css .dark — the comps must be the app's
+   own palette, or choosing between them decides nothing. */
+:root {
+  --bg: oklch(0.1585 0 0);
+  --panel: oklch(0.2135 0 0);
+  --raised: oklch(0.2603 0 0);
+  --seam: oklch(0.2685 0 0);
+  --ink: oklch(0.9128 0.0228 101.3697);
+  --accent: oklch(0.6832 0.2107 38.6427);
+  --powder: oklch(0.8192 0.0304 204.4701);
+  --success: oklch(0.75 0.15 155);
+  --ease: cubic-bezier(0.23, 1, 0.32, 1);
+  --sans: "DM Sans", ui-sans-serif, system-ui, sans-serif;
+  --display: "Bricolage Grotesque", ui-sans-serif, system-ui, sans-serif;
+  --mono: "JetBrains Mono", ui-monospace, monospace;
+}
+
+* { box-sizing: border-box; margin: 0; }
+body {
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--sans);
+  -webkit-font-smoothing: antialiased;
+}
+a { color: inherit; text-decoration: none; }
+
+.fig {
+  font-family: var(--display);
+  font-weight: 600;
+  letter-spacing: -0.03em;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+.meta {
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: color-mix(in oklab, var(--ink) 50%, transparent);
+  white-space: nowrap;
+}
+.mono { font-family: var(--mono); font-variant-numeric: tabular-nums; }
+.num { font-variant-numeric: tabular-nums; }
+.up { color: var(--success); }
+.dn { color: oklch(0.68 0.19 25); }
+
+
+:root{
+  --t1: var(--ink);
+  --t2: color-mix(in oklab, var(--ink) 88%, transparent);
+  --t3: color-mix(in oklab, var(--ink) 72%, transparent);
+  --t4: color-mix(in oklab, var(--ink) 62%, transparent);
+  --t5: color-mix(in oklab, var(--ink) 56%, transparent);
+  --rule: color-mix(in oklab, var(--ink) 9%, transparent);
+}
+.meta{color:var(--t5)}
+.app{display:grid;grid-template-columns:236px 1fr;min-height:100vh}
+.app{max-width:100%;overflow-x:clip}
+.app>main{min-width:0}
+.card,.col{min-width:0}
+pre{white-space:pre-wrap;word-break:break-word}
+.rail{background:var(--bg);border-right:1px solid var(--seam);padding:14px 12px;display:flex;flex-direction:column;gap:14px;position:sticky;top:0;height:100vh}
+.brand{display:flex;align-items:center;gap:9px;padding:2px 8px;font-size:13.5px;font-weight:600;letter-spacing:-0.02em}
+.nav{display:flex;flex-direction:column;gap:2px}
+.nav a{display:flex;align-items:center;gap:10px;padding:7px 10px;border-radius:6px;font-size:13.5px;color:var(--t5);position:relative;white-space:nowrap}
+.nav a:hover{background:color-mix(in oklab,var(--ink) 5%,transparent);color:var(--t2)}
+.nav a.on{background:var(--panel);color:var(--t1)}
+.nav a.on::before{content:"";position:absolute;left:0;top:50%;translate:0 -50%;width:2px;height:15px;border-radius:2px;background:var(--accent)}
+.nav a.on svg{color:var(--accent)}
+.railgroup .meta{padding:0 10px 7px;display:block;font-size:10.5px}
+
+/* The rail had two links and then a hand's height of nothing. What belongs in
+   that space is the thing you actually switch between. */
+.switch{display:flex;align-items:center;gap:9px;width:100%;background:var(--panel);border:1px solid var(--seam);border-radius:8px;padding:8px 10px;cursor:pointer;text-align:left}
+.switch:hover{border-color:color-mix(in oklab,var(--accent) 40%,transparent)}
+.switch .pip{width:6px;height:6px;border-radius:50%;background:var(--success);flex:none}
+.switch b{flex:1;min-width:0;font-size:13px;font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.switch svg{color:var(--t5);flex:none}
+.sitelist{display:flex;flex-direction:column;gap:1px}
+.sitelist a{display:flex;align-items:center;gap:9px;padding:6px 10px;border-radius:6px;font-size:12.5px;color:var(--t5)}
+.sitelist a:hover{background:color-mix(in oklab,var(--ink) 5%,transparent);color:var(--t2)}
+.sitelist a.on{background:var(--panel);color:var(--t1)}
+.sitelist .pip{width:5px;height:5px;border-radius:50%;background:var(--success);flex:none}
+.sitelist .pip.off{background:color-mix(in oklab,var(--ink) 26%,transparent)}
+.sitelist .n{margin-left:auto;font-variant-numeric:tabular-nums;font-size:11.5px;color:var(--t5)}
+
+.col{max-width:1120px;margin:0 auto;padding:24px 32px 64px;width:100%}
+.col.narrow{max-width:680px}
+.head{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.head h1{font-family:var(--display);font-weight:600;letter-spacing:-0.03em;font-size:25px}
+.sub{font-family:var(--mono);font-size:12px;color:var(--t5)}
+.st{margin-left:auto;display:flex;align-items:center;gap:14px}
+.st .live{display:flex;align-items:center;gap:7px;font-size:12.5px;color:var(--success)}
+.st .live i{width:6px;height:6px;border-radius:50%;background:currentColor}
+/* Recency is the health signal a status word only gestures at. */
+.st .ago{font-size:12.5px;color:var(--t5)}
+.lede{margin-top:8px;font-size:13.5px;line-height:1.6;color:var(--t5);max-width:62ch}
+.bar{display:flex;align-items:center;gap:10px;margin:18px 0 16px;flex-wrap:wrap}
+.tabs{display:flex;gap:3px}
+.tabs a{padding:6px 11px;border-radius:6px;font-size:13px;color:var(--t5)}
+.tabs a:hover{background:color-mix(in oklab,var(--ink) 5%,transparent);color:var(--t2)}
+.tabs a.on{background:var(--panel);color:var(--t1)}
+.seg{display:flex;gap:2px;margin-left:auto;background:var(--panel);border:1px solid var(--seam);border-radius:7px;padding:2px}
+.seg span{padding:5px 11px;border-radius:5px;font-size:11.5px;font-weight:500;color:var(--t5);cursor:pointer}
+.seg span:hover:not(.on){background:color-mix(in oklab,var(--ink) 6%,transparent);color:var(--t2)}
+.seg span.on{background:var(--accent);color:var(--bg)}
+
+.card{background:var(--panel);border:1px solid var(--seam);border-radius:11px}
+.ch{display:flex;align-items:baseline;justify-content:space-between;gap:12px;padding:15px 18px;border-bottom:1px solid var(--seam)}
+.ch b{font-size:14px;font-weight:500}
+.ch p{font-size:12.5px;line-height:1.55;color:var(--t5);margin-top:4px}
+.cb{padding:18px}
+.btn{display:inline-flex;align-items:center;gap:7px;border-radius:7px;padding:7px 13px;font-size:13px;font-weight:500;border:1px solid var(--seam);background:var(--panel);color:var(--t1);cursor:pointer}
+.btn:hover{border-color:color-mix(in oklab,var(--ink) 22%,transparent)}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--bg)}
+.btn.primary:hover{background:color-mix(in oklab,var(--accent) 88%,white)}
+.btn.ghost{background:transparent}
+.btn.danger{background:transparent;border-color:color-mix(in oklab,oklch(0.63 0.21 25) 45%,transparent);color:oklch(0.74 0.17 25)}
+.btn[disabled]{opacity:.45;cursor:not-allowed}
+/* Focus is drawn, not inherited: a comp that never shows it ships an app that
+   never has it. */
+:where(a,button,input,.seg span,.switch):focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:6px}
+label.f{display:block;margin-bottom:16px}
+label.f .lb{display:block;font-size:12.5px;font-weight:500;margin-bottom:6px}
+label.f input{width:100%;background:var(--bg);border:1px solid var(--seam);border-radius:7px;padding:9px 11px;color:var(--t1);font-family:inherit;font-size:13.5px}
+label.f input:focus{outline:none;border-color:color-mix(in oklab,var(--accent) 55%,transparent);box-shadow:0 0 0 3px color-mix(in oklab,var(--accent) 14%,transparent)}
+label.f input::placeholder{color:color-mix(in oklab,var(--ink) 32%,transparent)}
+label.f .hint{display:block;margin-top:6px;font-size:12px;color:var(--t5)}
+pre{background:var(--bg);border:1px solid var(--seam);border-radius:8px;padding:13px 14px;overflow:auto;font-family:var(--mono);font-size:11.5px;line-height:1.65;color:var(--t3)}
+pre .t{color:var(--powder)}
+pre .a{color:var(--accent)}
+.kv{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:11px 0;border-bottom:1px solid var(--rule);font-size:13px}
+.kv:last-child{border-bottom:0}
+.kv .k{color:var(--t5)}
+.kv .v{font-family:var(--mono);font-size:11.5px;background:var(--bg);border:1px solid var(--seam);border-radius:5px;padding:3px 8px;color:var(--t3)}
