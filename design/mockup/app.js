@@ -271,7 +271,7 @@ function rankTable(title, labelHead, unit, rows, opts = {}) {
     <tbody>${rows.map((r) => `<tr class="${state.filter?.kind === kind && state.filter?.label === r.label ? "sel" : ""}"
         ${kind ? `data-filter="${kind}" data-label="${esc(r.label)}" data-share="${r.share}" data-pct="${r.pct}"` : ""}>
       <td class="l${opts.mono ? " mn" : ""}" title="${esc(r.label)}">${esc(r.label)}</td>
-      <td class="s"><span class="track"><i style="width:${(r.share * 100).toFixed(1)}%"></i></span></td>
+      <td class="s"><span class="track"><i style="--w:${r.share.toFixed(3)}"></i></span></td>
       <td class="n">${F(r.value)}</td></tr>`).join("")}</tbody></table>
   </div>`;
 }

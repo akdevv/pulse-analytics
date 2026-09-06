@@ -53,7 +53,10 @@ td.l.mn{font-family:var(--mono);font-size:12px}
 td.s{width:88px;padding-left:14px}
 td.n{width:58px;text-align:right;font-variant-numeric:tabular-nums;color:var(--t3);font-size:12.5px;padding-right:8px}
 .track{display:block;height:4px;border-radius:2px;background:var(--rule);overflow:hidden}
-.track i{display:block;height:100%;background:var(--accent);opacity:.8;border-radius:2px;transition:width .35s var(--ease)}
+/* scaleX, not width: animating width relayouts the row on every frame, and
+   these move together whenever the range or the filter changes. */
+.track i{display:block;height:100%;width:100%;background:var(--accent);opacity:.8;border-radius:2px;
+  transform:scaleX(var(--w,0));transform-origin:left center;transition:transform .35s var(--ease)}
 
 /* The filter the page is scoped to, and the way back out of it. */
 .filterbar{display:flex;align-items:center;gap:9px;margin-top:14px;padding:9px 12px;background:color-mix(in oklab,var(--accent) 8%,transparent);border:1px solid color-mix(in oklab,var(--accent) 26%,transparent);border-radius:9px;font-size:13px}
