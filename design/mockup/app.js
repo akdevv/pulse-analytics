@@ -36,6 +36,8 @@ const state = {
   install: "script",   // setup: which install path is shown
   dirty: false,        // settings: has the form been edited
   confirmText: "",     // settings: typed confirmation before deleting
+  railMenu: false,     // mobile: the rail's site menu
+  demoOpen: false,     // the mockup-only state switcher
   demo: "live",        // live | loading | failed
   asking: false,
 };
@@ -143,7 +145,6 @@ const icon = (k, s = 15) =>
 function railHtml() {
   const r = state.route;
   const cur = r.site ? siteById(r.site) : null;
-  const others = sites().filter((s) => s.id !== cur?.id);
 
   const sparkFor = (s) => {
     const ts = s.ranges?.["7d"]?.timeseries;
@@ -174,7 +175,7 @@ function railHtml() {
       <div class="scfoot"><b class="fig">${pvFor(s)}</b><span>views · 7d</span></div>
     </div>`;
 
-  const compact = (s) => `<a class="siterow" href="#/site/${s.id}/analytics" data-go="#/site/${s.id}/analytics">
+  const compact = (s, on = false) => `<a class="siterow ${on ? "on" : ""}" href="#/site/${s.id}/analytics" data-go="#/site/${s.id}/analytics"${on ? ' aria-current="page"' : ""}>
       <span class="pip ${s.active ? "" : "off"}"></span>
       <span class="nm">${esc(s.name)}</span>
       <span class="n">${pvFor(s)}</span>
@@ -192,9 +193,12 @@ function railHtml() {
     </button>
 
     <div class="zone">
-      <div class="zhead"><span class="meta">${cur ? "Current site" : "Sites"}</span><a class="zlink" href="#/sites" data-go="#/sites">All${cur ? "" : " sites"} →</a></div>
-      ${cur ? currentBlock(cur) : ""}
-      <div class="siterows">${(cur ? others : sites()).map(compact).join("")}</div>
+      <div class="zhead"><span class="meta">${cur ? "Current site" : "All sites"}</span><a class="zlink" href="#/sites" data-go="#/sites">All sites →</a></div>
+      ${currentBlock(cur ?? {
+        name: "All sites", domain: `${sites().length} sites`, active: sites().some((x) => x.active),
+        ranges: sites().find((x) => x.ranges)?.ranges,
+      })}
+      <div class="siterows">${sites().map((x) => compact(x, x.id === cur?.id)).join("")}</div>
       <a class="addrow" href="#/new" data-go="#/new"><span class="plus">+</span>Add site</a>
     </div>
 
@@ -206,11 +210,26 @@ function railHtml() {
       <a class="${r.view === "docs" ? "on" : ""}" href="#/docs" data-go="#/docs">${icon("docs")}<span>Docs</span></a>
     </nav>
 
+    <button class="railmenu" data-railmenu aria-haspopup="true" aria-expanded="${state.railMenu ? "true" : "false"}">
+      <span class="pip ${cur ? (cur.active ? "" : "off") : "hide"}"></span>
+      <span class="rm">${cur ? esc(cur.name) : "All sites"}</span>
+      ${icon("chevron", 14)}
+    </button>
+    ${state.railMenu ? `<div class="railsheet">
+      <a href="#/sites" data-go="#/sites">All sites</a>
+      ${sites().map((x) => `<a href="#/site/${x.id}/analytics" data-go="#/site/${x.id}/analytics" class="${x.id === r.site ? "on" : ""}">
+        <span class="pip ${x.active ? "" : "off"}"></span>${esc(x.name)}<span class="n">${pvFor(x)}</span></a>`).join("")}
+      <a href="#/new" data-go="#/new">+ Add site</a>
+      <a href="#/docs" data-go="#/docs">Docs</a>
+      <a href="#/notes" data-go="#/notes">About this mockup</a>
+    </div>` : ""}
+
     <a class="acct ${r.view === "account" ? "on" : ""}" href="#/account" data-go="#/account">
       <span class="av">AK</span>
       <span class="who"><b>Ashish</b><span>you@example.com</span></span>
       ${icon("chevron", 14)}
     </a>
+    <a class="notelink" href="#/notes" data-go="#/notes">About this mockup</a>
   </aside>`;
 }
 
@@ -251,7 +270,7 @@ function siteHeadHtml(site, tab) {
     <h1>${esc(site.name)}</h1><span class="sub">${esc(site.domain)}</span>
     <span class="st">
       <span class="ago">last event ${ago}${site.active ? " ago" : ""}</span>
-      <span class="live ${site.active ? "" : "off"}"><i style="${site.active ? "" : "background:currentColor"}"></i>${site.active ? "Receiving" : "Listening"}</span>
+      <span class="live ${site.active ? "" : "off"}"><i style="${site.active ? "" : "background:currentColor"}"></i>${site.active ? "Receiving" : "Not receiving"}</span>
     </span>
   </div>
   <div class="bar">
@@ -329,16 +348,17 @@ function analyticsView(site) {
      <span class="meta">${state.filter.pct}% of ${RANGE_LABEL[state.range].toLowerCase()}</span>
      <button class="x" data-clear-filter>Clear ✕</button></div>` : ""}
 
-  <div class="card mrow" style="margin-top:${state.filter ? 14 : 0}px">
+  <div class="card mrow">
     ${[["Pageviews", F(v.overview.pageviews), spark(pv), delta(d1)],
        ["Sessions", F(v.overview.sessions), spark(se), delta(d1 * 0.66)],
        ["Visitors", F(v.overview.visitors), spark(pv.map((x, i) => x * (0.7 + ((i * 7) % 11) / 32))), delta(d1 * -0.17)]]
       .map(([l, val, sp, d]) => `<div class="m"><div class="mtop"><span class="meta">${l}</span>
         <svg width="86" height="24" fill="none" aria-hidden="true"><path d="${sp}" stroke="var(--accent)" stroke-opacity=".7" stroke-width="1.3"/></svg></div>
         <span class="fig v">${val}</span>${d}</div>`).join("")}
-    <div class="m"><div class="mtop"><span class="meta">Active now</span></div>
+    <div class="m"><div class="mtop"><span class="meta"><span class="pip live-pip"></span>Active now</span>
+      <span class="ticker" aria-hidden="true">${[3,5,4,7,6,4,8,5,7,9,6,8].map((h) => `<i style="height:${h * 11}%"></i>`).join("")}</span></div>
       <span class="fig v" style="color:var(--powder)">${state.filter ? "—" : 3}</span>
-      <span class="d" style="color:var(--t5)">last 5 min</span></div>
+      <span class="d muted-d">last 5 min</span></div>
   </div>
 
   <div class="card chartcard">
@@ -354,9 +374,9 @@ function analyticsView(site) {
           <stop offset="0%" stop-color="var(--accent)" stop-opacity="0.15"/>
           <stop offset="100%" stop-color="var(--accent)" stop-opacity="0"/></linearGradient></defs>
         ${ticks.map((t) => `<line x1="0" x2="${W}" y1="${((1 - t / yMax) * H).toFixed(1)}" y2="${((1 - t / yMax) * H).toFixed(1)}" stroke="var(--ink)" stroke-opacity="0.05" vector-effect="non-scaling-stroke"/>`).join("")}
-        <path d="${smooth(pts(prev))}" fill="none" stroke="var(--ink)" stroke-opacity="0.24" stroke-width="1" stroke-dasharray="3 4" vector-effect="non-scaling-stroke"/>
+        <path d="${smooth(pts(prev))}" fill="none" stroke="var(--ink)" stroke-opacity="0.16" stroke-width="1" stroke-dasharray="3 4" vector-effect="non-scaling-stroke"/>
         <path d="${smooth(pts(pv))} L${W},${H} L0,${H} Z" fill="url(#g)"/>
-        <path d="${smooth(pts(se))}" fill="none" stroke="var(--powder)" stroke-opacity="0.42" stroke-width="1.1" vector-effect="non-scaling-stroke" stroke-linejoin="round"/>
+        <path d="${smooth(pts(se))}" fill="none" stroke="var(--powder)" stroke-opacity="0.85" stroke-width="1.3" vector-effect="non-scaling-stroke" stroke-linejoin="round"/>
         <path d="${smooth(pts(pv))}" fill="none" stroke="var(--accent)" stroke-width="1.7" vector-effect="non-scaling-stroke" stroke-linejoin="round"/>
       </svg>
       <div class="cursor"></div><span class="dot ghost"></span><span class="dot"></span>
@@ -373,14 +393,9 @@ function analyticsView(site) {
       ${[["devices", "Device"], ["browsers", "Browser"], ["os", "OS"]].map(([k, l]) => `<span class="${state.tech === k ? "on" : ""}" data-tech="${k}" role="button" tabindex="0">${l}</span>`).join("")}</div>` })}
   </div>
 
-  <div style="margin-top:16px">${rankTable("Custom events", "Event", "Count", v.events, { mono: true })}</div>
+  <div>${rankTable("Custom events", "Event", "Count", v.events, { mono: true })}</div>
 
-  <div class="card" style="margin-top:22px;border-style:dashed"><div class="cb" style="padding:14px 18px">
-    <p class="muted"><b style="color:var(--t3);font-weight:500">About this mockup.</b>
-    Every figure comes from the local database — ${int(site.ranges["90d"].overview.totalPageviews)} real events over 90 days, seeded as sessions rather than loose pageviews.
-    Two things are drawn but not built: the period deltas and the dashed comparison line need a previous-window query the analytics API does not have,
-    and scoping by a row is applied client-side here because <code>/analytics</code> takes no filter yet.</p>
-  </div></div>`;
+`;
 }
 
 function loadingView(site) {
@@ -428,7 +443,7 @@ function sitesView() {
     const sp = r ? sparkPath(blocks(r.timeseries.map((p) => p.pageviews), Math.max(1, Math.round(r.timeseries.length / 16)))) : null;
     return `<a class="card sc" href="#/site/${s.id}/analytics" data-go="#/site/${s.id}/analytics">
       <div class="sct"><span><b>${esc(s.name)}</b><span class="dm">${esc(s.domain)}</span></span>
-        <span class="live ${s.active ? "" : "off"}"><i></i>${s.active ? "Live" : "Paused"}</span></div>
+        <span class="live ${s.active ? "" : "off"}"><i></i>${s.active ? "Receiving" : "Not receiving"}</span></div>
       <div class="nums">
         <span class="n"><b>${r ? F(r.overview.totalPageviews) : 0}</b><span>pageviews</span></span>
         <span class="n"><b>${r ? F(r.overview.totalVisitors) : 0}</b><span>visitors</span></span>
@@ -437,10 +452,33 @@ function sitesView() {
            : `<div class="spark" style="height:34px;display:grid;place-items:center;font-size:12px;color:var(--t5)">no events yet</div>`}
     </a>`;
   };
+  const live = sites().filter((x) => x.ranges);
+  const sum = (k, r = "7d") => live.reduce((n, x) => n + x.ranges[r].overview[k], 0);
+  const series = [];
+  for (const x of live) (x.ranges["7d"].timeseries ?? []).forEach((pt, i) => { series[i] = (series[i] ?? 0) + pt.pageviews; });
+
   return `
-  <div class="top"><h1>Sites</h1><button class="btn primary" style="margin-left:auto" data-go="#/new">＋ Add site</button></div>
+  <div class="head"><h1>Sites</h1>
+    <span class="action"><button class="btn primary" data-go="#/new">+ Add site</button></span></div>
+
+  <div class="card allsites">
+    <div class="asnums">
+      ${[["Pageviews", F(sum("totalPageviews"))], ["Sessions", F(sum("totalSessions"))],
+         ["Visitors", F(sum("totalVisitors"))], ["Sites reporting", `${live.length} of ${sites().length}`]]
+        .map(([l, v]) => `<div class="stat"><span class="meta">${l}</span><b class="fig">${v}</b></div>`).join("")}
+    </div>
+    <svg class="asspark" viewBox="0 0 200 40" preserveAspectRatio="none" fill="none" aria-hidden="true">
+      <defs><linearGradient id="asg" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0%" stop-color="var(--accent)" stop-opacity=".18"/>
+        <stop offset="100%" stop-color="var(--accent)" stop-opacity="0"/></linearGradient></defs>
+      <path d="${sparkPath(blocks(series, Math.max(1, Math.round(series.length / 40))), 200, 40)} L200,40 L0,40 Z" fill="url(#asg)"/>
+      <path d="${sparkPath(blocks(series, Math.max(1, Math.round(series.length / 40))), 200, 40)}" stroke="var(--accent)" stroke-opacity=".75" stroke-width="1.3" vector-effect="non-scaling-stroke"/>
+    </svg>
+    <span class="meta asfoot">Last 7 days, all sites</span>
+  </div>
+
   <div class="grid">${sites().map(card).join("")}</div>
-  <p class="muted" style="margin-top:20px">Last 7 days on each. Staging has never reported — open it to see the state a new site lands in.</p>`;
+  <p class="muted">Last 7 days on each. Staging has never reported — open it to see the state a new site lands in.</p>`;
 }
 
 /* Syntax colour without the bug the first version shipped: escaping, then
@@ -527,7 +565,7 @@ function setupView(site) {
     <span class="meta">checking every 5s</span>
   </div>`}
 
-  <div class="card" style="margin-top:16px">
+  <div class="card">
     <div class="ch">
       <span><b>Install</b><p>${esc(cur.note)}</p></span>
       <div class="mini">${Object.entries(opts).map(([k, o]) => `<span class="${(state.install ?? "script") === k ? "on" : ""}" data-install="${k}" role="button" tabindex="0">${o.label}</span>`).join("")}</div>
@@ -537,11 +575,11 @@ function setupView(site) {
         <pre>${code(cur.src, cur.kind)}</pre>
         <button class="copy float" data-copy="${esc(cur.src)}">Copy</button>
       </div>
-      <p class="muted" style="margin-top:12px">Put it before the closing <code>&lt;/head&gt;</code>. Events from <code>${esc(site.domain)}</code> and its subdomains are kept; anything else is dropped, including localhost.</p>
+      <p class="muted">Put it before the closing <code>&lt;/head&gt;</code>. Events from <code>${esc(site.domain)}</code> and its subdomains are kept; anything else is dropped, including localhost.</p>
     </div>
   </div>
 
-  <div class="duo" style="margin-top:16px">
+  <div class="duo">
     <div class="card">
       <div class="ch"><span><b>Send a test event</b><p>Tells a broken snippet apart from a quiet site.</p></span></div>
       <div class="cb"><div class="codewrap">
@@ -552,10 +590,10 @@ function setupView(site) {
     <div class="card">
       <div class="ch"><span><b>Keys</b><p>The tracking id is public — it ships in your page source.</p></span></div>
       <div class="cb" style="padding-top:6px;padding-bottom:8px">
-        <div class="kv"><span class="k">Tracking ID</span>
-          <span style="display:flex;align-items:center;gap:8px">
-            <span class="v">${site.tid}</span>
-            <button class="copy" data-copy="${site.tid}">Copy</button></span></div>
+        <div class="key">
+          <span>${site.tid}</span>
+          <button class="copy" data-copy="${site.tid}">Copy</button>
+        </div>
         <div class="kv"><span class="k">Domain</span><span class="v">${esc(site.domain)}</span></div>
         <div class="kv"><span class="k">Created</span><span class="v">${esc(site.created)}</span></div>
       </div>
@@ -782,8 +820,10 @@ function newSiteView() {
   return `
   <div class="head"><h1>Add a site</h1></div>
   <p class="lede">A name and a domain. You get the snippet on the next screen, and the first visit shows up while you are still looking at it.</p>
-  <div class="two" style="margin-top:24px">
-    <div class="card"><div class="cb">
+  <div class="two">
+    <div class="card">
+      <div class="ch"><span><b>The site</b><p>Both fields can be changed later.</p></span></div>
+      <div class="cb">
       <label class="f"><span class="lb">Site name</span><input placeholder="Acme Docs" id="nsName"><span class="hint">What you will call it inside Pulse.</span></label>
       <label class="f"><span class="lb">Domain</span><input placeholder="example.com" id="nsDomain"><span class="hint">No https:// and no trailing slash. Events from subdomains count too.</span></label>
       <div style="display:flex;gap:9px;justify-content:flex-end"><button class="btn ghost" data-go="#/sites">Cancel</button><button class="btn primary" data-create>Create site</button></div>
@@ -793,7 +833,7 @@ function newSiteView() {
       <div class="cb">
         <pre>&lt;<span class="t">script</span> <span class="a">src</span>="https://api.pulse.dev/pulse.js"
         <span class="a">data-tid</span>="pk-…"&gt;&lt;/<span class="t">script</span>&gt;</pre>
-        <p class="muted" style="margin-top:12px">No cookie banner and no consent flow: Pulse sets no cookies and stores no visitor identifiers.</p>
+        <p class="muted">No cookie banner and no consent flow: Pulse sets no cookies and stores no visitor identifiers.</p>
       </div>
     </div>
   </div>`;
@@ -802,7 +842,7 @@ function newSiteView() {
 function accountView() {
   return `
   <div class="head"><h1>Account</h1><span class="sub">you@example.com</span></div>
-  <div class="stack narrowstack" style="margin-top:24px;max-width:600px">
+  <div class="stack narrowstack">
     <div class="card">
       <div class="ch"><b>Profile</b></div>
       <div class="cb">
@@ -814,28 +854,83 @@ function accountView() {
     <div class="card">
       <div class="ch"><span><b>Password</b><p>Changing it signs out every other device.</p></span></div>
       <div class="cb">
-        <label class="f"><span class="lb">New password</span><input type="password" id="pw" placeholder="At least 8 characters"></label>
-        <div style="margin:-6px 0 14px" id="pwrules">
-          <div class="rule off" data-rule="len"><i></i>At least 8 characters</div>
-          <div class="rule off" data-rule="upper"><i></i>One uppercase letter</div>
-          <div class="rule off" data-rule="digit"><i></i>One number</div>
-        </div>
+        <label class="f"><span class="lb">New password</span>
+          <input type="password" id="pw" placeholder="New password">
+          <span class="hint" id="pwrules">
+            <span class="rule off" data-rule="len"><i></i>8 characters</span>
+            <span class="rule off" data-rule="upper"><i></i>An uppercase letter</span>
+            <span class="rule off" data-rule="digit"><i></i>A number</span>
+          </span>
+        </label>
         <label class="f" style="margin-bottom:10px"><span class="lb">Confirm password</span><input type="password" placeholder="Repeat it"></label>
         <div class="rowend"><button class="btn primary" data-toast="Password changed.">Change password</button></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="ch"><span><b>Sessions</b><p>Signed in on two devices. Signing out here ends this one only.</p></span></div>
+      <div class="cb" style="padding-top:var(--s1)">
+        <div class="kv"><span class="k">This browser · macOS</span><span class="v">active now</span></div>
+        <div class="kv"><span class="k">iPhone · Safari</span><span class="v">2 days ago</span></div>
+        <div class="between" style="margin-top:var(--s3)">
+          <p class="muted">Ends the session in this browser.</p>
+          <button class="btn" data-go="#/sites">Sign out</button>
+        </div>
       </div>
     </div>
   </div>`;
 }
 
+/* Docs had been an H1 and a card reading "Not part of this mockup" — the only
+   non-site item in the rail landing on a page that says the work was not done.
+   It is a plausible index now, built from the pieces Setup already owns. */
 function docsView() {
+  const PAGES = [
+    ["Quickstart", "Create a site, paste one line, see your first event land.", "5 min"],
+    ["Installation", "Script tag, npm, Next.js, Astro, React and Vite.", "8 min"],
+    ["Tracking events", "trackEvent, the usePulse hook, and data-pulse-event.", "6 min"],
+    ["How it works", "The hot path, the queue, the worker, and why /track answers 204.", "9 min"],
+    ["SDK reference", "Every signature, every /track parameter, and the rate limits.", "reference"],
+  ];
   return `
   <div class="head"><h1>Docs</h1></div>
-  <p class="lede">The documentation lives at <code>/docs</code> in the real app and is readable signed out. It is out of scope for this mockup — the rail entry is here because signed in there was no way to reach it at all.</p>
-  <div class="card" style="margin-top:22px"><div class="mid">
-    <h2>Not part of this mockup</h2>
-    <p>Quickstart, install guides, event tracking, how it works and the SDK reference already exist as markdown in the repo.</p>
-    <div class="act"><button class="btn" data-go="#/sites">Back to sites</button></div>
-  </div></div>`;
+  <p class="lede">Five pages, readable signed out. Everything here is markdown in the repo and rendered at <code>/docs</code>.</p>
+
+  <div class="card">
+    <div class="ch"><span><b>Get started</b><p>The snippet is the whole install; the rest is optional.</p></span></div>
+    <div class="cb">
+      <pre>&lt;<span class="t">script</span> <span class="a">src</span>="https://api.pulse.dev/pulse.js"
+        <span class="a">data-tid</span>="pk-…"&gt;&lt;/<span class="t">script</span>&gt;</pre>
+    </div>
+  </div>
+
+  <div class="doclist">
+    ${PAGES.map(([t, d, len]) => `<a class="card docrow" href="#/docs" data-go="#/docs">
+      <span class="dt">${t}</span>
+      <span class="dd">${d}</span>
+      <span class="dl">${len}</span>
+    </a>`).join("")}
+  </div>`;
+}
+
+/* Where the mockup admits what it is. Off the product screens, in one place. */
+function notesView() {
+  const rows = [
+    ["Real", "Every figure on the analytics screens, at all three ranges, dumped from the local API against 96,627 seeded events across two sites."],
+    ["Real", "The traffic generator models sessions — a visitor, a device, a referrer and a few pages in a row — with a diurnal curve, a weekend dip and growth across the window."],
+    ["Not built", "Period deltas and the dashed comparison line need a previous-window query the analytics API does not have."],
+    ["Not built", "Scoping the page by a ranked row is applied client-side; /analytics takes no filter parameter."],
+    ["Not built", "The per-site sparkline needs a timeseries in the sites list response."],
+    ["Canned", "Ask AI replies are fixed text. The threads, the folding and the SQL are the design; the answers are not generated."],
+  ];
+  return `
+  <div class="head"><h1>About this mockup</h1></div>
+  <p class="lede">A clickable design for the Pulse app. Some of it is wired to real data and some of it is drawn — this page says which, so no screen has to carry a disclaimer.</p>
+  <div class="card">
+    <div class="cb" style="padding-top:var(--s1);padding-bottom:var(--s2)">
+      ${rows.map(([tag, text]) => `<div class="noterow"><span class="tag ${tag === "Real" ? "ok" : ""}">${tag}</span><p>${text}</p></div>`).join("")}
+    </div>
+  </div>`;
 }
 
 /* ── render ────────────────────────────────────────────────────────────── */
@@ -846,6 +941,7 @@ function render() {
   else if (r.view === "new") body = newSiteView();
   else if (r.view === "account") body = accountView();
   else if (r.view === "docs") body = docsView();
+  else if (r.view === "notes") body = notesView();
   else if (r.view === "site") {
     const site = siteById(r.site);
     if (!site) { location.hash = "#/sites"; return; }
@@ -853,11 +949,18 @@ function render() {
   }
 
   const showDemo = r.view === "site" && r.tab === "analytics" && siteById(r.site)?.ranges;
+  // Wide for data, narrow for forms and reading. It was three widths that all
+  // hugged the left, so the app appeared to slide sideways between pages.
+  const narrow = ["account", "new", "notes", "docs"].includes(r.view) ||
+    (r.view === "site" && ["settings", "setup"].includes(r.tab));
   document.body.innerHTML = `
-    <div class="app">${railHtml()}<main><div class="col"${showDemo ? ' style="padding-bottom:104px"' : ""}>${body}</div></main></div>
-    ${showDemo ? `<div class="demo"><span>State</span>
-      ${[["live", "Live"], ["loading", "Loading"], ["failed", "Failed"]]
-        .map(([k, l]) => `<button class="${state.demo === k ? "on" : ""}" data-demo="${k}">${l}</button>`).join("")}
+    <div class="app">${railHtml()}<main><div class="col${narrow ? " narrow" : ""}"${showDemo ? ' style="padding-bottom:104px"' : ""}>${body}</div></main></div>
+    ${showDemo ? `<div class="demo ${state.demoOpen ? "open" : ""}">
+      <button class="demotoggle" data-demoopen aria-expanded="${state.demoOpen ? "true" : "false"}">
+        <span class="ddot ${state.demo}"></span><span class="dlabel">${state.demo === "live" ? "Live data" : state.demo === "loading" ? "Loading state" : "Failed state"}</span>
+      </button>
+      ${state.demoOpen ? `<span class="dopts">${[["live", "Live"], ["loading", "Loading"], ["failed", "Failed"]]
+        .map(([k, l]) => `<button class="${state.demo === k ? "on" : ""}" data-demo="${k}">${l}</button>`).join("")}</span>` : ""}
     </div>` : ""}`;
 
   if (showDemo && state.demo === "live") wireChart();
@@ -977,13 +1080,16 @@ addEventListener("hashchange", () => {
   if (next.site !== state.route.site) { state.filter = null; state.demo = "live"; }
   if (next.tab !== state.route.tab || next.site !== state.route.site) { state.dirty = false; state.confirmText = ""; }
   state.route = next;
+  state.railMenu = false;
   scrollTo(0, 0);
   render();
 });
 
 document.addEventListener("click", (e) => {
+  if (e.target.closest("[data-railmenu]")) { state.railMenu = !state.railMenu; render(); return; }
+
   const go = e.target.closest("[data-go]");
-  if (go) { e.preventDefault(); location.hash = go.dataset.go; return; }
+  if (go) { e.preventDefault(); state.railMenu = false; location.hash = go.dataset.go; return; }
 
   const range = e.target.closest("[data-range]");
   if (range) { state.range = range.dataset.range; state.filter = null; render(); return; }
@@ -994,8 +1100,10 @@ document.addEventListener("click", (e) => {
   const tech = e.target.closest("[data-tech]");
   if (tech) { state.tech = tech.dataset.tech; render(); return; }
 
+  if (e.target.closest("[data-demoopen]")) { state.demoOpen = !state.demoOpen; render(); return; }
+
   const demo = e.target.closest("[data-demo]");
-  if (demo) { state.demo = demo.dataset.demo; render(); return; }
+  if (demo) { state.demo = demo.dataset.demo; state.demoOpen = false; render(); return; }
 
   const row = e.target.closest("[data-filter]");
   if (row) {
