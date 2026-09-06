@@ -174,7 +174,7 @@ function railHtml() {
       <div class="scfoot"><b class="fig">${pvFor(s)}</b><span>views · 7d</span></div>
     </div>`;
 
-  const compact = (s) => `<a class="siterow" data-go="#/site/${s.id}/analytics">
+  const compact = (s) => `<a class="siterow" href="#/site/${s.id}/analytics" data-go="#/site/${s.id}/analytics">
       <span class="pip ${s.active ? "" : "off"}"></span>
       <span class="nm">${esc(s.name)}</span>
       <span class="n">${pvFor(s)}</span>
@@ -192,10 +192,10 @@ function railHtml() {
     </button>
 
     <div class="zone">
-      <div class="zhead"><span class="meta">${cur ? "Current site" : "Sites"}</span><a class="zlink" data-go="#/sites">All${cur ? "" : " sites"} →</a></div>
+      <div class="zhead"><span class="meta">${cur ? "Current site" : "Sites"}</span><a class="zlink" href="#/sites" data-go="#/sites">All${cur ? "" : " sites"} →</a></div>
       ${cur ? currentBlock(cur) : ""}
       <div class="siterows">${(cur ? others : sites()).map(compact).join("")}</div>
-      <a class="addrow" data-go="#/new"><span class="plus">+</span>Add site</a>
+      <a class="addrow" href="#/new" data-go="#/new"><span class="plus">+</span>Add site</a>
     </div>
 
     <div class="spacer"></div>
@@ -203,10 +203,10 @@ function railHtml() {
     ${usageBlock()}
 
     <nav class="nav">
-      <a class="${r.view === "docs" ? "on" : ""}" data-go="#/docs">${icon("docs")}<span>Docs</span></a>
+      <a class="${r.view === "docs" ? "on" : ""}" href="#/docs" data-go="#/docs">${icon("docs")}<span>Docs</span></a>
     </nav>
 
-    <a class="acct ${r.view === "account" ? "on" : ""}" data-go="#/account">
+    <a class="acct ${r.view === "account" ? "on" : ""}" href="#/account" data-go="#/account">
       <span class="av">AK</span>
       <span class="who"><b>Ashish</b><span>you@example.com</span></span>
       ${icon("chevron", 14)}
@@ -257,7 +257,7 @@ function siteHeadHtml(site, tab) {
   <div class="bar">
     <div class="tabs">
       ${[["analytics", "Analytics"], ["ask", "Ask AI"], ["setup", "Setup"], ["settings", "Settings"]]
-        .map(([k, l]) => `<a class="${tab === k ? "on" : ""}" data-go="#/site/${site.id}/${k}">${l}</a>`).join("")}
+        .map(([k, l]) => `<a class="${tab === k ? "on" : ""}" href="#/site/${site.id}/${k}" data-go="#/site/${site.id}/${k}">${l}</a>`).join("")}
     </div>
     ${tab === "analytics" && site.ranges ? `<div class="seg" role="group" aria-label="Date range">
       ${["7d", "30d", "90d"].map((k) => `<span class="${state.range === k ? "on" : ""}" data-range="${k}" role="button" tabindex="0">${k.toUpperCase()}</span>`).join("")}
@@ -272,7 +272,7 @@ function rankTable(title, labelHead, unit, rows, opts = {}) {
     <div class="ph"><b>${title}</b>${opts.extra ?? ""}</div>
     <table><thead><tr><td class="meta" style="padding-left:8px">${labelHead}</td><td class="s"></td><td class="meta n">${unit}</td></tr></thead>
     <tbody>${rows.map((r) => `<tr class="${state.filter?.kind === kind && state.filter?.label === r.label ? "sel" : ""}"
-        ${kind ? `data-filter="${kind}" data-label="${esc(r.label)}" data-share="${r.share}" data-pct="${r.pct}"` : ""}>
+        ${kind ? `data-filter="${kind}" data-label="${esc(r.label)}" data-share="${r.share}" data-pct="${r.pct}" role="button" tabindex="0"` : ""}>
       <td class="l${opts.mono ? " mn" : ""}" title="${esc(r.label)}">${esc(r.label)}</td>
       <td class="s"><span class="track"><i style="--w:${r.share.toFixed(3)}"></i></span></td>
       <td class="n">${F(r.value)}</td></tr>`).join("")}</tbody></table>
@@ -426,7 +426,7 @@ function sitesView() {
   const card = (s) => {
     const r = s.ranges?.["7d"];
     const sp = r ? sparkPath(blocks(r.timeseries.map((p) => p.pageviews), Math.max(1, Math.round(r.timeseries.length / 16)))) : null;
-    return `<a class="card sc" data-go="#/site/${s.id}/analytics">
+    return `<a class="card sc" href="#/site/${s.id}/analytics" data-go="#/site/${s.id}/analytics">
       <div class="sct"><span><b>${esc(s.name)}</b><span class="dm">${esc(s.domain)}</span></span>
         <span class="live ${s.active ? "" : "off"}"><i></i>${s.active ? "Live" : "Paused"}</span></div>
       <div class="nums">
@@ -734,7 +734,7 @@ function askView(site) {
         <span class="plus" aria-hidden="true">+</span>New chat
       </button>
       <div class="tlist">
-        ${THREADS.map((x) => `<div class="titem ${x.id === state.thread ? "on" : ""}" data-thread="${x.id}">
+        ${THREADS.map((x) => `<div class="titem ${x.id === state.thread ? "on" : ""}" data-thread="${x.id}" role="button" tabindex="0">
           <span class="tt">${esc(x.title)}</span>
           <span class="tw">${esc(x.when)}</span>
           <button class="tdel" data-del-thread="${x.id}" title="Delete chat" aria-label="Delete ${esc(x.title)}">
@@ -1056,7 +1056,7 @@ document.addEventListener("click", (e) => {
 document.addEventListener("keydown", (e) => {
   if (e.key === "Enter" && e.target.id === "askbox") { e.preventDefault(); ask(e.target.value); return; }
   if (e.key !== "Enter" && e.key !== " ") return;
-  const hit = e.target.closest("[data-range],[data-tech],[data-demo],[data-install]");
+  const hit = e.target.closest("[data-range],[data-tech],[data-demo],[data-install],[data-thread],[data-filter]");
   if (hit) { e.preventDefault(); hit.click(); }
 });
 
