@@ -132,7 +132,11 @@ code{font-family:var(--mono);font-size:11.5px;background:var(--bg);border:1px so
 .threads a.on{background:var(--raised);color:var(--t1)}
 .conv{display:flex;flex-direction:column;min-height:520px}
 .msgs{padding:20px;display:flex;flex-direction:column;gap:24px;flex:1}
-.q{font-size:16px;font-weight:500;letter-spacing:-0.015em}
+/* The question and the answer were the same size, so the pair read as two
+   statements rather than one being the reply to the other. You already know
+   what you asked; the answer is what you came for. */
+.asked .meta{display:block;margin-bottom:6px;font-size:10.5px}
+.q{font-size:14px;font-weight:400;color:var(--t4);letter-spacing:-0.005em}
 .a p{font-size:14px;line-height:1.6;color:var(--t2)}
 .sql{margin-top:12px}
 .sqlhead{display:flex;align-items:center;gap:8px;margin-bottom:7px}
@@ -267,3 +271,91 @@ code{font-family:var(--mono);font-size:11.5px;background:var(--bg);border:1px so
 .uspark{display:block;width:calc(100% - 8px);height:22px;margin:9px 4px 7px}
 .ufoot{padding:0 4px;font-size:11px;color:var(--t5)}
 @media (max-width:900px){.rail .usage{display:none}}
+
+/* ── Setup ──────────────────────────────────────────────────
+   The page exists to answer one question — did it work — so that
+   answer is the first thing on it, not a third card of details. */
+.verify{display:flex;align-items:center;gap:14px;padding:14px 18px;border-radius:11px;border:1px solid var(--seam)}
+.verify.ok{border-color:color-mix(in oklab,var(--success) 26%,transparent);background:color-mix(in oklab,var(--success) 6%,transparent)}
+.verify.wait{border-color:color-mix(in oklab,var(--powder) 24%,transparent);background:color-mix(in oklab,var(--powder) 6%,transparent)}
+.verify .vmark{width:26px;height:26px;flex:none;display:grid;place-items:center;border-radius:50%;
+  background:color-mix(in oklab,var(--success) 18%,transparent);color:var(--success);font-size:13px}
+.verify .vtext{flex:1;min-width:0}
+.verify .vtext b{font-size:13.5px;font-weight:500;display:block}
+.verify .vtext p{font-size:12.5px;color:var(--t5);margin-top:3px}
+.verify .vspark{width:160px;height:30px;flex:none}
+.verify .pip{position:relative;display:flex;width:9px;height:9px;flex:none}
+.verify .pip i{position:absolute;inset:0;border-radius:50%;background:var(--powder)}
+.verify .pip i:first-child{animation:ping 1.8s var(--ease) infinite;opacity:.5}
+
+.codewrap{position:relative}
+.copy.float{position:absolute;top:9px;right:9px;background:var(--panel)}
+.codewrap pre{padding-right:70px}
+
+/* ── Settings ───────────────────────────────────────────────*/
+.settings{display:flex;flex-direction:column;gap:16px;max-width:760px}
+.settings .rowend{align-items:center;gap:12px}
+.warn{font-size:12.5px;line-height:1.55;color:var(--t4);background:color-mix(in oklab,var(--accent) 7%,transparent);
+  border:1px solid color-mix(in oklab,var(--accent) 22%,transparent);border-radius:8px;padding:10px 12px;margin-bottom:14px}
+.warn b{font-weight:500;color:var(--t2)}
+.confirmrow{display:flex;gap:10px}
+.cinput{flex:1;background:var(--bg);border:1px solid var(--seam);border-radius:7px;padding:9px 11px;
+  color:var(--t1);font-family:var(--mono);font-size:12.5px}
+.cinput:focus{outline:none;border-color:color-mix(in oklab,oklch(0.63 0.21 25) 50%,transparent);
+  box-shadow:0 0 0 3px color-mix(in oklab,oklch(0.63 0.21 25) 14%,transparent)}
+.cinput::placeholder{color:color-mix(in oklab,var(--ink) 26%,transparent)}
+
+/* ── Ask ────────────────────────────────────────────────────
+   The thread list is a list, not a button with three links under it,
+   and the schema is shown because "it only reads rollups" is the
+   product's claim and a claim is worth more demonstrated. */
+.threads{padding:12px;display:flex;flex-direction:column;gap:12px}
+.thead{display:flex;align-items:center;justify-content:space-between;padding:2px 4px 0}
+.iconbtn{width:24px;height:24px;display:grid;place-items:center;border-radius:6px;border:1px solid var(--seam);
+  background:var(--bg);color:var(--t4);font-size:15px;line-height:1;cursor:pointer}
+.iconbtn:hover{color:var(--t1);border-color:color-mix(in oklab,var(--ink) 22%,transparent)}
+.tlist{display:flex;flex-direction:column;gap:1px}
+.tlist a{display:block;padding:8px 10px;border-radius:7px;cursor:pointer}
+.tlist a:hover{background:color-mix(in oklab,var(--ink) 5%,transparent)}
+.tlist a.on{background:var(--raised)}
+.tlist .tt{display:block;font-size:12.5px;color:var(--t4);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.tlist a.on .tt{color:var(--t1)}
+.tlist .tw{display:block;font-size:11px;color:var(--t5);margin-top:3px}
+.schema{border-top:1px solid var(--seam);padding-top:12px;margin-top:auto}
+.schema .meta{display:block;padding:0 4px 8px;font-size:10.5px}
+.srow{padding:0 4px 8px}
+.srow b{display:block;font-family:var(--mono);font-size:11.5px;color:var(--accent);font-weight:400}
+.srow span{display:block;font-family:var(--mono);font-size:10.5px;line-height:1.55;color:var(--t5);margin-top:3px}
+.schema p{padding:0 4px;font-size:11.5px;line-height:1.55;color:var(--t5);border-top:1px solid var(--rule);padding-top:9px}
+
+.firstrun{padding:14px 0 6px}
+.firstrun h2{font-family:var(--display);font-weight:600;letter-spacing:-0.03em;font-size:21px}
+.firstrun p{font-size:13.5px;line-height:1.6;color:var(--t5);margin-top:8px;max-width:56ch}
+.chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:18px}
+.chip{border:1px solid var(--seam);background:var(--bg);border-radius:20px;padding:8px 13px;font:inherit;
+  font-size:12.5px;color:var(--t4);cursor:pointer;text-align:left}
+.chip:hover{color:var(--t1);border-color:color-mix(in oklab,var(--accent) 45%,transparent);
+  background:color-mix(in oklab,var(--accent) 6%,transparent)}
+
+/* The sentence is the answer; the table is its evidence. */
+.a .answer{font-size:15.5px;line-height:1.6;color:var(--t1);letter-spacing:-0.01em}
+.resfoot{display:flex;align-items:center;gap:10px;margin-top:9px}
+details.sql{margin-top:14px;border:1px solid var(--seam);border-radius:9px;overflow:hidden}
+details.sql summary{display:flex;align-items:center;gap:10px;padding:9px 12px;cursor:pointer;
+  background:color-mix(in oklab,var(--ink) 3%,transparent);list-style:none}
+details.sql summary::-webkit-details-marker{display:none}
+details.sql summary .meta{flex:1}
+details.sql pre{border:0;border-top:1px solid var(--seam);border-radius:0}
+
+.composer{gap:10px}
+.cfield{position:relative;flex:1;display:flex}
+.cfield input{flex:1;padding-right:38px}
+.cfield kbd{position:absolute;right:10px;top:50%;translate:0 -50%;font-family:var(--mono);font-size:10px;
+  padding:2px 5px;border-radius:4px;border:1px solid var(--seam);background:var(--bg);color:var(--t5)}
+
+@media (max-width:900px){
+  .settings{max-width:none}
+  .verify{flex-wrap:wrap}
+  .verify .vspark{display:none}
+  .schema{display:none}
+}

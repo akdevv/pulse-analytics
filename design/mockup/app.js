@@ -33,6 +33,9 @@ const state = {
   filter: null,        // { kind, label, factor }
   tech: "devices",
   thread: 0,
+  install: "script",   // setup: which install path is shown
+  dirty: false,        // settings: has the form been edited
+  confirmText: "",     // settings: typed confirmation before deleting
   demo: "live",        // live | loading | failed
   asking: false,
 };
@@ -440,28 +443,121 @@ function sitesView() {
   <p class="muted" style="margin-top:20px">Last 7 days on each. Staging has never reported — open it to see the state a new site lands in.</p>`;
 }
 
+/* Syntax colour without the bug the first version shipped: escaping, then
+   running replacements over the result, let a later pattern match the markup
+   an earlier one had just inserted — which is how a curl block came out
+   reading `"t">curl`. Tokenise once, emit once. */
+function code(src, kind) {
+  const RULES = kind === "sql"
+    ? [[/\b(SELECT|FROM|WHERE|GROUP BY|ORDER BY|LIMIT|AND|AS|FILTER|ROUND|SUM|NULLIF|DESC|ASC|LIKE|interval|now)\b/g, "t"],
+       [/'[^']*'/g, "a"]]
+    : kind === "html"
+    ? [[/<\/?\w+/g, "t"], [/[\w-]+(?==)/g, "a"]]
+    : [[/^\w+/gm, "t"], [/"[^"]*"/g, "a"]];
+
+  const marks = [];
+  for (const [re, cls] of RULES) {
+    for (const m of src.matchAll(re)) {
+      if (!marks.some((k) => m.index < k.end && k.start < m.index + m[0].length))
+        marks.push({ start: m.index, end: m.index + m[0].length, cls });
+    }
+  }
+  marks.sort((a, b) => a.start - b.start);
+
+  let out = "", at = 0;
+  for (const m of marks) {
+    out += esc(src.slice(at, m.start)) + `<span class="${m.cls}">` + esc(src.slice(m.start, m.end)) + "</span>";
+    at = m.end;
+  }
+  return out + esc(src.slice(at));
+}
+
+const INSTALL = (site) => ({
+  script: {
+    label: "Script tag",
+    note: "Works on any stack. Nothing to build, nothing to install.",
+    kind: "html",
+    src: `<script src="https://api.pulse.dev/pulse.js"\n        data-tid="${site.tid}"\n        data-host="https://api.pulse.dev"></script>`,
+  },
+  npm: {
+    label: "npm",
+    note: "For apps that already have a bundler. Gives you trackEvent and the usePulse hook.",
+    kind: "js",
+    src: `npm i @akdevv/pulse\n\nimport { init } from "@akdevv/pulse";\n\ninit({ trackingId: "${site.tid}", host: "https://api.pulse.dev" });`,
+  },
+  next: {
+    label: "Next.js",
+    note: "App Router. The component mounts once and follows client-side navigation.",
+    kind: "js",
+    src: `import { Pulse } from "@akdevv/pulse/react";\n\nexport default function RootLayout({ children }) {\n  return (\n    <html><body>\n      {children}\n      <Pulse trackingId="${site.tid}" />\n    </body></html>\n  );\n}`,
+  },
+});
+
 function setupView(site) {
-  const snippet = `<script src="https://api.pulse.dev/pulse.js"\n        data-tid="${site.tid}"\n        data-host="https://api.pulse.dev"><\/script>`;
+  const live = !!site.ranges;
+  const opts = INSTALL(site);
+  const cur = opts[state.install] ?? opts.script;
   const curl = `curl -X POST "https://api.pulse.dev/api/v1/track" -G \\\n  --data-urlencode "tid=${site.tid}" \\\n  --data-urlencode "t=PAGEVIEW" \\\n  --data-urlencode "dl=https://${site.domain}/"`;
+
+  const week = live ? site.ranges["7d"] : null;
+  const spark = week
+    ? sparkPath(blocks(week.timeseries.map((p) => p.pageviews), Math.max(1, Math.round(week.timeseries.length / 20))), 160, 30)
+    : null;
+
   return `${siteHeadHtml(site, "setup")}
-  ${site.active ? "" : `<div class="wait"><span class="pip"><i></i><i></i></span>
-    <span><b>Waiting for your first event</b><p>This page becomes the dashboard the moment one arrives. Checking every few seconds.</p></span></div>`}
-  <div class="stack">
+
+  ${live ? `
+  <div class="verify ok">
+    <span class="vmark">✓</span>
+    <div class="vtext">
+      <b>Installed and reporting</b>
+      <p>First event arrived 12 June. ${int(week.overview.totalPageviews)} pageviews in the last 7 days, most recently 12 seconds ago.</p>
+    </div>
+    <svg class="vspark" viewBox="0 0 160 30" preserveAspectRatio="none" fill="none" aria-hidden="true">
+      <path d="${spark}" stroke="var(--success)" stroke-opacity=".7" stroke-width="1.3" vector-effect="non-scaling-stroke"/>
+    </svg>
+    <button class="btn" data-go="#/site/${site.id}/analytics">Open dashboard</button>
+  </div>` : `
+  <div class="verify wait">
+    <span class="pip"><i></i><i></i></span>
+    <div class="vtext">
+      <b>Waiting for your first event</b>
+      <p>This page becomes the dashboard the moment one arrives. Nothing to refresh — it is listening.</p>
+    </div>
+    <span class="meta">checking every 5s</span>
+  </div>`}
+
+  <div class="card" style="margin-top:16px">
+    <div class="ch">
+      <span><b>Install</b><p>${esc(cur.note)}</p></span>
+      <div class="mini">${Object.entries(opts).map(([k, o]) => `<span class="${(state.install ?? "script") === k ? "on" : ""}" data-install="${k}" role="button" tabindex="0">${o.label}</span>`).join("")}</div>
+    </div>
+    <div class="cb">
+      <div class="codewrap">
+        <pre>${code(cur.src, cur.kind)}</pre>
+        <button class="copy float" data-copy="${esc(cur.src)}">Copy</button>
+      </div>
+      <p class="muted" style="margin-top:12px">Put it before the closing <code>&lt;/head&gt;</code>. Events from <code>${esc(site.domain)}</code> and its subdomains are kept; anything else is dropped, including localhost.</p>
+    </div>
+  </div>
+
+  <div class="duo" style="margin-top:16px">
     <div class="card">
-      <div class="ch"><span><b>Tracking snippet</b><p>Paste this once, inside the &lt;head&gt; of every page you want counted.</p></span>
-        <button class="copy" data-copy="${esc(snippet)}">Copy</button></div>
-      <div class="cb"><pre>${esc(snippet).replace(/script/g, '<span class="t">script</span>').replace(/(data-\w+)/g, '<span class="a">$1</span>')}</pre></div>
+      <div class="ch"><span><b>Send a test event</b><p>Tells a broken snippet apart from a quiet site.</p></span></div>
+      <div class="cb"><div class="codewrap">
+        <pre>${code(curl, "sh")}</pre>
+        <button class="copy float" data-copy="${esc(curl)}">Copy</button>
+      </div></div>
     </div>
     <div class="card">
-      <div class="ch"><span><b>Send a test event</b><p>Fires one pageview from your terminal, so you can tell a broken snippet from an empty site.</p></span>
-        <button class="copy" data-copy="${esc(curl)}">Copy</button></div>
-      <div class="cb"><pre>${esc(curl).replace(/^curl/, '<span class="t">curl</span>').replace(/("[^"]*")/g, '<span class="a">$1</span>')}</pre></div>
-    </div>
-    <div class="card">
-      <div class="ch"><b>Details</b></div>
-      <div class="cb" style="padding-top:4px;padding-bottom:6px">
-        ${[["Tracking ID", site.tid], ["Domain", site.domain], ["Plan", "Free — 100k events / month"], ["Created", site.created]]
-          .map(([k, val]) => `<div class="kv"><span class="k">${k}</span><span class="v">${esc(val)}</span></div>`).join("")}
+      <div class="ch"><span><b>Keys</b><p>The tracking id is public — it ships in your page source.</p></span></div>
+      <div class="cb" style="padding-top:6px;padding-bottom:8px">
+        <div class="kv"><span class="k">Tracking ID</span>
+          <span style="display:flex;align-items:center;gap:8px">
+            <span class="v">${site.tid}</span>
+            <button class="copy" data-copy="${site.tid}">Copy</button></span></div>
+        <div class="kv"><span class="k">Domain</span><span class="v">${esc(site.domain)}</span></div>
+        <div class="kv"><span class="k">Created</span><span class="v">${esc(site.created)}</span></div>
       </div>
     </div>
   </div>`;
@@ -469,36 +565,74 @@ function setupView(site) {
 
 function settingsView(site) {
   const events = site.ranges ? int(site.ranges["90d"].overview.totalPageviews) : "0";
+  const armed = state.confirmText.trim().toLowerCase() === site.domain.toLowerCase();
   return `${siteHeadHtml(site, "settings")}
-  <div class="stack narrowstack">
+  <div class="settings">
     <div class="card">
-      <div class="ch"><span><b>General</b><p>The name is yours alone; the domain decides which events are kept.</p></span></div>
+      <div class="ch"><span><b>General</b><p>The name is yours alone. The domain decides which events are kept, so changing it changes what arrives.</p></span></div>
       <div class="cb">
-        <label class="f"><span class="lb">Site name</span><input value="${esc(site.name)}"></label>
-        <label class="f" style="margin-bottom:10px"><span class="lb">Domain</span><input value="${esc(site.domain)}">
+        <label class="f"><span class="lb">Site name</span><input value="${esc(site.name)}" data-dirty></label>
+        <label class="f" style="margin-bottom:12px"><span class="lb">Domain</span>
+          <input value="${esc(site.domain)}" data-dirty data-domain>
           <span class="hint">No https:// and no trailing slash. Subdomains of this are counted too.</span></label>
-        <div class="rowend"><button class="btn primary" data-toast="Site updated.">Save changes</button></div>
+        <div class="warn" id="domainwarn" hidden>
+          Events already recorded stay. New events from <b>${esc(site.domain)}</b> stop being kept the moment you save.
+        </div>
+        <div class="rowend">
+          <span class="meta" id="dirtyhint" ${state.dirty ? "" : "hidden"}>Unsaved changes</span>
+          <button class="btn primary" id="save" ${state.dirty ? "" : "disabled"} data-toast="Site updated.">Save changes</button>
+        </div>
       </div>
     </div>
+
     <div class="card">
-      <div class="ch"><span><b>Tracking key</b><p>Regenerate if it leaked. The old snippet stops reporting the moment you do.</p></span></div>
+      <div class="ch"><span><b>Tracking key</b><p>Public by design — it ships in your page source. Regenerate only if you need the old snippet to stop reporting.</p></span></div>
       <div class="cb">
-        <div class="key"><span>${site.tid}</span><span class="meta">Active</span></div>
-        <div class="rowend"><button class="btn" data-toast="Tracking key regenerated.">Regenerate key</button></div>
+        <div class="key">
+          <span>${site.tid}</span>
+          <span style="display:flex;align-items:center;gap:10px">
+            <span class="meta" style="color:var(--success)">Active</span>
+            <button class="copy" data-copy="${site.tid}">Copy</button>
+          </span>
+        </div>
+        <div class="between">
+          <p class="muted">Last regenerated ${esc(site.created)} — never since.</p>
+          <button class="btn" data-toast="Tracking key regenerated.">Regenerate key</button>
+        </div>
       </div>
     </div>
+
     <div class="card danger">
-      <div class="ch"><span><b>Delete this site</b><p>Removes the site and every event recorded for it. There is no undo.</p></span></div>
-      <div class="cb"><div class="between" id="danger">
-        <span><b>${esc(site.domain)}</b><p>${events} events across 90 days would go with it.</p></span>
-        <button class="btn danger" data-confirm-delete>Delete site</button>
-      </div></div>
+      <div class="ch"><span><b>Delete this site</b><p>Removes ${esc(site.domain)} and every event recorded for it. There is no undo and no export.</p></span></div>
+      <div class="cb">
+        <p class="muted" style="margin-bottom:12px">${events} events across 90 days would go with it. Type <code>${esc(site.domain)}</code> to confirm.</p>
+        <div class="confirmrow">
+          <input class="cinput" placeholder="${esc(site.domain)}" value="${esc(state.confirmText)}" data-confirm-input aria-label="Type the domain to confirm deletion">
+          <button class="btn danger" ${armed ? "" : "disabled"} data-toast="Site deleted.">Delete site</button>
+        </div>
+      </div>
     </div>
   </div>`;
 }
 
+const EXAMPLES = [
+  "Which day last week had the most pageviews?",
+  "What share of traffic is mobile?",
+  "Which referrer sends the most sessions?",
+  "Which docs page loses people?",
+];
+
+/* The two views the model may read, and every column on them. The product's
+   claim is that a question becomes SQL over rollups and nothing else; the
+   claim is worth more shown than asserted. */
+const SCHEMA = [
+  ["ask_hourly", "hour, page, referrer, browser, os, device, country, pageviews, sessions"],
+  ["ask_daily", "day, page, referrer, browser, os, device, country, pageviews, sessions"],
+];
+
 const THREADS = [
   {
+    when: "12 minutes ago",
     title: "Busiest day last week",
     q: "Which day last week had the most pageviews?",
     a: "Tuesday 2 September, with 1,486 pageviews — about 21% above the week's daily average of 1,229.",
@@ -508,6 +642,7 @@ const THREADS = [
     sql: `SELECT day, SUM(pageviews) AS pageviews, SUM(sessions) AS sessions\nFROM ask_daily\nWHERE day >= now() - interval '7 days'\nGROUP BY day ORDER BY pageviews DESC LIMIT 3;`,
   },
   {
+    when: "Yesterday",
     title: "Which docs page loses people",
     q: "Which docs page has the worst pageviews-per-session?",
     a: "/docs/events, at 1.08 pageviews per session — visitors arrive there and leave without going deeper. /docs/quickstart is the healthiest at 2.6.",
@@ -517,6 +652,7 @@ const THREADS = [
     sql: `SELECT page, SUM(pageviews) AS views,\n       ROUND(SUM(pageviews)::numeric / NULLIF(SUM(sessions), 0), 2) AS per_session\nFROM ask_daily\nWHERE day >= now() - interval '30 days' AND page LIKE '/docs/%'\nGROUP BY page ORDER BY per_session ASC;`,
   },
   {
+    when: "3 days ago",
     title: "Mobile share over time",
     q: "Is mobile traffic growing?",
     a: "Yes, slowly. Mobile was 29.4% of pageviews in the first month of the window and 33.6% in the last — up about four points over 90 days.",
@@ -529,31 +665,63 @@ const THREADS = [
 
 function askView(site) {
   const t = THREADS[state.thread];
+  const fresh = state.thread === -1;
+
   return `${siteHeadHtml(site, "ask")}
   <div class="wrap">
     <div class="card threads">
-      <button class="btn primary nt" data-toast="New thread started.">New question</button>
-      ${THREADS.map((x, i) => `<a class="${i === state.thread ? "on" : ""}" data-thread="${i}">${esc(x.title)}</a>`).join("")}
+      <div class="thead">
+        <span class="meta">Threads</span>
+        <button class="iconbtn" title="New question" data-newthread>+</button>
+      </div>
+      <div class="tlist">
+        ${THREADS.map((x, i) => `<a class="${i === state.thread ? "on" : ""}" data-thread="${i}">
+          <span class="tt">${esc(x.title)}</span><span class="tw">${esc(x.when)}</span></a>`).join("")}
+      </div>
+      <div class="schema">
+        <span class="meta">What it can read</span>
+        ${SCHEMA.map(([name, cols]) => `<div class="srow"><b>${name}</b><span>${cols}</span></div>`).join("")}
+        <p>Two site-scoped views over the rollups. No raw events, no visitor identifiers, and the query runs read-only.</p>
+      </div>
     </div>
+
     <div class="card conv">
-      <div class="ch"><span><b>${esc(t.title)}</b><p>Answers are SQL over the hourly and daily rollups — never raw events, never visitor identifiers.</p></span></div>
+      <div class="ch"><span><b>${fresh ? "New question" : esc(t.title)}</b>
+        <p>Plain English in, SQL out. Every answer shows the query it ran.</p></span>
+        ${fresh ? "" : `<span class="meta">${esc(t.when)}</span>`}</div>
+
       <div class="msgs">
-        <div><p class="q">${esc(t.q)}</p></div>
+        ${fresh ? `
+        <div class="firstrun">
+          <h2>Ask about ${esc(site.domain)}</h2>
+          <p>It writes a query against two rollup views, runs it read-only, and shows you both the rows and the SQL. Start with one of these.</p>
+          <div class="chips">${EXAMPLES.map((q) => `<button class="chip" data-example>${esc(q)}</button>`).join("")}</div>
+        </div>` : `
+        <div class="asked"><span class="meta">You asked</span><p class="q">${esc(t.q)}</p></div>
         ${state.asking ? `<div class="thinking"><i></i><i></i><i></i>Writing the query…</div>` : `
         <div class="a">
-          <p>${esc(t.a)}</p>
+          <p class="answer">${esc(t.a)}</p>
           <div class="res"><table>
             <thead><tr>${t.cols.map((c, i) => `<th${i ? ' style="text-align:right"' : ""}>${c}</th>`).join("")}</tr></thead>
             <tbody>${t.rows.map((r) => `<tr>${r.map((c, i) => `<td class="${i ? "n" : "mn"}">${c}</td>`).join("")}</tr>`).join("")}</tbody>
           </table></div>
-          <div class="sql">
-            <div class="sqlhead"><span class="meta">Query it ran</span><span style="flex:1;height:1px;background:var(--seam)"></span><span class="meta">${t.ms} ms</span></div>
-            <pre>${esc(t.sql).replace(/\b(SELECT|FROM|WHERE|GROUP BY|ORDER BY|LIMIT|AND|AS|FILTER|ROUND|SUM|NULLIF|DESC|ASC|LIKE)\b/g, '<span class="t">$1</span>').replace(/('[^']*')/g, '<span class="a">$1</span>')}</pre>
+          <div class="resfoot">
+            <span class="meta">${t.rows.length} rows · ${t.ms} ms</span>
+            <span style="flex:1"></span>
+            <button class="copy" data-copy="${esc(t.rows.map((r) => r.join(",")).join("\n"))}">Copy rows</button>
           </div>
-        </div>`}
+          <details class="sql" open>
+            <summary><span class="meta">Query it ran</span><button class="copy" data-copy="${esc(t.sql)}">Copy SQL</button></summary>
+            <pre>${code(t.sql, "sql")}</pre>
+          </details>
+        </div>`}`}
       </div>
+
       <div class="composer">
-        <input placeholder="Ask about this site's traffic…" id="askbox" ${state.asking ? "disabled" : ""}>
+        <div class="cfield">
+          <input placeholder="Ask about this site's traffic…" id="askbox" ${state.asking ? "disabled" : ""}>
+          <kbd>⏎</kbd>
+        </div>
         <button class="btn primary" data-ask ${state.asking ? "disabled" : ""}>Ask</button>
       </div>
     </div>
@@ -711,6 +879,7 @@ addEventListener("hashchange", () => {
   const next = parseHash();
   // A filter belongs to one site and one window; carrying it across is a lie.
   if (next.site !== state.route.site) { state.filter = null; state.demo = "live"; }
+  if (next.tab !== state.route.tab || next.site !== state.route.site) { state.dirty = false; state.confirmText = ""; }
   state.route = next;
   scrollTo(0, 0);
   render();
@@ -722,6 +891,9 @@ document.addEventListener("click", (e) => {
 
   const range = e.target.closest("[data-range]");
   if (range) { state.range = range.dataset.range; state.filter = null; render(); return; }
+
+  const inst = e.target.closest("[data-install]");
+  if (inst) { state.install = inst.dataset.install; render(); return; }
 
   const tech = e.target.closest("[data-tech]");
   if (tech) { state.tech = tech.dataset.tech; render(); return; }
@@ -742,9 +914,16 @@ document.addEventListener("click", (e) => {
   const thread = e.target.closest("[data-thread]");
   if (thread) { state.thread = Number(thread.dataset.thread); render(); return; }
 
+  if (e.target.closest("[data-newthread]")) { state.thread = -1; render(); return; }
+  if (e.target.closest("[data-example]")) {
+    state.asking = true; state.thread = 0; render();
+    setTimeout(() => { state.asking = false; render(); }, 1400);
+    return;
+  }
+
   if (e.target.closest("[data-ask]")) {
     state.asking = true; render();
-    setTimeout(() => { state.asking = false; state.thread = (state.thread + 1) % THREADS.length; render(); }, 1400);
+    setTimeout(() => { state.asking = false; state.thread = (Math.max(0, state.thread) + 1) % THREADS.length; render(); }, 1400);
     return;
   }
 
@@ -783,12 +962,30 @@ document.addEventListener("click", (e) => {
 
 document.addEventListener("keydown", (e) => {
   if (e.key !== "Enter" && e.key !== " ") return;
-  const hit = e.target.closest("[data-range],[data-tech],[data-demo]");
+  const hit = e.target.closest("[data-range],[data-tech],[data-demo],[data-install]");
   if (hit) { e.preventDefault(); hit.click(); }
 });
 
-// Password rules resolve as you type rather than failing after submit.
 document.addEventListener("input", (e) => {
+  // Save stays disabled until something actually changed, and the domain
+  // field says what changing it costs while you are still editing it.
+  if (e.target.matches("[data-dirty]")) {
+    state.dirty = true;
+    $("#save")?.removeAttribute("disabled");
+    $("#dirtyhint")?.removeAttribute("hidden");
+    if (e.target.matches("[data-domain]")) $("#domainwarn")?.toggleAttribute("hidden", !e.target.value.trim());
+    return;
+  }
+  // Deleting is irreversible, so it asks for the domain rather than a click.
+  if (e.target.matches("[data-confirm-input]")) {
+    state.confirmText = e.target.value;
+    const site = siteById(state.route.site);
+    const armed = state.confirmText.trim().toLowerCase() === site.domain.toLowerCase();
+    e.target.closest(".confirmrow").querySelector(".btn").toggleAttribute("disabled", !armed);
+    return;
+  }
+
+  // Password rules resolve as you type rather than failing after submit.
   if (e.target.id !== "pw") return;
   const v = e.target.value;
   const ok = { len: v.length >= 8, upper: /[A-Z]/.test(v), digit: /[0-9]/.test(v) };
