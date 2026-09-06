@@ -156,9 +156,111 @@ code{font-family:var(--mono);font-size:11.5px;background:var(--bg);border:1px so
 
 /* A strip only the mockup has: the app cannot switch to a loading state on
    demand, but someone reviewing the design needs to see one. */
-.demo{position:fixed;left:16px;bottom:16px;display:flex;align-items:center;gap:8px;background:var(--raised);border:1px solid var(--seam);border-radius:999px;padding:6px 8px 6px 14px;box-shadow:0 14px 34px -14px rgba(0,0,0,.9);z-index:50}
+.demo{position:fixed;right:20px;bottom:20px;display:flex;align-items:center;gap:8px;background:var(--raised);border:1px solid var(--seam);border-radius:999px;padding:6px 8px 6px 14px;box-shadow:0 14px 34px -14px rgba(0,0,0,.9);z-index:50}
 .demo span{font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--t5)}
 .demo button{border:0;background:transparent;color:var(--t4);font:inherit;font-size:12px;padding:5px 10px;border-radius:999px;cursor:pointer}
 .demo button:hover{color:var(--t1);background:color-mix(in oklab,var(--ink) 8%,transparent)}
 .demo button.on{background:var(--accent);color:var(--bg)}
-@media (max-width:900px){.demo{left:16px;right:16px;justify-content:center}}
+@media (max-width:900px){.demo{left:12px;right:12px;bottom:12px;justify-content:center}}
+
+/* ── The rail ───────────────────────────────────────────────
+   It carried a switcher pill and, under it, a list of the same
+   sites: two controls for one job. It is one object now — the site
+   you are in, with the others beneath — anchored at the top by the
+   mark and at the bottom by whose account this is. Three weights,
+   not nine identical rows. */
+.rail{gap:0}
+.rail > * + *{margin-top:14px}
+
+.brand{display:flex;align-items:center;gap:9px;padding:2px 4px 0}
+.brand .mark{width:27px;height:27px;flex:none;display:grid;place-items:center;border-radius:8px;
+  background:linear-gradient(180deg,color-mix(in oklab,var(--ink) 7%,transparent),transparent);
+  border:1px solid var(--seam);box-shadow:inset 0 1px 0 color-mix(in oklab,var(--ink) 8%,transparent)}
+.brand .word{font-family:var(--display);font-weight:600;font-size:16px;letter-spacing:-0.035em}
+
+/* Reads as a field, not a button: it is a place to type. */
+.jump{display:flex;align-items:center;gap:8px;width:100%;padding:7px 9px;border-radius:8px;
+  background:color-mix(in oklab,var(--ink) 3.5%,transparent);border:1px solid var(--seam);
+  color:var(--t5);font:inherit;font-size:12.5px;cursor:text;text-align:left}
+.jump:hover{border-color:color-mix(in oklab,var(--ink) 20%,transparent);color:var(--t4)}
+.jump span{flex:1}
+.jump kbd{font-family:var(--mono);font-size:10px;padding:2px 5px;border-radius:4px;
+  border:1px solid var(--seam);background:var(--bg);color:var(--t5)}
+
+.zone{border-top:1px solid var(--seam);padding-top:14px}
+.zhead{display:flex;align-items:baseline;justify-content:space-between;padding:0 4px;margin-bottom:9px}
+.zhead .meta{font-size:10.5px}
+.zlink{font-size:11.5px;color:var(--t5);cursor:pointer}
+.zlink:hover{color:var(--accent)}
+
+/* The current site is the mass of the rail: name, host, its own week,
+   and the one number the rest of the list is ranked by. */
+.sitecard{background:var(--panel);border:1px solid var(--seam);border-radius:10px;padding:11px 12px 9px;
+  box-shadow:inset 0 1px 0 color-mix(in oklab,var(--ink) 6%,transparent)}
+.sctop{display:flex;align-items:center;gap:8px}
+.scname{font-size:13.5px;font-weight:500;letter-spacing:-0.01em;flex:1;min-width:0;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.scpip{width:6px;height:6px;border-radius:50%;background:var(--success);flex:none;
+  box-shadow:0 0 0 3px color-mix(in oklab,var(--success) 16%,transparent)}
+.scpip.off{background:color-mix(in oklab,var(--ink) 26%,transparent);box-shadow:none}
+.scdom{display:block;font-family:var(--mono);font-size:11px;color:var(--t5);margin-top:4px;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.scspark{display:block;width:100%;height:26px;margin:11px 0 8px}
+.scspark.empty{display:grid;place-items:center;font-size:11px;color:var(--t5);font-family:var(--sans)}
+.scfoot{display:flex;align-items:baseline;gap:6px}
+.scfoot b{font-size:15px}
+.scfoot span{font-size:11px;color:var(--t5)}
+.sitecard.quiet .scfoot b{color:var(--t5)}
+
+.siterows{display:flex;flex-direction:column;gap:1px;margin-top:8px}
+.siterow{display:flex;align-items:center;gap:9px;padding:6px 8px;border-radius:6px;
+  font-size:12.5px;color:var(--t4);cursor:pointer}
+.siterow:hover{background:color-mix(in oklab,var(--ink) 5%,transparent);color:var(--t2)}
+.siterow .pip{width:5px;height:5px;border-radius:50%;background:var(--success);flex:none}
+.siterow .pip.off{background:color-mix(in oklab,var(--ink) 24%,transparent)}
+.siterow .nm{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.siterow .n{font-variant-numeric:tabular-nums;font-size:11.5px;color:var(--t5)}
+
+.addrow{display:flex;align-items:center;gap:9px;padding:6px 8px;margin-top:2px;border-radius:6px;
+  font-size:12.5px;color:var(--t5);cursor:pointer}
+.addrow:hover{background:color-mix(in oklab,var(--ink) 5%,transparent);color:var(--t2)}
+.addrow .plus{width:5px;display:grid;place-items:center;font-size:13px;line-height:1}
+
+.rail .spacer{flex:1;margin-top:14px}
+
+/* Whose account this is, which the two identical "Account / Log out"
+   rows never said. */
+.acct{display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:9px;
+  border:1px solid transparent;cursor:pointer;color:var(--t2)}
+.acct:hover{background:color-mix(in oklab,var(--ink) 5%,transparent);border-color:var(--seam)}
+.acct.on{background:var(--panel);border-color:var(--seam)}
+.acct .av{width:29px;height:29px;flex:none;display:grid;place-items:center;border-radius:8px;
+  background:linear-gradient(160deg,color-mix(in oklab,var(--accent) 78%,black),color-mix(in oklab,var(--accent) 55%,black));
+  color:var(--bg);font-family:var(--display);font-weight:600;font-size:11.5px;letter-spacing:0}
+.acct .who{flex:1;min-width:0}
+.acct .who b{display:block;font-size:12.5px;font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.acct .who span{display:block;font-family:var(--mono);font-size:10.5px;color:var(--t5);
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-top:2px}
+.acct svg{color:var(--t5);flex:none}
+
+@media (max-width:900px){
+  .rail > * + *{margin-top:0}
+  .rail .zone,.rail .jump,.rail .spacer{display:none}
+  .rail .brand{padding:0}
+  .rail .acct{margin-left:auto;padding:5px 8px}
+  .rail .acct .who,.rail .acct svg{display:none}
+}
+
+/* The rail's lower half was a spacer. It answers a question now. */
+.usage{border-top:1px solid var(--seam);padding-top:13px}
+.uhead{display:flex;align-items:baseline;justify-content:space-between;padding:0 4px}
+.uhead .meta{font-size:10.5px}
+.udelta{font-size:11px;font-weight:500}
+.udelta.up{color:var(--success)}
+.udelta.dn{color:oklch(0.72 0.17 25)}
+.ufig{display:flex;align-items:baseline;gap:6px;padding:0 4px;margin-top:8px}
+.ufig b{font-size:19px}
+.ufig span{font-size:11px;color:var(--t5)}
+.uspark{display:block;width:calc(100% - 8px);height:22px;margin:9px 4px 7px}
+.ufoot{padding:0 4px;font-size:11px;color:var(--t5)}
+@media (max-width:900px){.rail .usage{display:none}}

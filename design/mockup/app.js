@@ -132,6 +132,7 @@ const ICON = {
   account: `<circle cx="10" cy="7.5" r="3"/><path d="M4.5 16a5.5 5.5 0 0 1 11 0"/>`,
   out: `<path d="M8 4H5v12h3"/><path d="M12 13l3-3-3-3M15 10H8"/>`,
   chevron: `<path d="M7 8.5 10 11.5 13 8.5"/>`,
+  search: `<circle cx="9" cy="9" r="5"/><path d="m13 13 3.5 3.5"/>`,
 };
 const icon = (k, s = 15) =>
   `<svg viewBox="0 0 20 20" width="${s}" height="${s}" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">${ICON[k]}</svg>`;
@@ -139,33 +140,105 @@ const icon = (k, s = 15) =>
 function railHtml() {
   const r = state.route;
   const cur = r.site ? siteById(r.site) : null;
-  const total = (s) => (s.ranges ? F(s.ranges["7d"].overview.totalPageviews) : "—");
+  const others = sites().filter((s) => s.id !== cur?.id);
+
+  const sparkFor = (s) => {
+    const ts = s.ranges?.["7d"]?.timeseries;
+    if (!ts) return null;
+    return sparkPath(blocks(ts.map((p) => p.pageviews), Math.max(1, Math.round(ts.length / 18))), 100, 26);
+  };
+  const pvFor = (s) => (s.ranges ? F(s.ranges["7d"].overview.totalPageviews) : "0");
+
+  // The site you are in, given the room it deserves. The rail used to carry a
+  // switcher pill and a list of the same sites underneath it — two controls
+  // for one job, which is why it read as unresolved.
+  const currentBlock = (s) => `
+    <div class="sitecard ${s.ranges ? "" : "quiet"}">
+      <div class="sctop">
+        <span class="scname">${esc(s.name)}</span>
+        <span class="scpip ${s.active ? "" : "off"}" title="${s.active ? "Receiving events" : "No events yet"}"></span>
+      </div>
+      <span class="scdom">${esc(s.domain)}</span>
+      ${sparkFor(s)
+        ? `<svg class="scspark" viewBox="0 0 100 26" preserveAspectRatio="none" fill="none" aria-hidden="true">
+             <defs><linearGradient id="rg" x1="0" y1="0" x2="0" y2="1">
+               <stop offset="0%" stop-color="var(--accent)" stop-opacity=".22"/>
+               <stop offset="100%" stop-color="var(--accent)" stop-opacity="0"/></linearGradient></defs>
+             <path d="${sparkFor(s)} L100,26 L0,26 Z" fill="url(#rg)"/>
+             <path d="${sparkFor(s)}" stroke="var(--accent)" stroke-width="1.3" vector-effect="non-scaling-stroke"/>
+           </svg>`
+        : `<div class="scspark empty">no events yet</div>`}
+      <div class="scfoot"><b class="fig">${pvFor(s)}</b><span>views · 7d</span></div>
+    </div>`;
+
+  const compact = (s) => `<a class="siterow" data-go="#/site/${s.id}/analytics">
+      <span class="pip ${s.active ? "" : "off"}"></span>
+      <span class="nm">${esc(s.name)}</span>
+      <span class="n">${pvFor(s)}</span>
+    </a>`;
+
   return `
   <aside class="rail">
     <div class="brand">
-      <svg viewBox="0 0 24 16" width="21" fill="none" stroke="var(--accent)" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><polyline points="1,11 5,11 8,3 12,14 15,8 18,8 20,5 23,5"/></svg>
-      <span>Pulse Analytics</span>
+      <span class="mark"><svg viewBox="0 0 24 16" width="17" fill="none" stroke="var(--accent)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="1,11 5,11 8,3 12,14 15,8 18,8 20,5 23,5"/></svg></span>
+      <span class="word">Pulse</span>
     </div>
-    ${cur ? `<button class="switch" data-go="#/sites"><span class="pip" style="${cur.active ? "" : "background:var(--t5)"}"></span><b>${esc(cur.name)}</b>${icon("chevron", 14)}</button>` : ""}
+
+    <button class="jump" data-toast="Command palette is not part of this mockup.">
+      ${icon("search", 14)}<span>Jump to…</span><kbd>⌘K</kbd>
+    </button>
+
+    <div class="zone">
+      <div class="zhead"><span class="meta">${cur ? "Current site" : "Sites"}</span><a class="zlink" data-go="#/sites">All${cur ? "" : " sites"} →</a></div>
+      ${cur ? currentBlock(cur) : ""}
+      <div class="siterows">${(cur ? others : sites()).map(compact).join("")}</div>
+      <a class="addrow" data-go="#/new"><span class="plus">+</span>Add site</a>
+    </div>
+
+    <div class="spacer"></div>
+
+    ${usageBlock()}
+
     <nav class="nav">
-      <a class="${r.view === "sites" ? "on" : ""}" data-go="#/sites">${icon("sites")}<span>All sites</span></a>
       <a class="${r.view === "docs" ? "on" : ""}" data-go="#/docs">${icon("docs")}<span>Docs</span></a>
     </nav>
-    <div class="railgroup">
-      <span class="meta">Your sites</span>
-      <div class="sitelist">
-        ${sites().map((s) => `<a class="${s.id === r.site ? "on" : ""}" data-go="#/site/${s.id}/analytics">
-          <span class="pip ${s.active ? "" : "off"}"></span>
-          <span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(s.name)}</span>
-          <span class="n">${total(s)}</span></a>`).join("")}
-      </div>
-    </div>
-    <div class="spacer" style="flex:1"></div>
-    <nav class="nav">
-      <a class="${r.view === "account" ? "on" : ""}" data-go="#/account">${icon("account")}<span>Account</span></a>
-      <a data-go="#/sites">${icon("out")}<span>Log out</span></a>
-    </nav>
+
+    <a class="acct ${r.view === "account" ? "on" : ""}" data-go="#/account">
+      <span class="av">AK</span>
+      <span class="who"><b>Ashish</b><span>you@example.com</span></span>
+      ${icon("chevron", 14)}
+    </a>
   </aside>`;
+}
+
+/* What filled the rail's dead half was a spacer. This is the question that
+   space can actually answer: how much am I collecting, across everything,
+   and is it going up. Both figures are summed from the same payloads the
+   dashboard reads — there is no quota here, because the product does not
+   have one to report. */
+function usageBlock() {
+  const totals = (key) =>
+    sites().reduce((sum, s) => sum + (s.ranges?.[key]?.overview.totalPageviews ?? 0), 0);
+  const last30 = totals("30d");
+  const prior = Math.max(0, totals("90d") - last30 * 2);
+  const change = prior ? ((last30 - prior) / prior) * 100 : 0;
+
+  // Summed across sites, day by day. A bar comparing this month to last was
+  // always full — with growth the larger value is always the current one, so
+  // the ratio could never say anything. The shape can.
+  const series = [];
+  for (const s of sites()) {
+    (s.ranges?.["30d"]?.timeseries ?? []).forEach((p, i) => { series[i] = (series[i] ?? 0) + p.pageviews; });
+  }
+  return `
+  <div class="usage">
+    <div class="uhead"><span class="meta">Last 30 days</span><span class="udelta ${change >= 0 ? "up" : "dn"}">${change >= 0 ? "↗" : "↘"} ${Math.abs(change).toFixed(0)}%</span></div>
+    <div class="ufig"><b class="fig">${F(last30)}</b><span>events · all sites</span></div>
+    ${series.length > 1 ? `<svg class="uspark" viewBox="0 0 100 22" preserveAspectRatio="none" fill="none" aria-hidden="true">
+      <path d="${sparkPath(series, 100, 22)}" stroke="var(--accent)" stroke-opacity=".8" stroke-width="1.2" vector-effect="non-scaling-stroke"/>
+    </svg>` : ""}
+    <div class="ufoot"><span>vs ${F(prior)} before</span></div>
+  </div>`;
 }
 
 function siteHeadHtml(site, tab) {
@@ -563,7 +636,7 @@ function render() {
 
   const showDemo = r.view === "site" && r.tab === "analytics" && siteById(r.site)?.ranges;
   document.body.innerHTML = `
-    <div class="app">${railHtml()}<main><div class="col">${body}</div></main></div>
+    <div class="app">${railHtml()}<main><div class="col"${showDemo ? ' style="padding-bottom:104px"' : ""}>${body}</div></main></div>
     ${showDemo ? `<div class="demo"><span>State</span>
       ${[["live", "Live"], ["loading", "Loading"], ["failed", "Failed"]]
         .map(([k, l]) => `<button class="${state.demo === k ? "on" : ""}" data-demo="${k}">${l}</button>`).join("")}
