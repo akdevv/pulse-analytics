@@ -681,35 +681,58 @@ let THREADS = [
   },
 ];
 
-function bubble(m, i) {
-  if (m.role === "user") return `<div class="turn user"><p>${esc(m.text)}</p></div>`;
-  return `<div class="turn bot">
-    <p class="answer">${esc(m.text)}</p>
-    <div class="res"><table>
-      <thead><tr>${m.cols.map((c, j) => `<th${j ? ' style="text-align:right"' : ""}>${c}</th>`).join("")}</tr></thead>
-      <tbody>${m.rows.map((r) => `<tr>${r.map((c, j) => `<td class="${j ? "n" : "mn"}">${c}</td>`).join("")}</tr>`).join("")}</tbody>
-    </table></div>
-    <details class="sql">
-      <summary>
-        <span class="caret">›</span>
-        <span class="meta">SQL</span>
-        <span class="meta dim">${m.rows.length} rows · ${m.ms} ms</span>
-      </summary>
-      <div class="sqlbody">
-        <pre>${code(m.sql, "sql")}</pre>
-        <button class="copy" data-copy="${esc(m.sql)}">Copy</button>
+/* One exchange: what you asked and what came back, kept together. Rendered as
+   a pair rather than as a flat list of messages, so the eye can find where one
+   question ends and the next begins without counting bubbles. */
+function exchange(pair, i) {
+  const [ask, reply] = pair;
+  return `<div class="ex">
+    ${ask ? `<div class="said"><p>${esc(ask.text)}</p></div>` : ""}
+    ${reply ? `<div class="reply">
+      <span class="who" aria-hidden="true">
+        <svg viewBox="0 0 24 16" width="14" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="1,11 5,11 8,3 12,14 15,8 18,8 20,5 23,5"/></svg>
+      </span>
+      <div class="body">
+        <p class="answer">${esc(reply.text)}</p>
+        <div class="res"><table>
+          <thead><tr>${reply.cols.map((c, j) => `<th${j ? ' class="n"' : ""}>${c}</th>`).join("")}</tr></thead>
+          <tbody>${reply.rows.map((r) => `<tr>${r.map((c, j) => `<td class="${j ? "n" : "mn"}">${c}</td>`).join("")}</tr>`).join("")}</tbody>
+        </table></div>
+        <details class="sql">
+          <summary>
+            <span class="caret" aria-hidden="true">›</span>
+            <span>SQL</span>
+            <span class="dim">${reply.rows.length} rows · ${reply.ms} ms</span>
+          </summary>
+          <div class="sqlbody">
+            <pre>${code(reply.sql, "sql")}</pre>
+            <button class="copy" data-copy="${esc(reply.sql)}">Copy</button>
+          </div>
+        </details>
       </div>
-    </details>
+    </div>` : ""}
   </div>`;
 }
+
+const pairUp = (messages) => {
+  const out = [];
+  for (const m of messages) {
+    if (m.role === "user") out.push([m, null]);
+    else if (out.length && !out[out.length - 1][1]) out[out.length - 1][1] = m;
+    else out.push([null, m]);
+  }
+  return out;
+};
 
 function askView(site) {
   const t = THREADS.find((x) => x.id === state.thread);
 
   return `${siteHeadHtml(site, "ask")}
   <div class="wrap">
-    <div class="card threads">
-      <button class="btn newthread" data-newthread>New chat</button>
+    <aside class="threads">
+      <button class="btn newthread" data-newthread>
+        <span class="plus" aria-hidden="true">+</span>New chat
+      </button>
       <div class="tlist">
         ${THREADS.map((x) => `<div class="titem ${x.id === state.thread ? "on" : ""}" data-thread="${x.id}">
           <span class="tt">${esc(x.title)}</span>
@@ -721,25 +744,35 @@ function askView(site) {
         </div>`).join("")}
         ${THREADS.length ? "" : `<p class="tempty">No chats yet.</p>`}
       </div>
-    </div>
+    </aside>
 
-    <div class="card conv">
+    <div class="conv">
+      <div class="convhead">
+        <span class="ct">${t ? esc(t.title) : "New chat"}</span>
+        ${t ? `<span class="cw">${esc(t.when)}</span>` : ""}
+      </div>
+
       <div class="msgs" id="msgs">
-        ${t
-          ? t.messages.map(bubble).join("") + (state.asking ? `<div class="turn bot"><div class="thinking"><i></i><i></i><i></i></div></div>` : "")
-          : `<div class="firstrun">
-              <h2>Ask about ${esc(site.domain)}</h2>
-              <p>Plain English in, rows and the query back. It reads two rollup views and nothing else.</p>
-              <div class="chips">${EXAMPLES.map((x) => `<button class="chip" data-example>${esc(x)}</button>`).join("")}</div>
-            </div>`}
+        <div class="col2">
+          ${t
+            ? pairUp(t.messages).map(exchange).join("") +
+              (state.asking ? `<div class="ex"><div class="reply"><span class="who" aria-hidden="true"></span><div class="body"><div class="thinking"><i></i><i></i><i></i></div></div></div></div>` : "")
+            : `<div class="firstrun">
+                <h2>Ask about ${esc(site.domain)}</h2>
+                <p>Questions become SQL over your rollups. You get the rows and the query that produced them.</p>
+                <div class="chips">${EXAMPLES.map((x) => `<button class="chip" data-example>${esc(x)}</button>`).join("")}</div>
+              </div>`}
+        </div>
       </div>
 
       <div class="composer">
-        <div class="cfield">
-          <input placeholder="Ask about this site's traffic…" id="askbox" ${state.asking ? "disabled" : ""}>
-          <kbd>⏎</kbd>
+        <div class="col2 crow">
+          <div class="cfield">
+            <input placeholder="Ask about this site's traffic…" id="askbox" ${state.asking ? "disabled" : ""}>
+            <kbd>⏎</kbd>
+          </div>
+          <button class="btn primary" data-ask ${state.asking ? "disabled" : ""}>Ask</button>
         </div>
-        <button class="btn primary" data-ask ${state.asking ? "disabled" : ""}>Ask</button>
       </div>
     </div>
   </div>`;
