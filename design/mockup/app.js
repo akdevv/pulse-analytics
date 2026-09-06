@@ -32,7 +32,7 @@ const state = {
   range: "7d",
   filter: null,        // { kind, label, factor }
   tech: "devices",
-  thread: 0,
+  thread: "t1",
   install: "script",   // setup: which install path is shown
   dirty: false,        // settings: has the form been edited
   confirmText: "",     // settings: typed confirmation before deleting
@@ -619,102 +619,119 @@ const EXAMPLES = [
   "Which day last week had the most pageviews?",
   "What share of traffic is mobile?",
   "Which referrer sends the most sessions?",
-  "Which docs page loses people?",
 ];
 
-/* The two views the model may read, and every column on them. The product's
-   claim is that a question becomes SQL over rollups and nothing else; the
-   claim is worth more shown than asserted. */
-const SCHEMA = [
-  ["ask_hourly", "hour, page, referrer, browser, os, device, country, pageviews, sessions"],
-  ["ask_daily", "day, page, referrer, browser, os, device, country, pageviews, sessions"],
+/* Threads are conversations, not single questions — the API keeps a thread of
+   messages and re-runs the stored SQL when one is reopened, so the mockup
+   holds the same shape. */
+const q = (text) => ({ role: "user", text });
+const a = (text, cols, rows, sql, ms) => ({ role: "assistant", text, cols, rows, sql, ms });
+
+let THREADS = [
+  {
+    id: "t1", title: "Busiest day last week", when: "12 min ago",
+    messages: [
+      q("Which day last week had the most pageviews?"),
+      a("Tuesday 2 September, with 1,486 pageviews — about 21% above the week's daily average of 1,229.",
+        ["Day", "Pageviews", "Sessions"],
+        [["2026-09-02", "1,486", "602"], ["2026-09-04", "1,402", "571"], ["2026-08-31", "1,338", "544"]],
+        "SELECT day, SUM(pageviews) AS pageviews, SUM(sessions) AS sessions\nFROM ask_daily\nWHERE day >= now() - interval '7 days'\nGROUP BY day ORDER BY pageviews DESC LIMIT 3;", 42),
+    ],
+  },
+  {
+    id: "t2", title: "Where the docs traffic goes", when: "Yesterday",
+    // The long one: a real thread wanders, narrows, and doubles back.
+    messages: [
+      q("How much of my traffic is the docs?"),
+      a("A little over a third. 3,241 of 9,062 pageviews in the last 7 days were under /docs — 35.8%.",
+        ["Section", "Pageviews", "Share"],
+        [["/docs", "3,241", "35.8%"], ["marketing", "4,077", "45.0%"], ["blog", "1,744", "19.2%"]],
+        "SELECT CASE WHEN page LIKE '/docs/%' THEN '/docs'\n            WHEN page LIKE '/blog/%' THEN 'blog'\n            ELSE 'marketing' END AS section,\n       SUM(pageviews) AS pageviews\nFROM ask_daily\nWHERE day >= now() - interval '7 days'\nGROUP BY 1 ORDER BY 2 DESC;", 38),
+      q("Which docs pages specifically?"),
+      a("Quickstart carries most of it, then installation. The five docs pages split fairly evenly after that.",
+        ["Page", "Pageviews", "Sessions"],
+        [["/docs/quickstart", "1,596", "612"], ["/docs/installation", "1,004", "418"], ["/docs/events", "733", "301"], ["/docs/reference", "412", "188"]],
+        "SELECT page, SUM(pageviews) AS pageviews, SUM(sessions) AS sessions\nFROM ask_daily\nWHERE day >= now() - interval '7 days' AND page LIKE '/docs/%'\nGROUP BY page ORDER BY pageviews DESC;", 51),
+      q("Is any of them losing people?"),
+      a("/docs/events is the weakest at 1.08 pageviews per session — people arrive there and leave without going deeper. Quickstart is the healthiest at 2.61.",
+        ["Page", "Per session"],
+        [["/docs/events", "1.08"], ["/docs/reference", "1.42"], ["/docs/installation", "1.64"], ["/docs/quickstart", "2.61"]],
+        "SELECT page,\n       ROUND(SUM(pageviews)::numeric / NULLIF(SUM(sessions), 0), 2) AS per_session\nFROM ask_daily\nWHERE day >= now() - interval '7 days' AND page LIKE '/docs/%'\nGROUP BY page ORDER BY per_session ASC;", 61),
+      q("Where do the people landing on /docs/events come from?"),
+      a("Mostly search. 58% of sessions that start on /docs/events arrive from Google, against 31% across the site as a whole — it is answering a query rather than continuing a visit.",
+        ["Referrer", "Sessions", "Share"],
+        [["google.com", "174", "57.8%"], ["Direct", "71", "23.6%"], ["news.ycombinator.com", "34", "11.3%"], ["github.com", "22", "7.3%"]],
+        "SELECT referrer, SUM(sessions) AS sessions\nFROM ask_daily\nWHERE day >= now() - interval '7 days' AND page = '/docs/events'\nGROUP BY referrer ORDER BY sessions DESC;", 44),
+      q("And is that getting better or worse?"),
+      a("Slightly better. Per-session depth on /docs/events was 0.94 four weeks ago and is 1.08 now — still the lowest page on the site, but moving the right way.",
+        ["Week", "Per session"],
+        [["Week of 10 Aug", "0.94"], ["Week of 17 Aug", "0.99"], ["Week of 24 Aug", "1.02"], ["Week of 31 Aug", "1.08"]],
+        "SELECT date_trunc('week', day) AS week,\n       ROUND(SUM(pageviews)::numeric / NULLIF(SUM(sessions), 0), 2) AS per_session\nFROM ask_daily\nWHERE day >= now() - interval '28 days' AND page = '/docs/events'\nGROUP BY 1 ORDER BY 1;", 73),
+    ],
+  },
+  {
+    id: "t3", title: "Mobile share over time", when: "3 days ago",
+    messages: [
+      q("Is mobile traffic growing?"),
+      a("Yes, slowly. Mobile was 29.4% of pageviews in the first month of the window and 33.6% in the last — up about four points over 90 days.",
+        ["Month", "Mobile", "Views"],
+        [["June", "29.4%", "18,204"], ["July", "31.1%", "27,880"], ["August", "33.6%", "36,102"]],
+        "SELECT date_trunc('month', day) AS month,\n       ROUND(100.0 * SUM(pageviews) FILTER (WHERE device = 'mobile')\n             / NULLIF(SUM(pageviews), 0), 1) AS mobile_pct,\n       SUM(pageviews) AS views\nFROM ask_daily\nWHERE day >= now() - interval '90 days'\nGROUP BY 1 ORDER BY 1;", 88),
+    ],
+  },
 ];
 
-const THREADS = [
-  {
-    when: "12 minutes ago",
-    title: "Busiest day last week",
-    q: "Which day last week had the most pageviews?",
-    a: "Tuesday 2 September, with 1,486 pageviews — about 21% above the week's daily average of 1,229.",
-    cols: ["Day", "Pageviews", "Sessions"],
-    rows: [["2026-09-02", "1,486", "602"], ["2026-09-04", "1,402", "571"], ["2026-08-31", "1,338", "544"]],
-    ms: 42,
-    sql: `SELECT day, SUM(pageviews) AS pageviews, SUM(sessions) AS sessions\nFROM ask_daily\nWHERE day >= now() - interval '7 days'\nGROUP BY day ORDER BY pageviews DESC LIMIT 3;`,
-  },
-  {
-    when: "Yesterday",
-    title: "Which docs page loses people",
-    q: "Which docs page has the worst pageviews-per-session?",
-    a: "/docs/events, at 1.08 pageviews per session — visitors arrive there and leave without going deeper. /docs/quickstart is the healthiest at 2.6.",
-    cols: ["Page", "Views", "Per session"],
-    rows: [["/docs/events", "733", "1.08"], ["/docs/installation", "1,004", "1.640"], ["/docs/quickstart", "1,596", "2.60"]],
-    ms: 61,
-    sql: `SELECT page, SUM(pageviews) AS views,\n       ROUND(SUM(pageviews)::numeric / NULLIF(SUM(sessions), 0), 2) AS per_session\nFROM ask_daily\nWHERE day >= now() - interval '30 days' AND page LIKE '/docs/%'\nGROUP BY page ORDER BY per_session ASC;`,
-  },
-  {
-    when: "3 days ago",
-    title: "Mobile share over time",
-    q: "Is mobile traffic growing?",
-    a: "Yes, slowly. Mobile was 29.4% of pageviews in the first month of the window and 33.6% in the last — up about four points over 90 days.",
-    cols: ["Month", "Mobile %", "Views"],
-    rows: [["June", "29.4%", "18,204"], ["July", "31.1%", "27,880"], ["August", "33.6%", "36,102"]],
-    ms: 88,
-    sql: `SELECT date_trunc('month', day) AS month,\n       ROUND(100.0 * SUM(pageviews) FILTER (WHERE device = 'mobile')\n             / NULLIF(SUM(pageviews), 0), 1) AS mobile_pct,\n       SUM(pageviews) AS views\nFROM ask_daily\nWHERE day >= now() - interval '90 days'\nGROUP BY 1 ORDER BY 1;`,
-  },
-];
+function bubble(m, i) {
+  if (m.role === "user") return `<div class="turn user"><p>${esc(m.text)}</p></div>`;
+  return `<div class="turn bot">
+    <p class="answer">${esc(m.text)}</p>
+    <div class="res"><table>
+      <thead><tr>${m.cols.map((c, j) => `<th${j ? ' style="text-align:right"' : ""}>${c}</th>`).join("")}</tr></thead>
+      <tbody>${m.rows.map((r) => `<tr>${r.map((c, j) => `<td class="${j ? "n" : "mn"}">${c}</td>`).join("")}</tr>`).join("")}</tbody>
+    </table></div>
+    <details class="sql">
+      <summary>
+        <span class="caret">›</span>
+        <span class="meta">SQL</span>
+        <span class="meta dim">${m.rows.length} rows · ${m.ms} ms</span>
+      </summary>
+      <div class="sqlbody">
+        <pre>${code(m.sql, "sql")}</pre>
+        <button class="copy" data-copy="${esc(m.sql)}">Copy</button>
+      </div>
+    </details>
+  </div>`;
+}
 
 function askView(site) {
-  const t = THREADS[state.thread];
-  const fresh = state.thread === -1;
+  const t = THREADS.find((x) => x.id === state.thread);
 
   return `${siteHeadHtml(site, "ask")}
   <div class="wrap">
     <div class="card threads">
-      <div class="thead">
-        <span class="meta">Threads</span>
-        <button class="iconbtn" title="New question" data-newthread>+</button>
-      </div>
+      <button class="btn newthread" data-newthread>New chat</button>
       <div class="tlist">
-        ${THREADS.map((x, i) => `<a class="${i === state.thread ? "on" : ""}" data-thread="${i}">
-          <span class="tt">${esc(x.title)}</span><span class="tw">${esc(x.when)}</span></a>`).join("")}
-      </div>
-      <div class="schema">
-        <span class="meta">What it can read</span>
-        ${SCHEMA.map(([name, cols]) => `<div class="srow"><b>${name}</b><span>${cols}</span></div>`).join("")}
-        <p>Two site-scoped views over the rollups. No raw events, no visitor identifiers, and the query runs read-only.</p>
+        ${THREADS.map((x) => `<div class="titem ${x.id === state.thread ? "on" : ""}" data-thread="${x.id}">
+          <span class="tt">${esc(x.title)}</span>
+          <span class="tw">${esc(x.when)}</span>
+          <button class="tdel" data-del-thread="${x.id}" title="Delete chat" aria-label="Delete ${esc(x.title)}">
+            <svg viewBox="0 0 20 20" width="13" height="13" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M4 6h12M8 6V4.5h4V6M6.5 6l.6 9.5h5.8L13.5 6"/></svg>
+          </button>
+        </div>`).join("")}
+        ${THREADS.length ? "" : `<p class="tempty">No chats yet.</p>`}
       </div>
     </div>
 
     <div class="card conv">
-      <div class="ch"><span><b>${fresh ? "New question" : esc(t.title)}</b>
-        <p>Plain English in, SQL out. Every answer shows the query it ran.</p></span>
-        ${fresh ? "" : `<span class="meta">${esc(t.when)}</span>`}</div>
-
-      <div class="msgs">
-        ${fresh ? `
-        <div class="firstrun">
-          <h2>Ask about ${esc(site.domain)}</h2>
-          <p>It writes a query against two rollup views, runs it read-only, and shows you both the rows and the SQL. Start with one of these.</p>
-          <div class="chips">${EXAMPLES.map((q) => `<button class="chip" data-example>${esc(q)}</button>`).join("")}</div>
-        </div>` : `
-        <div class="asked"><span class="meta">You asked</span><p class="q">${esc(t.q)}</p></div>
-        ${state.asking ? `<div class="thinking"><i></i><i></i><i></i>Writing the query…</div>` : `
-        <div class="a">
-          <p class="answer">${esc(t.a)}</p>
-          <div class="res"><table>
-            <thead><tr>${t.cols.map((c, i) => `<th${i ? ' style="text-align:right"' : ""}>${c}</th>`).join("")}</tr></thead>
-            <tbody>${t.rows.map((r) => `<tr>${r.map((c, i) => `<td class="${i ? "n" : "mn"}">${c}</td>`).join("")}</tr>`).join("")}</tbody>
-          </table></div>
-          <div class="resfoot">
-            <span class="meta">${t.rows.length} rows · ${t.ms} ms</span>
-            <span style="flex:1"></span>
-            <button class="copy" data-copy="${esc(t.rows.map((r) => r.join(",")).join("\n"))}">Copy rows</button>
-          </div>
-          <details class="sql" open>
-            <summary><span class="meta">Query it ran</span><button class="copy" data-copy="${esc(t.sql)}">Copy SQL</button></summary>
-            <pre>${code(t.sql, "sql")}</pre>
-          </details>
-        </div>`}`}
+      <div class="msgs" id="msgs">
+        ${t
+          ? t.messages.map(bubble).join("") + (state.asking ? `<div class="turn bot"><div class="thinking"><i></i><i></i><i></i></div></div>` : "")
+          : `<div class="firstrun">
+              <h2>Ask about ${esc(site.domain)}</h2>
+              <p>Plain English in, rows and the query back. It reads two rollup views and nothing else.</p>
+              <div class="chips">${EXAMPLES.map((x) => `<button class="chip" data-example>${esc(x)}</button>`).join("")}</div>
+            </div>`}
       </div>
 
       <div class="composer">
@@ -811,6 +828,11 @@ function render() {
     </div>` : ""}`;
 
   if (showDemo && state.demo === "live") wireChart();
+  // A chat opens at the latest turn, not the first one.
+  if (r.view === "site" && r.tab === "ask") {
+    const box = $("#msgs");
+    if (box) box.scrollTop = box.scrollHeight;
+  }
 }
 
 /* The chart reads under the pointer. Without it a trend line is a picture of
@@ -862,6 +884,47 @@ function wireChart() {
   plot.addEventListener("pointerleave", () => plot.classList.remove("live"));
 }
 
+/* Asking appends to the open thread, or opens one. The reply is canned — the
+   point is the shape of the exchange, not the answer. */
+const CANNED = [
+  ["Direct is the largest source at 6,712 pageviews, 74% of the week. Google is second at 793.",
+   ["Source", "Pageviews"], [["Direct", "6,712"], ["google.com", "793"], ["news.ycombinator.com", "535"]],
+   "SELECT referrer, SUM(pageviews) AS pageviews\nFROM ask_daily\nWHERE day >= now() - interval '7 days'\nGROUP BY referrer ORDER BY pageviews DESC LIMIT 3;", 39],
+  ["Mobile is 33.6% of pageviews this week — 3,045 of 9,062. Desktop is 57.1% and tablet the rest.",
+   ["Device", "Pageviews", "Share"], [["desktop", "5,174", "57.1%"], ["mobile", "3,045", "33.6%"], ["tablet", "843", "9.3%"]],
+   "SELECT device, SUM(pageviews) AS pageviews\nFROM ask_daily\nWHERE day >= now() - interval '7 days'\nGROUP BY device ORDER BY pageviews DESC;", 33],
+];
+let canned = 0;
+
+function ask(text) {
+  const question = (text ?? "").trim();
+  if (!question || state.asking) return;
+
+  let t = THREADS.find((x) => x.id === state.thread);
+  if (!t) {
+    t = { id: "t" + Date.now(), title: question.replace(/\?$/, "").slice(0, 42), when: "just now", messages: [] };
+    THREADS.unshift(t);
+    state.thread = t.id;
+  }
+  t.messages.push(q(question));
+  state.asking = true;
+  render();
+  scrollChat();
+
+  setTimeout(() => {
+    const [text2, cols, rows, sql, ms] = CANNED[canned++ % CANNED.length];
+    t.messages.push(a(text2, cols, rows, sql, ms));
+    state.asking = false;
+    render();
+    scrollChat();
+  }, 1300);
+}
+
+function scrollChat() {
+  const box = $("#msgs");
+  if (box) box.scrollTop = box.scrollHeight;
+}
+
 function toast(msg) {
   const t = el(`<div style="position:fixed;left:50%;bottom:26px;translate:-50% 0;background:var(--raised);border:1px solid var(--seam);border-radius:9px;padding:10px 15px;font-size:13px;box-shadow:0 16px 34px -16px rgba(0,0,0,.9);z-index:60">${esc(msg)}</div>`);
   document.body.append(t);
@@ -911,21 +974,30 @@ document.addEventListener("click", (e) => {
   }
   if (e.target.closest("[data-clear-filter]")) { state.filter = null; render(); return; }
 
+  // The delete button lives inside the row, so closest() matches both. The
+  // row defers; the delete handler below claims it.
   const thread = e.target.closest("[data-thread]");
-  if (thread) { state.thread = Number(thread.dataset.thread); render(); return; }
-
-  if (e.target.closest("[data-newthread]")) { state.thread = -1; render(); return; }
-  if (e.target.closest("[data-example]")) {
-    state.asking = true; state.thread = 0; render();
-    setTimeout(() => { state.asking = false; render(); }, 1400);
+  if (thread && !e.target.closest("[data-del-thread]")) {
+    state.thread = thread.dataset.thread;
+    render();
     return;
   }
 
-  if (e.target.closest("[data-ask]")) {
-    state.asking = true; render();
-    setTimeout(() => { state.asking = false; state.thread = (Math.max(0, state.thread) + 1) % THREADS.length; render(); }, 1400);
+  if (e.target.closest("[data-newthread]")) { state.thread = null; render(); return; }
+
+  const delThread = e.target.closest("[data-del-thread]");
+  if (delThread) {
+    e.stopPropagation();
+    const id = delThread.dataset.delThread;
+    THREADS = THREADS.filter((x) => x.id !== id);
+    if (state.thread === id) state.thread = THREADS[0]?.id ?? null;
+    render();
     return;
   }
+  const ex = e.target.closest("[data-example]");
+  if (ex) { ask(ex.textContent); return; }
+
+  if (e.target.closest("[data-ask]")) { ask($("#askbox")?.value); return; }
 
   const copy = e.target.closest("[data-copy]");
   if (copy) {
@@ -934,18 +1006,6 @@ document.addEventListener("click", (e) => {
     setTimeout(() => { copy.textContent = "Copy"; copy.classList.remove("done"); }, 1600);
     return;
   }
-
-  // Deleting a site drops its analytics with it, so the button asks twice.
-  const del = e.target.closest("[data-confirm-delete]");
-  if (del) {
-    const box = $("#danger");
-    box.querySelector("p").textContent = "This cannot be undone. Confirm to delete.";
-    del.replaceWith(el(`<span style="display:flex;gap:8px;flex:none">
-      <button class="btn ghost" data-cancel-delete>Cancel</button>
-      <button class="btn danger" data-toast="Site deleted.">Yes, delete</button></span>`));
-    return;
-  }
-  if (e.target.closest("[data-cancel-delete]")) { render(); return; }
 
   if (e.target.closest("[data-create]")) {
     const name = $("#nsName")?.value.trim() || "New site";
@@ -961,6 +1021,7 @@ document.addEventListener("click", (e) => {
 });
 
 document.addEventListener("keydown", (e) => {
+  if (e.key === "Enter" && e.target.id === "askbox") { e.preventDefault(); ask(e.target.value); return; }
   if (e.key !== "Enter" && e.key !== " ") return;
   const hit = e.target.closest("[data-range],[data-tech],[data-demo],[data-install]");
   if (hit) { e.preventDefault(); hit.click(); }
