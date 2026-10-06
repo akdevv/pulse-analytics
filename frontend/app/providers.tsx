@@ -13,7 +13,7 @@ function createQueryClient() {
       queries: {
         staleTime: 60_000,
         refetchOnWindowFocus: false,
-        // Only server errors are worth retrying; 401s go through the refresh interceptor.
+        // 401s are handled by the refresh interceptor; only retry server errors.
         retry: (failureCount, error) =>
           isAxiosError(error) &&
           (error.response?.status ?? 500) >= 500 &&

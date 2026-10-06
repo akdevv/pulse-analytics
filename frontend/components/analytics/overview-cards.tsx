@@ -14,7 +14,6 @@ interface Props {
   data?: OverviewStats;
   isLoading: boolean;
   error: Error | null;
-  /** Sessions open right now. Not a window total, so it reads in powder. */
   activeSessions?: number;
   activeLoading: boolean;
 }
@@ -44,13 +43,6 @@ function Cell({
   );
 }
 
-/**
- * The window's totals, and beside them the one figure that is not a total.
- *
- * "Active now" used to head a panel of its own that restated the dashboard in
- * miniature. It belongs here, in the row the eye already reads first, tinted
- * away from the accent so it is not mistaken for a fourth window total.
- */
 export function OverviewCards({
   data,
   isLoading,

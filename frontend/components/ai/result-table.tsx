@@ -1,11 +1,16 @@
 "use client";
 
-// Rendering is capped well below the runner's 1000-row limit. Past a couple of
-// hundred rows nobody is reading, and the DOM cost is real on a slow machine.
 const RENDER_CAP = 200;
 
-// Counts arrive as strings — Postgres bigint does not fit in a JS number, so pg
-// hands them over as text. Format what looks numeric, print the rest as is.
+const NUMBER = new Intl.NumberFormat();
+const DATE_TIME = new Intl.DateTimeFormat(undefined, {
+  month: "short",
+  day: "numeric",
+  hour: "numeric",
+  minute: "2-digit",
+});
+
+// Postgres bigint counts arrive as strings.
 const isNumeric = (v: unknown) =>
   typeof v === "number" ||
   (typeof v === "string" && v.trim() !== "" && !Number.isNaN(Number(v)));
@@ -15,15 +20,8 @@ const isIsoDate = (v: unknown): v is string =>
 
 const format = (v: unknown): string => {
   if (v === null || v === undefined || v === "") return "—";
-  if (isNumeric(v)) return Number(v).toLocaleString();
-  if (isIsoDate(v)) {
-    return new Date(v).toLocaleString(undefined, {
-      month: "short",
-      day: "numeric",
-      hour: "numeric",
-      minute: "2-digit",
-    });
-  }
+  if (isNumeric(v)) return NUMBER.format(Number(v));
+  if (isIsoDate(v)) return DATE_TIME.format(new Date(v));
   return String(v);
 };
 
@@ -52,20 +50,17 @@ export function ResultTable({
           <caption className="sr-only">{caption}</caption>
           <thead className="sticky top-0 z-10">
             <tr>
-              {columns.map((c) => {
-                const numeric = isNumeric(rows[0]![c]);
-                return (
-                  <th
-                    key={c}
-                    scope="col"
-                    className={`border-b border-border bg-muted/70 px-3 py-2.5 font-mono text-[10px] font-semibold tracking-[0.14em] whitespace-nowrap text-muted-foreground uppercase backdrop-blur-sm ${
-                      numeric ? "text-right" : "text-left"
-                    }`}
-                  >
-                    {c}
-                  </th>
-                );
-              })}
+              {columns.map((c) => (
+                <th
+                  key={c}
+                  scope="col"
+                  className={`border-b border-border bg-muted/70 px-3 py-2.5 font-mono text-[10px] font-semibold tracking-[0.14em] whitespace-nowrap text-muted-foreground uppercase backdrop-blur-sm ${
+                    isNumeric(rows[0]![c]) ? "text-right" : "text-left"
+                  }`}
+                >
+                  {c}
+                </th>
+              ))}
             </tr>
           </thead>
           <tbody>

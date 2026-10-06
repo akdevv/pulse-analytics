@@ -1,15 +1,22 @@
 import Link from "next/link";
+import type {
+  Control,
+  ControllerRenderProps,
+  FieldPath,
+  FieldValues,
+} from "react-hook-form";
+import {
+  FormControl,
+  FormDescription,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
 
-/** Shared by every field on both pages, so they cannot drift apart.
- *
- *  Three things here are load-bearing rather than decorative.
- *  `dark:bg-*` is required because the base Input ships `dark:bg-input/30`
- *  and this route sets `class="dark"`: without a matching modifier the
- *  grey default outranks this fill on specificity and the tint never
- *  renders. The font size is set only from `md` up, so the base
- *  `text-base` survives on mobile and Safari does not zoom the page on
- *  focus. And the placeholder sits at /40, which clears the 4.5:1 floor
- *  over the field fill. */
+// `dark:` variants are needed to beat the base Input's `dark:bg-input/30`.
+// Font size is set from md up so mobile keeps 16px and Safari does not zoom.
 export const AUTH_INPUT = [
   "h-11 rounded-lg border px-3.5 shadow-none md:text-[15px]",
   "border-ink/10 bg-ink/[0.035] dark:bg-ink/[0.035] text-ink",
@@ -21,10 +28,59 @@ export const AUTH_INPUT = [
   "aria-invalid:border-destructive/70 aria-invalid:focus-visible:ring-destructive/20 dark:aria-invalid:ring-destructive/20",
 ].join(" ");
 
-export const AUTH_LABEL =
+const AUTH_LABEL =
   "text-[13px] font-medium text-ink/70 data-[error=true]:text-destructive";
 
-export const AUTH_MESSAGE = "text-[12.5px] leading-snug";
+export function EmailInput(props: React.ComponentProps<"input">) {
+  return (
+    <Input
+      type="email"
+      inputMode="email"
+      autoComplete="email"
+      autoCapitalize="none"
+      spellCheck={false}
+      placeholder="you@example.com"
+      className={AUTH_INPUT}
+      {...props}
+    />
+  );
+}
+
+export function AuthField<T extends FieldValues, N extends FieldPath<T>>({
+  control,
+  name,
+  label,
+  description,
+  after,
+  children,
+}: {
+  control: Control<T>;
+  name: N;
+  label: string;
+  description?: string;
+  after?: React.ReactNode;
+  children: (field: ControllerRenderProps<T, N>) => React.ReactNode;
+}) {
+  return (
+    <FormField
+      control={control}
+      name={name}
+      render={({ field }) => (
+        <FormItem className="gap-1.5">
+          <FormLabel className={AUTH_LABEL}>{label}</FormLabel>
+          <FormControl>{children(field)}</FormControl>
+          {description && (
+            <FormDescription className="text-[12px] leading-snug text-ink/45">
+              {description}
+            </FormDescription>
+          )}
+          {after}
+          <FormMessage className="text-[12.5px] leading-snug" />
+        </FormItem>
+      )}
+    />
+  );
+}
 
 export function AuthCard({
   title,
@@ -50,7 +106,6 @@ export function AuthCard({
         </p>
       </div>
 
-      {/* role=alert so a failed submit is announced, not just repainted */}
       {error && (
         <div
           role="alert"
@@ -94,9 +149,6 @@ export function AuthCard({
   );
 }
 
-/* Fading a primary button out on hover reads as "going away". It
-   brightens instead, and keeps its label while it works so the button
-   does not change width mid-submit. */
 export function AuthSubmit({
   loading,
   idle,

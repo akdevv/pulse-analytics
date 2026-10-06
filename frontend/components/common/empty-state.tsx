@@ -3,11 +3,6 @@ import { Button } from "@/components/ui/button";
 
 type Action = { label: string; href: string; primary?: boolean };
 
-/**
- * The shell both teaching empty states share: what is missing, why, what to do
- * about it, and a list of the actual steps. Kept in one place so the sites list
- * and an unreported site don't drift into two different voices.
- */
 export function EmptyState({
   title,
   description,
@@ -44,12 +39,10 @@ export function EmptyState({
   );
 }
 
-/** The numbered/queried steps below an empty state's copy. */
 export function StepList({
   marker,
   items,
 }: {
-  /** "count" numbers the steps in order; "query" marks each as a thing to check. */
   marker: "count" | "query";
   items: { title: string; body: React.ReactNode }[];
 }) {

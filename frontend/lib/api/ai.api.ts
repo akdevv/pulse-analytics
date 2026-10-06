@@ -5,8 +5,7 @@ import type {
   ConversationSummary,
 } from "@/lib/types/ai.types";
 
-// The model call can take a while on a free tier — the client's default 10s
-// timeout is too tight for this one route.
+// Asking can take two model calls plus a repair round, well past the 10s default.
 export const ask = (
   siteId: string,
   question: string,
@@ -15,16 +14,13 @@ export const ask = (
   apiPost<AskResult>(
     `ai/${siteId}/ask`,
     { question, ...(conversationId && { conversationId }) },
-    // Worst case is two model calls plus a repair round; leave room for it
-    // rather than timing out on a request the server still bills and stores.
     { timeout: 90_000 }
   );
 
 export const getConversations = (siteId: string) =>
   apiGet<ConversationSummary[]>(`ai/${siteId}/conversations`);
 
-// Opening a thread re-runs its stored SQL server-side, so it needs more than
-// the client's 10s default.
+// Opening a thread re-runs its stored SQL server-side.
 export const getConversation = (siteId: string, conversationId: string) =>
   apiGet<Conversation>(`ai/${siteId}/conversations/${conversationId}`, {
     timeout: 40_000,

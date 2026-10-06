@@ -3,19 +3,42 @@
 import { Skeleton } from "@/components/ui/skeleton";
 import { formatCompact } from "@/lib/format";
 
-export type Rank = { label: string; value: number; title?: string };
+type Rank = { label: string; value: number; title?: string };
 
-/**
- * Pages, referrers, countries, devices and events are all the same object: a
- * ranked distribution over one window. They had been four copies of the same
- * markup, each free to drift, and each drew its bar as a 1px rule under the
- * label — which reads as decoration rather than as the number's size.
- *
- * The bar is the row instead. Its width is the row's share of the leader and
- * its opacity rises with that share, so the shape of the distribution is
- * legible before a single label is read. The percentage stays hidden until
- * the row is pointed at, because it is the answer to a second question.
- */
+export function PanelTabs<T extends string>({
+  tabs,
+  value,
+  onChange,
+}: {
+  tabs: readonly { value: T; label: string }[];
+  value: T;
+  onChange: (value: T) => void;
+}) {
+  return (
+    <div role="tablist" className="flex items-center gap-0.5">
+      {tabs.map((tab) => {
+        const on = tab.value === value;
+        return (
+          <button
+            key={tab.value}
+            type="button"
+            role="tab"
+            aria-selected={on}
+            onClick={() => onChange(tab.value)}
+            className={`meta cursor-pointer rounded px-2 py-1 transition-colors duration-150 ease-[var(--ease-out)] ${
+              on
+                ? "bg-muted text-foreground"
+                : "hover:bg-foreground/[0.05] hover:text-foreground/80"
+            }`}
+          >
+            {tab.label}
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
 export function RankedList({
   title,
   label,
@@ -29,22 +52,22 @@ export function RankedList({
   header,
 }: {
   title: string;
-  /** Names the left column, the way every reference dashboard does. */
   label: string;
   unit: string;
   rows?: Rank[];
   isLoading: boolean;
   error: Error | null;
   empty: string;
-  /** Which chart token the bars are keyed to. */
   tone?: string;
-  /** Paths and domains are mono; device and browser names are not. */
   mono?: boolean;
-  /** Replaces the unit label — used by the panel that carries tabs. */
   header?: React.ReactNode;
 }) {
-  const total = rows?.reduce((sum, r) => sum + r.value, 0) ?? 0;
-  const max = rows?.length ? Math.max(...rows.map((r) => r.value), 1) : 1;
+  let total = 0;
+  let max = 1;
+  for (const row of rows ?? []) {
+    total += row.value;
+    if (row.value > max) max = row.value;
+  }
 
   return (
     <div className="panel flex min-h-0 min-w-0 flex-col px-5 py-4">
@@ -57,7 +80,7 @@ export function RankedList({
         <p className="py-8 text-sm text-destructive">{error.message}</p>
       ) : isLoading ? (
         <div className="flex flex-col gap-0.5">
-          {Array.from({ length: 7 }).map((_, i) => (
+          {Array.from({ length: 7 }, (_, i) => (
             <Skeleton key={i} className="h-[35px] rounded-[3px]" />
           ))}
         </div>
@@ -70,9 +93,9 @@ export function RankedList({
             <span className="meta">{unit}</span>
           </div>
           <div className="flex flex-col gap-0.5">
-            {rows.map((row) => (
+            {rows.map((row, i) => (
               <div
-                key={row.label}
+                key={`${i}-${row.label}`}
                 className="rank-row"
                 style={
                   {

@@ -13,8 +13,6 @@ export function useSites() {
   return useQuery({ queryKey: ["sites"], queryFn: getSites });
 }
 
-/** The site header, settings and setup pages all want the same site; one
-    query key means one request between them. */
 export function useSite(id: string) {
   return useQuery({
     queryKey: ["site", id],

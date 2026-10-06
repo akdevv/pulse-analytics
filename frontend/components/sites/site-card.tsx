@@ -1,12 +1,7 @@
 import Link from "next/link";
+import { SiteStatus } from "@/components/sites/site-status";
 import type { Site } from "@/lib/types/site.types";
 
-/**
- * One site in the list. It answers which site and whether it is reporting;
- * the tracking id and tier are there because this is also where you come to
- * copy them. Set in the panel language rather than as a generic card, so the
- * list reads as part of the same instrument as the dashboard behind it.
- */
 export function SiteCard({ site }: { site: Site }) {
   return (
     <Link
@@ -22,18 +17,7 @@ export function SiteCard({ site }: { site: Site }) {
             {site.domain}
           </p>
         </div>
-        <span
-          className={`meta flex shrink-0 items-center gap-1.5 ${
-            site.isActive ? "text-success" : "text-foreground/40"
-          }`}
-        >
-          <span
-            className={`size-1.5 rounded-full ${
-              site.isActive ? "bg-success" : "bg-foreground/30"
-            }`}
-          />
-          {site.isActive ? "Live" : "Paused"}
-        </span>
+        <SiteStatus active={site.isActive} label="Live" />
       </div>
 
       <dl className="flex items-end justify-between gap-3 border-t border-[var(--seam)] pt-3.5">

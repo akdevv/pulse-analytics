@@ -1,5 +1,6 @@
 "use client";
 
+import { useMemo } from "react";
 import { Area, AreaChart, CartesianGrid, XAxis, YAxis } from "recharts";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
@@ -16,19 +17,46 @@ const chartConfig: ChartConfig = {
   sessions: { label: "Sessions", color: "var(--chart-2)" },
 };
 
-// Sans, not mono: the axis is read as a scale, not as a value to copy, and
-// mono at 10px on a dark ground was the least legible text on the page.
 const TICK = {
   fontSize: 11,
   fill: "currentColor",
   fillOpacity: 0.5,
 };
 
+const HOUR = new Intl.DateTimeFormat("en", { hour: "numeric", hour12: true });
+const DAY = new Intl.DateTimeFormat("en", { month: "short", day: "numeric" });
+const DAY_HOUR = new Intl.DateTimeFormat("en", {
+  month: "short",
+  day: "numeric",
+  hour: "numeric",
+  hour12: true,
+});
+
+function toChartData(data: TimeseriesPoint[], interval: "hour" | "day") {
+  const first = data[0];
+  const last = data[data.length - 1];
+  const spansDays =
+    !!first &&
+    !!last &&
+    new Date(first.time).getDate() !== new Date(last.time).getDate();
+  const axis = interval === "hour" && !spansDays ? HOUR : DAY;
+  const tooltip = interval === "hour" ? DAY_HOUR : DAY;
+
+  return data.map((d) => {
+    const at = new Date(d.time);
+    return {
+      time: axis.format(at),
+      full: tooltip.format(at),
+      pageviews: d.pageviews,
+      sessions: d.sessions,
+    };
+  });
+}
+
 interface Props {
   data?: TimeseriesPoint[];
   isLoading: boolean;
   error: Error | null;
-  /** Hourly buckets need the hour; every label was the same date without it. */
   interval: "hour" | "day";
 }
 
@@ -49,29 +77,10 @@ function Legend() {
 }
 
 export function TimeseriesChart({ data, isLoading, error, interval }: Props) {
-  const spansDays =
-    data && data.length > 1
-      ? new Date(data[data.length - 1].time).getDate() !==
-        new Date(data[0].time).getDate()
-      : false;
-
-  const chartData = data?.map((d) => {
-    const at = new Date(d.time);
-    return {
-      time:
-        interval === "hour" && !spansDays
-          ? at.toLocaleTimeString("en", { hour: "numeric", hour12: true })
-          : at.toLocaleDateString("en", { month: "short", day: "numeric" }),
-      // The axis is short; the tooltip can afford to say which day too.
-      full: at.toLocaleString("en", {
-        month: "short",
-        day: "numeric",
-        ...(interval === "hour" && { hour: "numeric", hour12: true }),
-      }),
-      pageviews: d.pageviews,
-      sessions: d.sessions,
-    };
-  });
+  const chartData = useMemo(
+    () => (data ? toChartData(data, interval) : undefined),
+    [data, interval]
+  );
 
   return (
     <div className="panel flex flex-col">
@@ -142,8 +151,6 @@ export function TimeseriesChart({ data, isLoading, error, interval }: Props) {
                 dot={false}
                 activeDot={{ r: 3 }}
               />
-              {/* Weight, not light: a glow on the stroke lit the fill under it
-                  and the whole plot read as a heat map. */}
               <Area
                 type="monotone"
                 dataKey="pageviews"

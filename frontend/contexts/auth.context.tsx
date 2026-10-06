@@ -1,6 +1,13 @@
 "use client";
 
-import { createContext, useContext, useEffect, useState } from "react";
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useState,
+} from "react";
 import * as authApi from "@/lib/api/auth.api";
 import { setAccessToken } from "@/lib/api/client";
 import type { User } from "@/lib/types/user.types";
@@ -14,14 +21,13 @@ interface AuthContextValue {
   refreshUser: () => Promise<void>;
 }
 
-export const AuthContext = createContext<AuthContextValue | null>(null);
+const AuthContext = createContext<AuthContextValue | null>(null);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    // On every page load, try to restore session via the cookie
     authApi
       .refreshSession()
       .then(({ accessToken }) => {
@@ -36,44 +42,36 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       .finally(() => setIsLoading(false));
   }, []);
 
-  const login = async (email: string, password: string) => {
-    const { accessToken } = await authApi.login(email, password);
-    setAccessToken(accessToken);
-    setUser(await authApi.getMe());
-  };
-
-  const register = async (name: string, email: string, password: string) => {
-    const { accessToken } = await authApi.register(name, email, password);
-    setAccessToken(accessToken);
-    setUser(await authApi.getMe());
-  };
-
-  // Re-read the profile after it changes (account page saves)
-  const refreshUser = async () => {
-    setUser(await authApi.getMe());
-  };
-
-  const logout = async () => {
-    try {
-      await authApi.logout();
-    } finally {
-      setAccessToken(null);
-      setUser(null);
-    }
-  };
-
-  const authValues: AuthContextValue = {
-    user,
-    isLoading,
-    login,
-    register,
-    logout,
-    refreshUser,
-  };
-
-  return (
-    <AuthContext.Provider value={authValues}>{children}</AuthContext.Provider>
+  const startSession = useCallback(
+    async (session: Promise<{ accessToken: string }>) => {
+      const { accessToken } = await session;
+      setAccessToken(accessToken);
+      setUser(await authApi.getMe());
+    },
+    []
   );
+
+  const value = useMemo<AuthContextValue>(
+    () => ({
+      user,
+      isLoading,
+      login: (email, password) => startSession(authApi.login(email, password)),
+      register: (name, email, password) =>
+        startSession(authApi.register(name, email, password)),
+      refreshUser: async () => setUser(await authApi.getMe()),
+      logout: async () => {
+        try {
+          await authApi.logout();
+        } finally {
+          setAccessToken(null);
+          setUser(null);
+        }
+      },
+    }),
+    [user, isLoading, startSession]
+  );
+
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
 
 export function useAuth() {

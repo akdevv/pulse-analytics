@@ -5,95 +5,22 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { useForm, useWatch } from "react-hook-form";
 import * as z from "zod";
-
 import {
   AUTH_INPUT,
-  AUTH_LABEL,
-  AUTH_MESSAGE,
   AuthAltLink,
   AuthCard,
+  AuthField,
   AuthSubmit,
+  EmailInput,
 } from "@/components/auth/auth-ui";
+import { PasswordRules } from "@/components/auth/password-rules";
 import { PasswordInput } from "@/components/common/password-input";
-import {
-  Form,
-  FormControl,
-  FormDescription,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-  useFormField,
-} from "@/components/ui/form";
+import { Form } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { useAuth } from "@/contexts/auth.context";
-
-const PERSONAL_EMAIL_DOMAINS = new Set([
-  // Google
-  "gmail.com",
-  "googlemail.com",
-  // Microsoft
-  "outlook.com",
-  "hotmail.com",
-  "hotmail.co.uk",
-  "hotmail.fr",
-  "hotmail.de",
-  "live.com",
-  "live.co.uk",
-  "live.fr",
-  "live.de",
-  "msn.com",
-  // Apple
-  "icloud.com",
-  "me.com",
-  "mac.com",
-  // Yahoo
-  "yahoo.com",
-  "yahoo.co.uk",
-  "yahoo.fr",
-  "yahoo.de",
-  "yahoo.es",
-  "yahoo.it",
-  "yahoo.co.in",
-  "yahoo.ca",
-  "yahoo.com.au",
-  "yahoo.com.br",
-  "yahoo.com.mx",
-  "yahoo.co.jp",
-  "rocketmail.com",
-  "ymail.com",
-  // Privacy-focused
-  "protonmail.com",
-  "protonmail.ch",
-  "proton.me",
-  "pm.me",
-  "tutanota.com",
-  "tutamail.com",
-  "tuta.io",
-  // Other established
-  "aol.com",
-  "aol.co.uk",
-  "mail.com",
-  "email.com",
-  "gmx.com",
-  "gmx.net",
-  "gmx.de",
-  "gmx.at",
-  "gmx.ch",
-  "yandex.com",
-  "yandex.ru",
-  "fastmail.com",
-  "fastmail.fm",
-  "hey.com",
-  "zoho.com",
-  "inbox.com",
-  "mailfence.com",
-]);
-
-function isPersonalEmail(email: string): boolean {
-  const domain = email.toLowerCase().split("@")[1] ?? "";
-  return PERSONAL_EMAIL_DOMAINS.has(domain);
-}
+import { passwordSchema } from "@/lib/password";
+import { isPersonalEmail } from "@/lib/personal-email";
+import { getErrorMessage } from "@/lib/utils";
 
 const registerSchema = z
   .object({
@@ -104,13 +31,7 @@ const registerSchema = z
         isPersonalEmail,
         "Please use a personal email (Gmail, Outlook, iCloud, etc.). Work emails aren't supported."
       ),
-    password: z
-      .string()
-      .min(8, "Password must be at least 8 characters.")
-      .regex(/[A-Z]/, "Must contain at least one uppercase letter.")
-      .regex(/[a-z]/, "Must contain at least one lowercase letter.")
-      .regex(/[0-9]/, "Must contain at least one number.")
-      .regex(/[^A-Za-z0-9]/, "Must contain at least one special character."),
+    password: passwordSchema,
     confirmPassword: z.string(),
   })
   .refine((data) => data.password === data.confirmPassword, {
@@ -118,91 +39,29 @@ const registerSchema = z
     path: ["confirmPassword"],
   });
 
-/* The password has five rules. Listing them as one grey sentence and
-   then rejecting the whole field on submit makes the user guess which
-   one they missed, so each rule reports itself as they type. Same
-   source of truth as the schema above. */
-const PASSWORD_RULES: { label: string; test: (v: string) => boolean }[] = [
-  { label: "8+ characters", test: (v) => v.length >= 8 },
-  { label: "Uppercase", test: (v) => /[A-Z]/.test(v) },
-  { label: "Lowercase", test: (v) => /[a-z]/.test(v) },
-  { label: "Number", test: (v) => /[0-9]/.test(v) },
-  { label: "Special character", test: (v) => /[^A-Za-z0-9]/.test(v) },
-];
+type RegisterValues = z.infer<typeof registerSchema>;
 
-function PasswordRules({ value }: { value: string }) {
-  const { formDescriptionId } = useFormField();
-  return (
-    <ul id={formDescriptionId} className="mt-1 flex flex-wrap gap-1.5">
-      {PASSWORD_RULES.map(({ label, test }) => {
-        const met = value.length > 0 && test(value);
-        return (
-          <li
-            key={label}
-            className={`inline-flex items-center gap-1.5 rounded-md border px-2 py-[3px] text-[11px] leading-none transition-colors duration-150 ease-out ${
-              met
-                ? "border-powder/30 bg-powder/9 text-powder"
-                : "border-ink/12 text-ink/50"
-            }`}
-          >
-            {met ? (
-              <svg
-                width="9"
-                height="9"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="3.5"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                className="shrink-0"
-                aria-hidden
-              >
-                <path d="M4 12.5 9.5 18 20 6.5" />
-              </svg>
-            ) : (
-              <span
-                aria-hidden
-                className="h-[3px] w-[3px] shrink-0 rounded-full bg-current"
-              />
-            )}
-            <span className="sr-only">{met ? "Met:" : "Not met:"}</span>
-            {label}
-          </li>
-        );
-      })}
-    </ul>
-  );
-}
-
-type RegisterFormValues = z.infer<typeof registerSchema>;
-
-export default function Register() {
+export default function RegisterPage() {
   const router = useRouter();
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
   const { register } = useAuth();
+  const [error, setError] = useState("");
 
-  const form = useForm<RegisterFormValues>({
+  const form = useForm<RegisterValues>({
     resolver: zodResolver(registerSchema),
     defaultValues: { name: "", email: "", password: "", confirmPassword: "" },
   });
   const password = useWatch({ control: form.control, name: "password" });
+  const busy = form.formState.isSubmitting;
 
-  async function onSubmit(data: RegisterFormValues) {
+  const onSubmit = async ({ name, email, password }: RegisterValues) => {
+    setError("");
     try {
-      setLoading(true);
-      setError("");
-      await register(data.name, data.email, data.password);
+      await register(name, email, password);
       router.push("/dashboard");
     } catch (err) {
-      setError(
-        err instanceof Error ? err.message : "An unknown error occurred"
-      );
-    } finally {
-      setLoading(false);
+      setError(getErrorMessage(err, "Could not create your account."));
     }
-  }
+  };
 
   return (
     <AuthCard
@@ -219,98 +78,62 @@ export default function Register() {
     >
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5">
-          <FormField
-            control={form.control}
-            name="name"
-            render={({ field }) => (
-              <FormItem className="gap-1.5">
-                <FormLabel className={AUTH_LABEL}>Name</FormLabel>
-                <FormControl>
-                  <Input
-                    autoComplete="name"
-                    placeholder="Ada Lovelace"
-                    disabled={loading}
-                    className={AUTH_INPUT}
-                    {...field}
-                  />
-                </FormControl>
-                <FormMessage className={AUTH_MESSAGE} />
-              </FormItem>
+          <AuthField control={form.control} name="name" label="Name">
+            {(field) => (
+              <Input
+                autoComplete="name"
+                placeholder="Ada Lovelace"
+                disabled={busy}
+                className={AUTH_INPUT}
+                {...field}
+              />
             )}
-          />
+          </AuthField>
 
-          <FormField
+          <AuthField
             control={form.control}
             name="email"
-            render={({ field }) => (
-              <FormItem className="gap-1.5">
-                <FormLabel className={AUTH_LABEL}>Email</FormLabel>
-                <FormControl>
-                  <Input
-                    type="email"
-                    inputMode="email"
-                    autoComplete="email"
-                    autoCapitalize="none"
-                    spellCheck={false}
-                    placeholder="you@example.com"
-                    disabled={loading}
-                    className={AUTH_INPUT}
-                    {...field}
-                  />
-                </FormControl>
-                {/* FormDescription lands in aria-describedby; the raw <p>
-                    this replaces was never announced. */}
-                <FormDescription className="text-[12px] leading-snug text-ink/45">
-                  Personal email only. Gmail, Outlook, iCloud and the like.
-                </FormDescription>
-                <FormMessage className={AUTH_MESSAGE} />
-              </FormItem>
-            )}
-          />
+            label="Email"
+            description="Personal email only. Gmail, Outlook, iCloud and the like."
+          >
+            {(field) => <EmailInput disabled={busy} {...field} />}
+          </AuthField>
 
-          <FormField
+          <AuthField
             control={form.control}
             name="password"
-            render={({ field }) => (
-              <FormItem className="gap-1.5">
-                <FormLabel className={AUTH_LABEL}>Password</FormLabel>
-                <FormControl>
-                  <PasswordInput
-                    autoComplete="new-password"
-                    placeholder="Pick something strong"
-                    disabled={loading}
-                    className={AUTH_INPUT}
-                    {...field}
-                  />
-                </FormControl>
-                <PasswordRules value={password} />
-                <FormMessage className={AUTH_MESSAGE} />
-              </FormItem>
+            label="Password"
+            after={<PasswordRules value={password} />}
+          >
+            {(field) => (
+              <PasswordInput
+                autoComplete="new-password"
+                placeholder="Pick something strong"
+                disabled={busy}
+                className={AUTH_INPUT}
+                {...field}
+              />
             )}
-          />
+          </AuthField>
 
-          <FormField
+          <AuthField
             control={form.control}
             name="confirmPassword"
-            render={({ field }) => (
-              <FormItem className="gap-1.5">
-                <FormLabel className={AUTH_LABEL}>Confirm password</FormLabel>
-                <FormControl>
-                  <PasswordInput
-                    autoComplete="new-password"
-                    placeholder="Repeat password"
-                    disabled={loading}
-                    className={AUTH_INPUT}
-                    {...field}
-                  />
-                </FormControl>
-                <FormMessage className={AUTH_MESSAGE} />
-              </FormItem>
+            label="Confirm password"
+          >
+            {(field) => (
+              <PasswordInput
+                autoComplete="new-password"
+                placeholder="Repeat password"
+                disabled={busy}
+                className={AUTH_INPUT}
+                {...field}
+              />
             )}
-          />
+          </AuthField>
 
           <AuthSubmit
-            loading={loading}
+            loading={busy}
             idle="Create account"
             busy="Creating account…"
           />

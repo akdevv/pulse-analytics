@@ -12,15 +12,13 @@ export function SitesList() {
   if (isLoading) {
     return (
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        {Array.from({ length: 3 }).map((_, i) => (
+        {Array.from({ length: 3 }, (_, i) => (
           <Skeleton key={i} className="h-32 rounded-xl" />
         ))}
       </div>
     );
   }
 
-  // Distinct from the empty state below — a failed request used to render as
-  // "No sites yet", which reads as data loss.
   if (error) {
     return (
       <p className="text-sm text-destructive">

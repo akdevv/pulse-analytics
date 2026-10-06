@@ -1,6 +1,3 @@
-// Each member repeats conversationId rather than intersecting it onto a union —
-// TypeScript narrows a plain discriminated union by `kind`, but not an
-// intersection wrapped around one.
 export type AskResult =
   | {
       conversationId: string;
@@ -13,9 +10,6 @@ export type AskResult =
       suppressed: number;
       latencyMs: number;
     }
-  // chat and refuse are separate members, not `kind: "chat" | "refuse"` —
-  // TypeScript only narrows a member away when its discriminant is a single
-  // literal.
   | { conversationId: string; kind: "chat"; reply: string }
   | { conversationId: string; kind: "refuse"; reply: string }
   | { conversationId: string; kind: "error"; sql: string; error: string };
@@ -28,8 +22,7 @@ export type ConversationSummary = {
 };
 
 export type AiMessage = {
-  // Re-run at read time from the stored SQL, never persisted — see the
-  // AiMessage model on the backend.
+  // Re-run from the stored SQL at read time, never persisted.
   rows: Record<string, unknown>[] | null;
   id: string;
   role: "USER" | "ASSISTANT";

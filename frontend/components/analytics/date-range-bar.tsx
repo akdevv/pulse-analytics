@@ -21,9 +21,6 @@ const INTERVALS: { value: Interval; label: string }[] = [
   { value: "day", label: "Daily" },
 ];
 
-/** One group, one selected item, filled in the accent. Two identical outlined
-    pill groups side by side gave the range and the bucket the same weight,
-    which they do not have — the bucket only ever refines the range. */
 function Group<T extends string>({
   label,
   options,

@@ -43,8 +43,6 @@ export function NewSiteForm() {
 
   const onSubmit = async (data: FormData) => {
     try {
-      // Through the mutation, so the cached sites list is invalidated and the
-      // new site is there when the user navigates back to it.
       const site = await createSite.mutateAsync(data);
       toast.success("Site created successfully!");
       router.push(`/dashboard/sites/${site.id}/setup`);

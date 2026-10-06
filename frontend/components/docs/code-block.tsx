@@ -1,18 +1,22 @@
 "use client";
 
-import { useRef, useState, type ReactNode } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import { Check, Copy } from "lucide-react";
 
 export function CodeBlock({ children }: { children: ReactNode }) {
   const ref = useRef<HTMLDivElement>(null);
+  const timer = useRef<ReturnType<typeof setTimeout>>(undefined);
   const [copied, setCopied] = useState(false);
+
+  useEffect(() => () => clearTimeout(timer.current), []);
 
   const copy = async () => {
     const text = ref.current?.innerText;
     if (!text) return;
     await navigator.clipboard.writeText(text.replace(/\n+$/, ""));
     setCopied(true);
-    setTimeout(() => setCopied(false), 1600);
+    clearTimeout(timer.current);
+    timer.current = setTimeout(() => setCopied(false), 1600);
   };
 
   return (

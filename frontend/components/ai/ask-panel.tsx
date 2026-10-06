@@ -20,21 +20,22 @@ import { Markdown } from "@/components/ai/markdown";
 import { ResultTable } from "@/components/ai/result-table";
 import { Skeleton } from "@/components/ui/skeleton";
 import { getErrorMessage } from "@/lib/utils";
-import type { AskResult, ConversationSummary } from "@/lib/types/ai.types";
+import type {
+  AiMessage,
+  AskResult,
+  ConversationSummary,
+} from "@/lib/types/ai.types";
 
-// What the thread shows. A live answer carries its rows; a reloaded one cannot,
-// because rows are deliberately never stored (see the AiMessage model).
+type Replayed = {
+  text: string;
+  sql: string | null;
+  rows: Record<string, unknown>[] | null;
+};
+
 type Turn =
   | { role: "user"; text: string }
-  | { role: "assistant"; result: AskResult }
-  | {
-      role: "assistant";
-      replayed: {
-        text: string;
-        sql: string | null;
-        rows: Record<string, unknown>[] | null;
-      };
-    };
+  | { role: "assistant"; question: string; result: AskResult }
+  | { role: "assistant"; question: string; replayed: Replayed };
 
 const EXAMPLES = [
   "Top pages last week",
@@ -81,8 +82,6 @@ function SqlDisclosure({ sql }: { sql: string }) {
 function Answer({ result, question }: { result: AskResult; question: string }) {
   if (result.kind === "chat") return <Markdown>{result.reply}</Markdown>;
 
-  // A refusal is information, not a failure — the model saying the data cannot
-  // answer this. It reads calm; only a broken query reads as an error.
   if (result.kind === "refuse") {
     return (
       <div className="flex gap-3 rounded-lg border border-border bg-muted/40 p-3.5">
@@ -111,7 +110,6 @@ function Answer({ result, question }: { result: AskResult; question: string }) {
     );
   }
 
-  // "matched nothing" would be a lie when rows existed and were withheld.
   const allWithheld = result.rowCount === 0 && result.suppressed > 0;
 
   return (
@@ -220,7 +218,6 @@ function ThreadList({
                     {relativeTime(c.updatedAt)}
                   </span>
                 </button>
-                {/* Always reachable by keyboard; revealed on hover for the mouse. */}
                 <button
                   type="button"
                   onClick={() => onDelete(c.id)}
@@ -243,18 +240,117 @@ function ThreadList({
   );
 }
 
+function ReplayedAnswer({
+  replayed,
+  question,
+}: {
+  replayed: Replayed;
+  question: string;
+}) {
+  return (
+    <div>
+      {replayed.rows ? (
+        <ResultTable rows={replayed.rows} caption={question} />
+      ) : (
+        <div className="text-muted-foreground">
+          <Markdown>{replayed.text}</Markdown>
+        </div>
+      )}
+      {replayed.sql && (
+        <>
+          <SqlDisclosure sql={replayed.sql} />
+          {replayed.rows && (
+            <p className="mt-1.5 font-mono text-[11px] text-muted-foreground">
+              re-run just now · rows are never stored
+            </p>
+          )}
+        </>
+      )}
+    </div>
+  );
+}
+
+function Composer({
+  disabled,
+  onSend,
+}: {
+  disabled: boolean;
+  onSend: (text: string) => boolean;
+}) {
+  const [question, setQuestion] = useState("");
+  const remaining = MAX_QUESTION - question.length;
+
+  const submit = () => {
+    if (onSend(question)) setQuestion("");
+  };
+
+  return (
+    <div className="border-t border-border p-3">
+      <div className="rounded-lg border border-border bg-background transition-colors focus-within:border-primary/50 focus-within:ring-2 focus-within:ring-primary/15">
+        <textarea
+          value={question}
+          maxLength={MAX_QUESTION}
+          onChange={(e) => setQuestion(e.target.value)}
+          onKeyDown={(e) => {
+            if (
+              e.key === "Enter" &&
+              !e.shiftKey &&
+              !e.nativeEvent.isComposing
+            ) {
+              e.preventDefault();
+              submit();
+            }
+          }}
+          rows={2}
+          placeholder="Ask about your traffic…"
+          aria-label="Ask a question about this site's traffic"
+          className="w-full resize-none bg-transparent px-3.5 py-2.5 text-sm caret-primary outline-none placeholder:text-muted-foreground"
+        />
+        <div className="flex items-center justify-between gap-3 px-3.5 pb-2.5">
+          <span className="font-mono text-[10px] tracking-[0.1em] text-muted-foreground uppercase">
+            {remaining <= 100
+              ? `${remaining} characters left`
+              : "Enter to send · Shift+Enter for a new line"}
+          </span>
+          <button
+            type="button"
+            onClick={submit}
+            disabled={!question.trim() || disabled}
+            aria-label="Send question"
+            className="flex size-8 items-center justify-center rounded-lg bg-primary text-primary-foreground transition-all hover:brightness-110 focus-visible:ring-2 focus-visible:ring-ring/60 focus-visible:outline-none disabled:pointer-events-none disabled:opacity-30"
+          >
+            <ArrowUp className="size-4" />
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function toReplayedTurns(messages: AiMessage[]): Turn[] {
+  let question = "Results";
+  return messages.map((m): Turn => {
+    if (m.role === "USER") {
+      question = m.content;
+      return { role: "user", text: m.content };
+    }
+    return {
+      role: "assistant",
+      question,
+      replayed: { text: m.error ?? m.content, sql: m.sql, rows: m.rows },
+    };
+  });
+}
+
 export function AskPanel({ siteId }: { siteId: string }) {
   const [liveTurns, setLiveTurns] = useState<Turn[]>([]);
   const [liveConversationId, setLiveConversationId] = useState<string>();
   const [replayId, setReplayId] = useState<string>();
-  const [question, setQuestion] = useState("");
   const bottomRef = useRef<HTMLDivElement>(null);
 
   const askMutation = useAsk(siteId);
   const deleteMutation = useDeleteConversation(siteId);
   const { data: conversations } = useConversations(siteId);
-  // Stored messages are only fetched when a past thread is opened — the live
-  // thread already holds everything, including the rows the server never keeps.
   const {
     data: replayed,
     isLoading: replayLoading,
@@ -263,61 +359,42 @@ export function AskPanel({ siteId }: { siteId: string }) {
 
   const conversationId = liveConversationId ?? replayId;
 
-  // Derived, not copied into state: an effect that mirrored the query into
-  // setTurns would re-render on every refetch and fight the live turns.
-  const turns = useMemo<Turn[]>(
-    () => [
-      ...(replayed?.messages ?? []).map((m): Turn =>
-        m.role === "USER"
-          ? { role: "user", text: m.content }
-          : {
-              role: "assistant",
-              replayed: {
-                text: m.error ?? m.content,
-                sql: m.sql,
-                rows: m.rows,
-              },
-            }
-      ),
-      ...liveTurns,
-    ],
+  const turns = useMemo(
+    () => [...toReplayedTurns(replayed?.messages ?? []), ...liveTurns],
     [replayed, liveTurns]
   );
 
-  // Scrolled when a turn is added, not on every keystroke or refetch.
   const scrollToEnd = () =>
     requestAnimationFrame(() =>
       bottomRef.current?.scrollIntoView({ behavior: "smooth", block: "end" })
     );
 
-  const send = (text: string) => {
-    const trimmed = text.trim();
-    if (!trimmed || askMutation.isPending) return;
-
-    setLiveTurns((t) => [...t, { role: "user", text: trimmed }]);
-    setQuestion("");
+  const addTurn = (turn: Turn) => {
+    setLiveTurns((t) => [...t, turn]);
     scrollToEnd();
+  };
 
+  const send = (text: string) => {
+    const question = text.trim();
+    if (!question || askMutation.isPending) return false;
+
+    addTurn({ role: "user", text: question });
     askMutation.mutate(
-      { question: trimmed, conversationId },
+      { question, conversationId },
       {
         onSuccess: (result) => {
           setLiveConversationId(result.conversationId);
-          setLiveTurns((t) => [...t, { role: "assistant", result }]);
-          scrollToEnd();
+          addTurn({ role: "assistant", question, result });
         },
-        onError: (err) => {
-          setLiveTurns((t) => [
-            ...t,
-            {
-              role: "assistant",
-              replayed: { text: err.message, sql: null, rows: null },
-            },
-          ]);
-          scrollToEnd();
-        },
+        onError: (err) =>
+          addTurn({
+            role: "assistant",
+            question,
+            replayed: { text: err.message, sql: null, rows: null },
+          }),
       }
     );
+    return true;
   };
 
   const startNew = () => {
@@ -326,7 +403,9 @@ export function AskPanel({ siteId }: { siteId: string }) {
     setLiveTurns([]);
   };
 
-  const remaining = MAX_QUESTION - question.length;
+  const title =
+    conversations?.find((c) => c.id === conversationId)?.title ??
+    "New question";
 
   return (
     <div className="grid gap-5 selection:bg-primary/20 lg:grid-cols-[15rem_minmax(0,1fr)]">
@@ -341,24 +420,19 @@ export function AskPanel({ siteId }: { siteId: string }) {
           }}
           onNew={startNew}
           deletingId={deleteMutation.variables}
-          onDelete={(id) => {
+          onDelete={(id) =>
             deleteMutation.mutate(id, {
-              // Only reset the view when the thread on screen is the one gone.
               onSuccess: () => {
                 if (id === conversationId) startNew();
               },
-            });
-          }}
+            })
+          }
         />
       </aside>
 
       <div className="flex min-h-[32rem] flex-col overflow-hidden rounded-xl border border-border bg-card">
-        {/* What the model can actually see, stated where it is answered. */}
         <div className="flex items-center justify-between gap-3 border-b border-border px-5 py-3">
-          <p className="truncate text-sm font-medium">
-            {conversations?.find((c) => c.id === conversationId)?.title ??
-              "New question"}
-          </p>
+          <p className="truncate text-sm font-medium">{title}</p>
           <span className="flex shrink-0 items-center gap-1.5 font-mono text-[10px] tracking-[0.14em] text-muted-foreground uppercase">
             <Database className="size-3" />
             hourly · daily rollups
@@ -371,10 +445,6 @@ export function AskPanel({ siteId }: { siteId: string }) {
           aria-busy={askMutation.isPending}
           className="flex-1 space-y-7 overflow-y-auto p-5 [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-border"
         >
-          {/* Opening a stored thread re-runs its SQL server-side, which is why
-              the request carries a 40s timeout. It used to show the
-              "ask a question" intro the whole time, as if the thread were
-              empty. */}
           {replayLoading && (
             <div className="space-y-4 py-10">
               <Skeleton className="h-5 w-64" />
@@ -403,14 +473,14 @@ export function AskPanel({ siteId }: { siteId: string }) {
                 query it ran.
               </p>
               <div className="mt-5 flex flex-wrap gap-2">
-                {EXAMPLES.map((e) => (
+                {EXAMPLES.map((example) => (
                   <button
-                    key={e}
+                    key={example}
                     type="button"
-                    onClick={() => send(e)}
+                    onClick={() => send(example)}
                     className="rounded-full border border-border px-3.5 py-1.5 text-xs text-muted-foreground transition-colors hover:border-primary/40 hover:bg-accent/50 hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring/50 focus-visible:outline-none"
                   >
-                    {e}
+                    {example}
                   </button>
                 ))}
               </div>
@@ -429,38 +499,12 @@ export function AskPanel({ siteId }: { siteId: string }) {
               ) : (
                 <div className="mt-3 border-l border-primary/30 pl-4">
                   {"result" in turn ? (
-                    <Answer
-                      result={turn.result}
-                      question={
-                        (turns[i - 1] as { text?: string })?.text ?? "Results"
-                      }
-                    />
+                    <Answer result={turn.result} question={turn.question} />
                   ) : (
-                    <div>
-                      {turn.replayed.rows ? (
-                        <ResultTable
-                          rows={turn.replayed.rows}
-                          caption={
-                            (turns[i - 1] as { text?: string })?.text ??
-                            "Results"
-                          }
-                        />
-                      ) : (
-                        <div className="text-muted-foreground">
-                          <Markdown>{turn.replayed.text}</Markdown>
-                        </div>
-                      )}
-                      {turn.replayed.sql && (
-                        <>
-                          <SqlDisclosure sql={turn.replayed.sql} />
-                          {turn.replayed.rows && (
-                            <p className="mt-1.5 font-mono text-[11px] text-muted-foreground">
-                              re-run just now · rows are never stored
-                            </p>
-                          )}
-                        </>
-                      )}
-                    </div>
+                    <ReplayedAnswer
+                      replayed={turn.replayed}
+                      question={turn.question}
+                    />
                   )}
                 </div>
               )}
@@ -486,42 +530,7 @@ export function AskPanel({ siteId }: { siteId: string }) {
           <div ref={bottomRef} />
         </div>
 
-        <div className="border-t border-border p-3">
-          <div className="rounded-lg border border-border bg-background transition-colors focus-within:border-primary/50 focus-within:ring-2 focus-within:ring-primary/15">
-            <textarea
-              value={question}
-              onChange={(e) =>
-                setQuestion(e.target.value.slice(0, MAX_QUESTION))
-              }
-              onKeyDown={(e) => {
-                if (e.key === "Enter" && !e.shiftKey) {
-                  e.preventDefault();
-                  send(question);
-                }
-              }}
-              rows={2}
-              placeholder="Ask about your traffic…"
-              aria-label="Ask a question about this site's traffic"
-              className="w-full resize-none bg-transparent px-3.5 py-2.5 text-sm caret-primary outline-none placeholder:text-muted-foreground"
-            />
-            <div className="flex items-center justify-between gap-3 px-3.5 pb-2.5">
-              <span className="font-mono text-[10px] tracking-[0.1em] text-muted-foreground uppercase">
-                {remaining <= 100
-                  ? `${remaining} characters left`
-                  : "Enter to send · Shift+Enter for a new line"}
-              </span>
-              <button
-                type="button"
-                onClick={() => send(question)}
-                disabled={!question.trim() || askMutation.isPending}
-                aria-label="Send question"
-                className="flex size-8 items-center justify-center rounded-lg bg-primary text-primary-foreground transition-all hover:brightness-110 focus-visible:ring-2 focus-visible:ring-ring/60 focus-visible:outline-none disabled:pointer-events-none disabled:opacity-30"
-              >
-                <ArrowUp className="size-4" />
-              </button>
-            </div>
-          </div>
-        </div>
+        <Composer disabled={askMutation.isPending} onSend={send} />
       </div>
     </div>
   );

@@ -1,10 +1,8 @@
 "use client";
 
+import { BookOpenText, CircleUserRound, Globe, LogOut } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { IoMdLogOut } from "react-icons/io";
-import { PiBookOpenTextBold, PiGlobeSimpleBold } from "react-icons/pi";
-import { RiUserSmileLine } from "react-icons/ri";
 
 import { PulseLogo } from "@/components/landing/shared";
 import {
@@ -18,23 +16,17 @@ import {
 } from "@/components/ui/sidebar";
 import { useAuth } from "@/contexts/auth.context";
 
-// Account-level destinations only. Everything scoped to one site is a tab on
-// that site's pages, and nothing here is listed before it works.
 const NAV = [
-  { title: "Sites", url: "/dashboard/sites", icon: PiGlobeSimpleBold },
-  // Signed out, the docs are reachable from the landing nav. Signed in, this
-  // was the only way in and it was missing.
-  { title: "Docs", url: "/docs", icon: PiBookOpenTextBold },
+  { title: "Sites", url: "/dashboard/sites", icon: Globe },
+  { title: "Docs", url: "/docs", icon: BookOpenText },
 ];
 
 const ACCOUNT = {
   title: "Account",
   url: "/dashboard/account",
-  icon: RiUserSmileLine,
+  icon: CircleUserRound,
 };
 
-/** A rail entry. Selected reads as a lit surface with the accent marking its
-    edge — the same treatment the product panel on the landing uses. */
 function NavLink({
   title,
   url,
@@ -97,22 +89,21 @@ export function AppSidebar() {
                 <NavLink
                   key={item.title}
                   {...item}
-                  active={!!pathname?.startsWith(item.url)}
+                  active={pathname.startsWith(item.url)}
                 />
               ))}
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
 
-        {/* Account and logout are the same errand, so they sit together. */}
         <SidebarFooter className="mt-auto gap-0.5 border-t border-[var(--seam)] px-3 py-3">
-          <NavLink {...ACCOUNT} active={!!pathname?.startsWith(ACCOUNT.url)} />
+          <NavLink {...ACCOUNT} active={pathname.startsWith(ACCOUNT.url)} />
           <button
             type="button"
             onClick={handleLogout}
             className="flex cursor-pointer items-center gap-2.5 rounded-md px-2.5 py-[7px] text-[13px] text-foreground/50 transition-colors duration-150 ease-[var(--ease-out)] hover:bg-foreground/[0.05] hover:text-foreground/90"
           >
-            <IoMdLogOut className="size-4 shrink-0" />
+            <LogOut className="size-4 shrink-0" />
             <span>Log out</span>
           </button>
         </SidebarFooter>

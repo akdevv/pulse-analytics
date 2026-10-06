@@ -1,5 +1,3 @@
-"use client";
-
 import { NewSiteForm } from "@/components/sites/new-site-form";
 
 export default function NewSitePage() {

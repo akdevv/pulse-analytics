@@ -4,9 +4,6 @@ import { useEffect, useState } from "react";
 
 import type { Heading } from "@/content/docs/nav";
 
-/* Scroll spy for the contents rail. The bottom margin keeps a heading from
-   counting as current while it is still low on the screen, so the mark
-   tracks what you are reading rather than what has barely appeared. */
 export function Toc({
   headings,
   editUrl,

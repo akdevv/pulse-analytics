@@ -3,18 +3,12 @@
 import { RankedList } from "@/components/analytics/ranked-list";
 import type { GeoStat } from "@/lib/types/analytics.types";
 
-// Flag emoji were standing in for this: they render as two letters on Windows,
-// as a picture everywhere else, and fell back to a globe for anything
-// unresolved. Intl ships the names, so the row can say the country.
-const REGIONS =
-  typeof Intl !== "undefined" && "DisplayNames" in Intl
-    ? new Intl.DisplayNames(["en"], { type: "region" })
-    : null;
+const REGIONS = new Intl.DisplayNames(["en"], { type: "region" });
 
 function countryName(code: string): string {
   if (!code) return "Unknown";
   try {
-    return REGIONS?.of(code.toUpperCase()) ?? code;
+    return REGIONS.of(code.toUpperCase()) ?? code;
   } catch {
     return code;
   }

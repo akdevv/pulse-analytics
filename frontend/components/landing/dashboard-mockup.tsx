@@ -65,7 +65,6 @@ function series(
   });
 }
 
-/** Catmull-Rom spline through every sample, as cubic beziers. */
 function chartPath(values: number[], yMax: number) {
   const pts = values.map((v, i) => [
     (i / (values.length - 1)) * CHART_W,

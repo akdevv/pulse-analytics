@@ -3,14 +3,6 @@ import Link from "next/link";
 import { AuthPanel, AuthPanelMobile } from "@/components/auth/auth-panel";
 import { PulseLogo } from "@/components/landing/shared";
 
-/* ── Auth chrome ───────────────────────────────────────────────
-   Both auth pages shipped this background, logo and centring as
-   copy-pasted markup. It belongs to the route group, so it lives here.
-
-   Even split from lg up: mark and form on the left sharing one left
-   edge in a centred column, landscape on the right. Below lg the
-   landscape becomes a short header band carrying the mark, and the form
-   starts directly beneath it rather than floating mid-screen. */
 export default function AuthLayout({
   children,
 }: {

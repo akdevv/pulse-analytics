@@ -66,7 +66,6 @@ export function Nav() {
       (entries) => {
         for (const e of entries) {
           if (e.isIntersecting) setActive(`#${e.target.id}`);
-          // Scrolled back above the first section: nothing is current.
           else if (e.target === sections[0] && e.boundingClientRect.top > 0)
             setActive(null);
         }

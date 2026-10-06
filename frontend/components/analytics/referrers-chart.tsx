@@ -17,8 +17,6 @@ export function ReferrersChart({ data, isLoading, error }: Props) {
       unit="Views"
       tone="var(--chart-2)"
       rows={data?.map((d) => ({
-        // An empty source is someone who typed the address or came from a
-        // link that sent no referrer. Saying so beats an empty row.
         label: d.source || "Direct",
         value: d.pageviews,
       }))}

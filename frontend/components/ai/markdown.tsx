@@ -2,9 +2,7 @@
 
 import ReactMarkdown, { type Components } from "react-markdown";
 
-// react-markdown renders text only — no raw HTML, no scripts — so model output
-// stays data. Elements are mapped explicitly because this project has no
-// typography plugin, and the defaults would ignore the design system.
+// Links render as plain text so model output can never navigate anywhere.
 const COMPONENTS: Components = {
   p: ({ children }) => (
     <p className="text-sm leading-relaxed [&:not(:first-child)]:mt-2.5">

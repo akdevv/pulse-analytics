@@ -3,15 +3,6 @@ import Link from "next/link";
 import { ramp, ridgePath } from "@/components/auth/ridge-silhouette";
 import { PulseLogo } from "@/components/landing/shared";
 
-/* ── The panel ─────────────────────────────────────────────────
-   A range of density curves stacked and offset, each occluding the one
-   behind it. It is the shape a week of ingest makes, drawn as flat
-   silhouettes rather than glowing lines so it holds an edge.
-
-   Depth comes from tone, not opacity: each layer gets its own colour
-   ramping toward the ground, computed in oklch so the steps are
-   perceptually even. Stacking one shape at several opacities reads as a
-   single form behind tracing paper instead of as ranges. */
 const W = 600;
 const H = 280;
 const TONES = ramp(5, [0.63, 0.185, 40], [0.174, 0.014, 31]);
@@ -34,14 +25,12 @@ const FIGURES = [
   { v: "0.00%", k: "data loss" },
 ];
 
-export const AUTH_SKY = `linear-gradient(176deg, var(--color-tangerine-soft) 0%, var(--color-tangerine) 64%)`;
+const AUTH_SKY = `linear-gradient(176deg, var(--color-tangerine-soft) 0%, var(--color-tangerine) 64%)`;
 
 const GRAIN =
   "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23n)'/%3E%3C/svg%3E\")";
 
-/* The ground layer is one more ridge filled with the page colour, so on
-   mobile the landscape runs straight into the form instead of ending on
-   a hard edge. */
+// A final ridge in the page colour lets the mobile band fade into the form.
 const GROUND = ridgePath({
   seed: 9901,
   base: 250,
@@ -74,7 +63,6 @@ function Ranges({
   );
 }
 
-/* A gradient across a panel this wide bands without it. */
 function Grain() {
   return (
     <div
@@ -106,8 +94,6 @@ function Figures() {
   );
 }
 
-/** Desktop half. Sticky, so the taller register form scrolls past the
- *  landscape rather than stretching it. */
 export function AuthPanel() {
   return (
     <div
@@ -134,8 +120,6 @@ export function AuthPanel() {
   );
 }
 
-/** Small screens get the landscape as a header band carrying the mark,
- *  so the form starts right under it and never sits below the fold. */
 export function AuthPanelMobile() {
   return (
     <div

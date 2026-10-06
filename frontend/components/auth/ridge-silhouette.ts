@@ -1,14 +1,3 @@
-/* Silhouette generator for the v12 family.
- *
- * v12 stacked one shape at four opacities, which reads as a single form
- * behind tracing paper. Real depth comes from tone: each layer gets its
- * own colour, stepping from the ground toward the sky, so the ranges sit
- * behind one another rather than through one another.
- *
- * `sharp` is the lever between the two readings. Wide bumps give rolling
- * ranges, narrow ones give something unmistakably plotted. */
-export type Layer = { d: string; fill: string };
-
 function rand(seed: number, i: number) {
   let t = (seed + i * 0x9e3779b9) >>> 0;
   t = Math.imul(t ^ (t >>> 15), 1 | t);
@@ -35,7 +24,6 @@ export function ridgePath({
   sharp?: number;
   pts?: number;
 }) {
-  /* one wide bump anchors the range so it has a main peak, the rest vary */
   const set = Array.from({ length: bumps }, (_, k) => ({
     m: 0.02 + rand(seed, k * 7 + 1) * 0.96,
     s: (0.05 + rand(seed, k * 7 + 2) * 0.1) * sharp,
@@ -69,8 +57,6 @@ export function ridgePath({
   return `${d} L${w},${h} Z`;
 }
 
-/** Tonal ramp from a far colour to a near one, in oklch so the steps are
- *  perceptually even rather than bunching in the middle. */
 export function ramp(
   n: number,
   from: [number, number, number],

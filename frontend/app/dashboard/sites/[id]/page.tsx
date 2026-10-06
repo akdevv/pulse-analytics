@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useMemo, useState } from "react";
 import { useParams } from "next/navigation";
 import {
   useOverview,
@@ -26,18 +26,13 @@ import { GeoChart } from "@/components/analytics/geo-chart";
 import { RealtimeWidget } from "@/components/analytics/realtime-widget";
 import { EventsChart } from "@/components/analytics/events-chart";
 
-function computeDateRange(preset: Preset, interval: Interval) {
+const PRESET_DAYS: Record<Preset, number> = { "7d": 7, "30d": 30, "90d": 90 };
+
+function computeRange(preset: Preset) {
   const to = new Date();
   const from = new Date(to);
-  from.setDate(
-    from.getDate() - (preset === "7d" ? 7 : preset === "30d" ? 30 : 90)
-  );
-  return {
-    from: from.toISOString(),
-    to: to.toISOString(),
-    interval,
-    limit: 10,
-  };
+  from.setDate(from.getDate() - PRESET_DAYS[preset]);
+  return { from: from.toISOString(), to: to.toISOString(), limit: 10 };
 }
 
 const RANGE_LABEL: Record<Preset, string> = {
@@ -46,11 +41,6 @@ const RANGE_LABEL: Record<Preset, string> = {
   "90d": "the last 90 days",
 };
 
-/**
- * Shown instead of the card grid when the range holds no events at all.
- * Eight cards each saying "no data" is eight ways of not answering the
- * question; the reasons a site reports nothing are few and checkable.
- */
 function NoEvents({
   domain,
   preset,
@@ -109,63 +99,29 @@ export default function SiteAnalyticsPage() {
   const { id } = useParams<{ id: string }>();
   const { data: site } = useSite(id);
   const [preset, setPreset] = useState<Preset>("7d");
-  const [interval, setInterval] = useState<Interval>("hour");
-  const dateRange = useMemo(
-    () => computeDateRange(preset, interval),
-    [preset, interval]
+  const [interval, setTimeInterval] = useState<Interval>("hour");
+
+  const range = useMemo(() => computeRange(preset), [preset]);
+  const seriesRange = useMemo(
+    () => ({ ...range, interval }),
+    [range, interval]
   );
 
-  const {
-    data: overview,
-    isLoading: overviewLoading,
-    error: overviewError,
-  } = useOverview(id, dateRange);
-  const {
-    data: timeseries,
-    isLoading: timeseriesLoading,
-    error: timeseriesError,
-  } = useTimeseries(id, dateRange);
-  const {
-    data: pages,
-    isLoading: pagesLoading,
-    error: pagesError,
-  } = useTopPages(id, dateRange);
-  const {
-    data: referrers,
-    isLoading: referrersLoading,
-    error: referrersError,
-  } = useReferrers(id, dateRange);
-  const {
-    data: devices,
-    isLoading: devicesLoading,
-    error: devicesError,
-  } = useDevices(id, dateRange);
-  const {
-    data: geo,
-    isLoading: geoLoading,
-    error: geoError,
-  } = useGeo(id, dateRange);
-  const {
-    data: events,
-    isLoading: eventsLoading,
-    error: eventsError,
-  } = useCustomEvents(id, dateRange);
-  const {
-    data: realtime,
-    isLoading: realtimeLoading,
-    error: realtimeError,
-  } = useRealtimeStream(id);
+  const overview = useOverview(id, range);
+  const timeseries = useTimeseries(id, seriesRange);
+  const pages = useTopPages(id, range);
+  const referrers = useReferrers(id, range);
+  const devices = useDevices(id, range);
+  const geo = useGeo(id, range);
+  const events = useCustomEvents(id, range);
+  const realtime = useRealtimeStream(id);
 
-  // Zero across all three counters means the range holds nothing — not that
-  // one card came back thin. The realtime widget stays either way: it reads
-  // raw events, so it is what turns this page into a dashboard the moment
-  // something lands.
+  const totals = overview.data;
   const hasNoEvents =
-    !overviewLoading &&
-    !overviewError &&
-    overview?.totalPageviews === 0 &&
-    overview?.totalSessions === 0 &&
-    overview?.totalVisitors === 0;
+    !!totals &&
+    totals.totalPageviews === 0 &&
+    totals.totalSessions === 0 &&
+    totals.totalVisitors === 0;
 
   return (
     <div className="flex flex-col">
@@ -174,7 +130,7 @@ export default function SiteAnalyticsPage() {
           preset={preset}
           interval={interval}
           onPresetChange={setPreset}
-          onIntervalChange={setInterval}
+          onIntervalChange={setTimeInterval}
         />
       </SiteTabs>
 
@@ -187,58 +143,59 @@ export default function SiteAnalyticsPage() {
           />
         </div>
       ) : (
-        // One seam grid, not a column of cards: the panels butt against each
-        // other and the ground shows through as a hairline, so the page reads
-        // as one instrument.
         <div className="seam grid flex-1 grid-cols-1 border-b border-[var(--seam)]">
           <OverviewCards
-            data={overview}
-            isLoading={overviewLoading}
-            error={overviewError}
-            activeSessions={realtime?.activeSessions}
-            activeLoading={realtimeLoading}
+            data={totals}
+            isLoading={overview.isLoading}
+            error={overview.error}
+            activeSessions={realtime.data?.activeSessions}
+            activeLoading={realtime.isLoading}
           />
 
           <TimeseriesChart
-            data={timeseries}
-            isLoading={timeseriesLoading}
-            error={timeseriesError}
+            data={timeseries.data}
+            isLoading={timeseries.isLoading}
+            error={timeseries.error}
             interval={interval}
           />
 
           <div className="seam grid grid-cols-1 lg:grid-cols-[1.4fr_1fr]">
             <TopPagesChart
-              data={pages}
-              isLoading={pagesLoading}
-              error={pagesError}
+              data={pages.data}
+              isLoading={pages.isLoading}
+              error={pages.error}
             />
             <RealtimeWidget
-              data={realtime ?? undefined}
-              isLoading={realtimeLoading}
-              error={realtimeError}
+              data={realtime.data ?? undefined}
+              isLoading={realtime.isLoading}
+              error={realtime.error}
             />
           </div>
 
           <div className="seam grid grid-cols-1 lg:grid-cols-3">
             <ReferrersChart
-              data={referrers}
-              isLoading={referrersLoading}
-              error={referrersError}
+              data={referrers.data}
+              isLoading={referrers.isLoading}
+              error={referrers.error}
             />
             <DevicesChart
-              data={devices}
-              isLoading={devicesLoading}
-              error={devicesError}
+              data={devices.data}
+              isLoading={devices.isLoading}
+              error={devices.error}
             />
-            <GeoChart data={geo} isLoading={geoLoading} error={geoError} />
+            <GeoChart
+              data={geo.data}
+              isLoading={geo.isLoading}
+              error={geo.error}
+            />
           </div>
 
           <EventsChart
             siteId={id}
-            dateRange={dateRange}
-            data={events}
-            isLoading={eventsLoading}
-            error={eventsError}
+            dateRange={range}
+            data={events.data}
+            isLoading={events.isLoading}
+            error={events.error}
           />
         </div>
       )}

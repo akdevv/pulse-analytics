@@ -1,8 +1,9 @@
-import Link from "next/link";
-import { cn } from "@/lib/utils";
 import type { Metadata } from "next";
+import Link from "next/link";
 import { notFound } from "next/navigation";
-
+import { Markdown } from "@/components/docs/markdown";
+import { Toc } from "@/components/docs/toc";
+import { REPO } from "@/components/landing/site";
 import {
   DOCS,
   DOCS_VERSION,
@@ -11,10 +12,7 @@ import {
   getDocNeighbours,
 } from "@/content/docs/nav";
 import { getDocContent } from "@/lib/docs";
-import { Markdown } from "@/components/docs/markdown";
-import { Toc } from "@/components/docs/toc";
-
-const REPO = "https://github.com/akdevv/pulse-analytics";
+import { cn } from "@/lib/utils";
 
 export const dynamicParams = false;
 
@@ -65,7 +63,7 @@ export default async function DocPage({
 }) {
   const { slug } = await params;
   const doc = getDocLink(slug);
-  const content = doc ? await getDocContent(slug) : null;
+  const content = await getDocContent(slug);
   if (!doc || !content) notFound();
 
   const headings = extractHeadings(content);
