@@ -9,8 +9,8 @@ import { PulseLogo } from "@/components/landing/shared";
 
    Even split from lg up: mark and form on the left sharing one left
    edge in a centred column, landscape on the right. Below lg the
-   landscape becomes a footer band rather than disappearing, so a phone
-   keeps the identity without the form dropping below the fold. */
+   landscape becomes a short header band carrying the mark, and the form
+   starts directly beneath it rather than floating mid-screen. */
 export default function AuthLayout({
   children,
 }: {
@@ -19,8 +19,10 @@ export default function AuthLayout({
   return (
     <div className="dark grid min-h-dvh bg-charcoal lg:grid-cols-2">
       <div className="relative flex min-h-dvh flex-col lg:min-h-0">
-        <div className="mx-auto flex w-full max-w-[392px] flex-1 flex-col px-6 pt-9 pb-6 sm:pt-10">
-          <header>
+        <AuthPanelMobile />
+
+        <div className="mx-auto flex w-full max-w-[392px] flex-1 flex-col px-6 pt-2 pb-10 sm:pt-6 lg:pt-10 lg:pb-6">
+          <header className="hidden lg:block">
             <Link
               href="/"
               className="group inline-flex items-center gap-2.5 rounded-full"
@@ -32,12 +34,10 @@ export default function AuthLayout({
             </Link>
           </header>
 
-          <main className="flex flex-1 items-center py-12 sm:py-14">
+          <main className="flex flex-1 lg:items-center lg:py-14">
             {children}
           </main>
         </div>
-
-        <AuthPanelMobile />
       </div>
 
       <AuthPanel />
