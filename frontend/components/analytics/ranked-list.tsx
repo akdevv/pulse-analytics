@@ -18,6 +18,7 @@ export type Rank = { label: string; value: number; title?: string };
  */
 export function RankedList({
   title,
+  label,
   unit,
   rows,
   isLoading,
@@ -28,6 +29,8 @@ export function RankedList({
   header,
 }: {
   title: string;
+  /** Names the left column, the way every reference dashboard does. */
+  label: string;
   unit: string;
   rows?: Rank[];
   isLoading: boolean;
@@ -45,51 +48,58 @@ export function RankedList({
 
   return (
     <div className="panel flex min-h-0 min-w-0 flex-col px-5 py-4">
-      <div className="mb-3 flex shrink-0 items-baseline justify-between gap-3">
+      <div className="mb-3.5 flex shrink-0 items-center justify-between gap-3">
         <span className="panel-title">{title}</span>
-        {header ?? <span className="meta">{unit}</span>}
+        {header}
       </div>
 
       {error ? (
-        <p className="py-6 text-sm text-destructive">{error.message}</p>
+        <p className="py-8 text-sm text-destructive">{error.message}</p>
       ) : isLoading ? (
-        <div className="flex flex-col gap-[3px]">
-          {Array.from({ length: 6 }).map((_, i) => (
-            <Skeleton key={i} className="h-[30px] rounded-[4px]" />
+        <div className="flex flex-col gap-0.5">
+          {Array.from({ length: 7 }).map((_, i) => (
+            <Skeleton key={i} className="h-[35px] rounded-[3px]" />
           ))}
         </div>
       ) : !rows?.length ? (
-        <p className="py-6 text-sm text-foreground/45">{empty}</p>
+        <p className="py-8 text-sm text-foreground/45">{empty}</p>
       ) : (
-        <div className="flex flex-col gap-[3px]">
-          {rows.map((row) => (
-            <div
-              key={row.label}
-              className="rank-row"
-              style={
-                {
-                  "--share": row.value / max,
-                  "--bar": tone,
-                } as React.CSSProperties
-              }
-            >
-              <span
-                className={`min-w-0 truncate text-foreground/85 ${mono ? "font-mono" : ""}`}
-                title={row.title ?? row.label}
+        <>
+          <div className="rank-head">
+            <span className="meta">{label}</span>
+            <span className="meta">{unit}</span>
+          </div>
+          <div className="flex flex-col gap-0.5">
+            {rows.map((row) => (
+              <div
+                key={row.label}
+                className="rank-row"
+                style={
+                  {
+                    "--share": row.value / max,
+                    "--bar": tone,
+                  } as React.CSSProperties
+                }
               >
-                {row.label}
-              </span>
-              <span className="flex shrink-0 items-baseline gap-2 font-mono text-[11px] tabular-nums">
-                <span className="rank-share text-foreground/40">
-                  {total > 0 ? ((row.value / total) * 100).toFixed(1) : "0.0"}%
+                <span
+                  className={`min-w-0 truncate text-foreground/90 ${mono ? "font-mono text-[12px]" : ""}`}
+                  title={row.title ?? row.label}
+                >
+                  {row.label}
                 </span>
-                <span className="text-foreground/60">
-                  {formatCompact(row.value)}
+                <span className="flex shrink-0 items-baseline gap-2.5 tabular-nums">
+                  <span className="rank-share text-[12px] text-foreground/40">
+                    {total > 0 ? ((row.value / total) * 100).toFixed(1) : "0.0"}
+                    %
+                  </span>
+                  <span className="font-medium text-foreground/75">
+                    {formatCompact(row.value)}
+                  </span>
                 </span>
-              </span>
-            </div>
-          ))}
-        </div>
+              </div>
+            ))}
+          </div>
+        </>
       )}
     </div>
   );

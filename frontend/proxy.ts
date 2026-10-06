@@ -1,34 +1,23 @@
-import { type NextRequest, NextResponse } from "next/server";
+import { NextResponse, type NextRequest } from "next/server";
+
+const GUEST_ONLY = ["/", "/login", "/register"];
 
 export function proxy(req: NextRequest) {
-  const token =
-    req.cookies.get("refresh_token")?.value ||
-    req.headers.get("authorization")?.replace("Bearer ", "");
-
   const { pathname } = req.nextUrl;
+  const signedIn = req.cookies.has("refresh_token");
+  const isDocs = pathname === "/docs" || pathname.startsWith("/docs/");
 
-  // Paths that bounce a signed-in user to the dashboard.
-  const publicPaths = ["/", "/login", "/register"];
-  const isPublicPath = publicPaths.includes(pathname);
-
-  // Docs read the same signed in or out, so they are open to anyone and
-  // redirect nobody.
-  const isDocsPath = pathname === "/docs" || pathname.startsWith("/docs/");
-
-  // unauthenticated user
-  if (!token && !isPublicPath && !isDocsPath) {
-    return NextResponse.redirect(new URL("/login", req.url));
-  }
-
-  // authenticated user
-  if (token && isPublicPath) {
+  if (signedIn && GUEST_ONLY.includes(pathname)) {
     return NextResponse.redirect(new URL("/dashboard", req.url));
   }
-
+  if (!signedIn && !isDocs && !GUEST_ONLY.includes(pathname)) {
+    return NextResponse.redirect(new URL("/login", req.url));
+  }
   return NextResponse.next();
 }
 
-// This ensures middleware config only applies to appropriate routes
 export const config = {
-  matcher: ["/((?!api|_next/static|_next/image|favicon.ico).*)"],
+  matcher: [
+    "/((?!api|_next/static|_next/image|favicon.ico|icon.svg|apple-icon.png).*)",
+  ],
 };

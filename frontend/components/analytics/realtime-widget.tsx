@@ -45,7 +45,8 @@ export function RealtimeWidget({ data, isLoading, error }: Props) {
   return (
     <RankedList
       title="Right now"
-      unit="sessions"
+      label="Page"
+      unit="Sessions"
       tone="var(--chart-2)"
       mono={tab !== "referrers"}
       rows={rows}

@@ -35,7 +35,8 @@ export function DevicesChart({ data, isLoading, error }: Props) {
   return (
     <RankedList
       title="Technology"
-      unit="views"
+      label="Name"
+      unit="Views"
       tone="var(--chart-2)"
       mono={false}
       rows={rows}

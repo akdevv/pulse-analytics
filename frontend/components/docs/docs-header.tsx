@@ -3,7 +3,6 @@
 import Link from "next/link";
 import { useState } from "react";
 
-import { LOGO_FONT } from "@/components/landing/tokens";
 import { PulseLogo } from "@/components/landing/shared";
 import { DocsNav } from "./docs-nav";
 
@@ -24,7 +23,7 @@ export function DocsHeader() {
             aria-label="Pulse home"
           >
             <PulseLogo size={20} />
-            <span className="text-[15px] text-ink" style={LOGO_FONT}>
+            <span className="font-display text-[15px] font-bold tracking-logo text-ink">
               Pulse
             </span>
           </Link>
@@ -96,7 +95,7 @@ export function DocsHeader() {
       {open && (
         <div
           id="docs-mobile-nav"
-          className="docs-sheet max-h-[70vh] overflow-y-auto border-t border-ink/8 px-4 py-7 lg:hidden"
+          className="pa-lift max-h-[70vh] overflow-y-auto border-t border-ink/8 px-4 py-7 lg:hidden"
         >
           <DocsNav onNavigate={() => setOpen(false)} />
         </div>

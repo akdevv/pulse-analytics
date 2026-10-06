@@ -2,14 +2,12 @@ import Link from "next/link";
 import ReactMarkdown, { type Components } from "react-markdown";
 import remarkGfm from "remark-gfm";
 import rehypeShikiFromHighlighter from "@shikijs/rehype/core";
+import { transformerNotationHighlight } from "@shikijs/transformers";
 import { createHighlighter } from "shiki";
 
 import { slugify } from "@/content/docs/nav";
 import { CodeBlock } from "./code-block";
 
-/** Flatten a heading's hast children back to text, so `## The \`ep\` field`
-    still produces a usable id. Typed locally because @types/hast is a
-    transitive dependency here, not a direct one. */
 type MdNode = { value?: string; children?: MdNode[] };
 
 function textOf(node: MdNode | undefined): string {
@@ -18,42 +16,73 @@ function textOf(node: MdNode | undefined): string {
   return (node.children ?? []).map(textOf).join("");
 }
 
-/* Block-level typography lives in the .docs-prose rules in globals.css.
-   Only the elements that need behaviour are mapped here: headings that
-   need anchor ids, links that should go through the router, and code
-   blocks that get a copy button. */
+const ANCHOR =
+  "before:absolute before:right-full before:pr-[0.35em] before:font-normal before:text-tangerine/75 before:opacity-0 before:transition-opacity before:content-['#'] group-hover:before:opacity-100 focus-visible:before:opacity-100 max-lg:before:content-none";
+
+function heading(Tag: "h2" | "h3", className: string): Components["h2"] {
+  return function Heading({ node, children }) {
+    const id = slugify(textOf(node));
+    return (
+      <Tag id={id} className={`group relative scroll-mt-22 ${className}`}>
+        <a href={`#${id}`} className={ANCHOR}>
+          {children}
+        </a>
+      </Tag>
+    );
+  };
+}
+
+const LINK =
+  "text-ink underline decoration-tangerine/50 decoration-1 underline-offset-3 transition-[text-decoration-color] duration-150 hover:decoration-tangerine";
+
 const COMPONENTS: Components = {
-  h2: ({ node, children }) => {
-    const id = slugify(textOf(node));
-    return (
-      <h2 id={id}>
-        <a href={`#${id}`} className="docs-anchor">
-          {children}
-        </a>
-      </h2>
-    );
-  },
-  h3: ({ node, children }) => {
-    const id = slugify(textOf(node));
-    return (
-      <h3 id={id}>
-        <a href={`#${id}`} className="docs-anchor">
-          {children}
-        </a>
-      </h3>
-    );
-  },
+  h2: heading(
+    "h2",
+    "mt-13 mb-4 font-display text-[1.32rem] leading-snug font-medium tracking-[-0.02em] text-ink"
+  ),
+  h3: heading(
+    "h3",
+    "mt-10 mb-3 text-[1.02rem] font-semibold tracking-[-0.01em] text-ink/94"
+  ),
+  p: ({ children }) => <p className="my-4.5">{children}</p>,
+  strong: ({ children }) => (
+    <strong className="font-semibold text-ink">{children}</strong>
+  ),
   a: ({ href, children }) => {
-    if (href?.startsWith("/")) return <Link href={href}>{children}</Link>;
-    if (href?.startsWith("#")) return <a href={href}>{children}</a>;
+    if (href?.startsWith("/"))
+      return (
+        <Link href={href} className={LINK}>
+          {children}
+        </Link>
+      );
     return (
-      <a href={href} target="_blank" rel="noreferrer">
+      <a
+        href={href}
+        className={LINK}
+        {...(!href?.startsWith("#") && { target: "_blank", rel: "noreferrer" })}
+      >
         {children}
       </a>
     );
   },
-  // className and style are what the highlighter puts on the tag. Spreading
-  // the rest would drag react-markdown's `node` handle onto the element.
+  ul: ({ children }) => (
+    <ul className="my-4.5 flex list-disc flex-col gap-2 pl-5.5 marker:text-ink/40">
+      {children}
+    </ul>
+  ),
+  ol: ({ children }) => (
+    <ol className="my-4.5 flex list-decimal flex-col gap-2 pl-5.5 marker:text-ink/40">
+      {children}
+    </ol>
+  ),
+  blockquote: ({ children }) => (
+    <blockquote className="my-8 rounded-xl border border-ink/12 bg-ink/4 px-4.5 py-3.5 text-[14px] text-ink/70 [&_p]:my-0">
+      {children}
+    </blockquote>
+  ),
+  hr: () => <hr className="my-11 border-ink/10" />,
+  // className and style come from the highlighter; spreading the rest would
+  // put react-markdown's `node` on the element.
   pre: ({ children, className, style }) => (
     <CodeBlock>
       <pre className={className} style={style}>
@@ -61,19 +90,35 @@ const COMPONENTS: Components = {
       </pre>
     </CodeBlock>
   ),
-  // A table wide enough to scroll needs a scroll container that is not the
-  // table itself, or the cells stop sharing the width evenly.
   table: ({ children }) => (
-    <div className="docs-table">
-      <table>{children}</table>
+    <div className="my-6 overflow-x-auto">
+      <table className="w-full border-collapse text-[13.5px]">{children}</table>
     </div>
+  ),
+  th: ({ children }) => (
+    <th className="border-b border-ink/14 pr-4 pb-2.5 text-left font-mono text-[10.5px] font-medium tracking-[0.15em] whitespace-nowrap text-ink/60 uppercase">
+      {children}
+    </th>
+  ),
+  td: ({ children }) => (
+    <td className="border-b border-ink/7 py-2.5 pr-4 align-top first:text-ink [tr:last-child_&]:border-b-0">
+      {children}
+    </td>
   ),
 };
 
-/* The default @shikijs/rehype plugin loads grammars on demand, which makes
-   the transform async, and react-markdown runs its pipeline synchronously.
-   Loading the languages up front gives a highlighter the plugin can use
-   without awaiting. One instance is shared across every page in a build. */
+const INLINE_CODE =
+  "[&_:not(pre)>code]:rounded-[5px] [&_:not(pre)>code]:border [&_:not(pre)>code]:border-ink/7 [&_:not(pre)>code]:bg-ink/8 [&_:not(pre)>code]:px-[0.36em] [&_:not(pre)>code]:py-[0.1em] [&_:not(pre)>code]:font-mono [&_:not(pre)>code]:text-[0.85em] [&_:not(pre)>code]:text-ink";
+
+const PROSE = [
+  "text-[15px] leading-[1.75] text-ink/74",
+  "[&>*:first-child]:mt-0",
+  "[&>p:first-child]:mb-9 [&>p:first-child]:text-[17px] [&>p:first-child]:leading-[1.62] [&>p:first-child]:text-ink/82",
+  INLINE_CODE,
+].join(" ");
+
+// The rehype plugin runs synchronously, so grammars are loaded up front
+// and one highlighter is shared across every page.
 const LANGS = ["html", "bash", "ts", "tsx", "astro", "sql"];
 
 let highlighter: ReturnType<typeof createHighlighter> | null = null;
@@ -87,12 +132,20 @@ export async function Markdown({ children }: { children: string }) {
   const shiki = await getHighlighter();
 
   return (
-    <div className="docs-prose">
+    <div className={PROSE}>
       <ReactMarkdown
         components={COMPONENTS}
         remarkPlugins={[remarkGfm]}
         rehypePlugins={[
-          [rehypeShikiFromHighlighter, shiki, { theme: "vesper" }],
+          [
+            rehypeShikiFromHighlighter,
+            shiki,
+            {
+              theme: "vesper",
+              defaultLanguage: "text",
+              transformers: [transformerNotationHighlight()],
+            },
+          ],
         ]}
       >
         {children}

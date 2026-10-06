@@ -2,22 +2,36 @@
 
 import { useMemo, useState } from "react";
 import {
-  ACCENT,
-  ACCENT_SOFT,
-  BG,
-  DISPLAY,
-  POWDER,
-  SURFACE_1,
-  SURFACE_2,
-} from "./tokens";
+  Activity,
+  ArrowDown,
+  ArrowUp,
+  CalendarDays,
+  ChartColumn,
+  ChevronLeft,
+  ChevronRight,
+  ChevronsUpDown,
+  Code,
+  Copy,
+  Eye,
+  Globe,
+  LayoutGrid,
+  Lock,
+  LogOut,
+  MousePointerClick,
+  PanelLeft,
+  Plus,
+  RotateCw,
+  Share,
+  SlidersHorizontal,
+  User,
+  Users,
+  X,
+  type LucideIcon,
+} from "lucide-react";
+import { cn } from "@/lib/utils";
 import { PulseLogo } from "./shared";
+import { HALO, RIM } from "./surfaces";
 
-/* ── Series ────────────────────────────────────────────────────
-   Every figure on the panel is derived from these curves rather than
-   typed in beside them: the totals are the integral of the line, the
-   deltas are this window over the last one, and the page and referrer
-   rows are fractions of those totals. Switch the range and the whole
-   panel stays true to itself, which is the part fake dashboards miss. */
 const WEEKDAY = [1.0, 1.05, 1.1, 1.14, 0.97, 0.6, 0.56]; // Mon…Sun
 const CHART_W = 720;
 const CHART_H = 300;
@@ -29,56 +43,46 @@ function jitter(seed: number, i: number) {
   return ((t ^ (t >>> 14)) >>> 0) / 4294967296 - 0.5;
 }
 
-/** `perDay` samples a day: 12 gives the two-hourly detail a week deserves,
- *  1 gives the daily bars a quarter does. `dayOffset` lines the weekend
- *  dip up with the real calendar day the range starts on. */
+type SeriesCfg = { n: number; perDay: number; dayOffset: number };
+
 function series(
+  { n, perDay, dayOffset }: SeriesCfg,
   seed: number,
-  n: number,
-  perDay: number,
-  dayOffset: number,
   base: number,
   growth: number
 ) {
   return Array.from({ length: n }, (_, i) => {
     const day = Math.floor(i / perDay);
-    const hour = perDay === 1 ? 14 : (i % perDay) * (24 / perDay);
-    /* gaussian around 14:00 with a floor for overnight traffic */
+    const hour = (i % perDay) * (24 / perDay);
     const diurnal =
-      perDay === 1
-        ? 1
-        : 0.26 + 0.74 * Math.exp(-Math.pow((hour - 14) / 6.2, 2));
+      perDay === 1 ? 1 : 0.26 + 0.74 * Math.exp(-(((hour - 14) / 6.2) ** 2));
     const trend = 1 + growth * (i / (n - 1));
+    const noise = 1 + jitter(seed, i) * 0.18;
     return Math.max(
       6,
-      base *
-        diurnal *
-        WEEKDAY[(day + dayOffset) % 7] *
-        trend *
-        (1 + jitter(seed, i) * 0.18)
+      base * diurnal * WEEKDAY[(day + dayOffset) % 7] * trend * noise
     );
   });
 }
 
-/** Catmull-Rom through every sample, converted to cubic beziers — keeps
- *  the curve continuous instead of the polyline-with-round-joins that
- *  gives most fake charts away. */
+/** Catmull-Rom spline through every sample, as cubic beziers. */
 function chartPath(values: number[], yMax: number) {
-  const pts = values.map<[number, number]>((v, i) => [
+  const pts = values.map((v, i) => [
     (i / (values.length - 1)) * CHART_W,
     (1 - v / yMax) * CHART_H,
   ]);
+  const p = (x: number, y: number) => `${x.toFixed(1)},${y.toFixed(1)}`;
 
-  let d = `M${pts[0][0].toFixed(1)},${pts[0][1].toFixed(1)}`;
+  let d = `M${p(pts[0][0], pts[0][1])}`;
   for (let i = 0; i < pts.length - 1; i++) {
     const p0 = pts[i - 1] ?? pts[i];
     const p1 = pts[i];
     const p2 = pts[i + 1];
     const p3 = pts[i + 2] ?? p2;
     d +=
-      ` C${(p1[0] + (p2[0] - p0[0]) / 6).toFixed(1)},${(p1[1] + (p2[1] - p0[1]) / 6).toFixed(1)}` +
-      ` ${(p2[0] - (p3[0] - p1[0]) / 6).toFixed(1)},${(p2[1] - (p3[1] - p1[1]) / 6).toFixed(1)}` +
-      ` ${p2[0].toFixed(1)},${p2[1].toFixed(1)}`;
+      ` C${p(p1[0] + (p2[0] - p0[0]) / 6, p1[1] + (p2[1] - p0[1]) / 6)}` +
+      ` ${p(p2[0] - (p3[0] - p1[0]) / 6, p2[1] - (p3[1] - p1[1]) / 6)}` +
+      ` ${p(p2[0], p2[1])}`;
   }
   return d;
 }
@@ -86,8 +90,7 @@ function chartPath(values: number[], yMax: number) {
 const MONTHS = "Jan Feb Mar Apr May Jun Jul Aug Sep Oct Nov Dec".split(" ");
 const DAY_NAMES = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 
-/** Built from a fixed start date, never from `Date.now()` — the server and
- *  the client have to agree on every label. */
+// Fixed dates, never `Date.now()`, so server and client render the same labels.
 function dayStamps(y: number, m: number, d: number, n: number) {
   const cursor = new Date(Date.UTC(y, m, d));
   return Array.from({ length: n }, () => {
@@ -97,25 +100,29 @@ function dayStamps(y: number, m: number, d: number, n: number) {
   });
 }
 
+function hourStamps(days: number, perDay: number) {
+  return Array.from({ length: days * perDay }, (_, i) => {
+    const hour = (i % perDay) * (24 / perDay);
+    return `${DAY_NAMES[Math.floor(i / perDay)]} ${String(hour).padStart(2, "0")}:00`;
+  });
+}
+
 const int = (n: number) => Math.round(n).toLocaleString("en-US");
 const tick = (n: number) =>
   n >= 1000 ? `${+(n / 1000).toFixed(1)}k` : `${Math.round(n)}`;
 
-/** Three gridlines on a round step, with room left above the peak. Runs
- *  for the filtered series too, which is why the steps are fine-grained:
- *  a page worth 12% of traffic still deserves an axis that fits it. */
 function niceScale(max: number) {
   const raw = max / 3;
-  const mag = Math.pow(10, Math.floor(Math.log10(raw)));
+  const mag = 10 ** Math.floor(Math.log10(raw));
   const step =
     ([1, 1.2, 1.5, 2, 2.5, 3, 4, 5, 6, 8, 10].find((m) => m * mag >= raw) ??
       10) * mag;
   return { yMax: step * 3.4, ticks: [step * 3, step * 2, step, 0] };
 }
 
-/* Shares hold across every range: the split of traffic doesn't change
-   just because you looked at three months of it. */
-const PAGE_SHARE = [
+type Share = { label: string; of: number };
+
+const PAGE_SHARE: Share[] = [
   { label: "/docs/quickstart", of: 0.1744 },
   { label: "/pricing", of: 0.1252 },
   { label: "/", of: 0.1019 },
@@ -123,7 +130,7 @@ const PAGE_SHARE = [
   { label: "/changelog", of: 0.0389 },
   { label: "/blog/scaling-timescale", of: 0.0249 },
 ];
-const REFERRER_SHARE = [
+const REFERRER_SHARE: Share[] = [
   { label: "Direct / None", of: 0.38 },
   { label: "google.com", of: 0.255 },
   { label: "github.com", of: 0.142 },
@@ -131,24 +138,23 @@ const REFERRER_SHARE = [
   { label: "x.com", of: 0.079 },
   { label: "reddit.com", of: 0.047 },
 ];
+const PAGES_PER_SESSION = 2.65;
 
-function rows(share: typeof PAGE_SHARE, total: number) {
-  const top = share[0].of;
-  return share.map(({ label, of }) => ({
-    label,
-    hits: int(total * of),
-    share: of / top,
+type Row = Share & { hits: string; width: number };
+
+function rows(shares: Share[], total: number): Row[] {
+  const top = shares[0].of;
+  return shares.map((s) => ({
+    ...s,
+    hits: int(total * s.of),
+    width: s.of / top,
   }));
 }
 
-type Preset = "7D" | "30D" | "90D";
-
 function buildView(cfg: {
+  series: SeriesCfg;
   seed: number;
   prevSeed: number;
-  n: number;
-  perDay: number;
-  dayOffset: number;
   base: number;
   prevBase: number;
   growth: number;
@@ -157,33 +163,15 @@ function buildView(cfg: {
   stamps: string[];
   cadence: string;
 }) {
-  const cur = series(
-    cfg.seed,
-    cfg.n,
-    cfg.perDay,
-    cfg.dayOffset,
-    cfg.base,
-    cfg.growth
-  );
-  const prev = series(
-    cfg.prevSeed,
-    cfg.n,
-    cfg.perDay,
-    cfg.dayOffset,
-    cfg.prevBase,
-    cfg.prevGrowth
-  );
+  const cur = series(cfg.series, cfg.seed, cfg.base, cfg.growth);
+  const prev = series(cfg.series, cfg.prevSeed, cfg.prevBase, cfg.prevGrowth);
 
-  /* each sample stands for the hours between it and the next one */
-  const span = cfg.perDay === 1 ? 1 : 24 / cfg.perDay;
-  const total = (a: number[]) => a.reduce((x, y) => x + y, 0) * span;
+  const hoursPerSample = cfg.series.perDay === 1 ? 1 : 24 / cfg.series.perDay;
+  const total = (a: number[]) => a.reduce((x, y) => x + y, 0) * hoursPerSample;
   const pageviews = total(cur);
   const lift = (pageviews / total(prev) - 1) * 100;
-  const sessions = pageviews / 2.65;
+  const sessions = pageviews / PAGES_PER_SESSION;
   const visitors = sessions / 1.417;
-
-  let peak = 0;
-  for (let i = 1; i < cur.length; i++) if (cur[i] > cur[peak]) peak = i;
 
   return {
     values: cur,
@@ -191,7 +179,7 @@ function buildView(cfg: {
     buckets: cfg.buckets,
     stamps: cfg.stamps,
     cadence: cfg.cadence,
-    peak,
+    peak: cur.indexOf(Math.max(...cur)),
     metrics: [
       { label: "Pageviews", value: int(pageviews), delta: lift },
       { label: "Sessions", value: int(sessions), delta: lift + 3.8 },
@@ -202,142 +190,73 @@ function buildView(cfg: {
   };
 }
 
-/* Anchored to Sun 23 Aug 2026, so each window starts on the weekday its
-   weekend dips actually fall on. */
-const VIEWS: Record<Preset, ReturnType<typeof buildView>> = {
+type View = ReturnType<typeof buildView>;
+type Preset = "7D" | "30D" | "90D";
+const PRESETS: Preset[] = ["7D", "30D", "90D"];
+
+// Every window ends Sun 23 Aug 2026; dayOffset puts the weekend dips on real weekends.
+const VIEWS: Record<Preset, View> = {
   "7D": buildView({
+    series: { n: 84, perDay: 12, dayOffset: 0 }, // Mon 17 Aug
     seed: 20260823,
     prevSeed: 991177,
-    n: 84,
-    perDay: 12,
-    dayOffset: 0, // Mon 17 Aug
     base: 505,
     prevBase: 466,
     growth: 0.1,
     prevGrowth: 0.08,
     buckets: DAY_NAMES,
-    stamps: Array.from(
-      { length: 84 },
-      (_, i) =>
-        `${DAY_NAMES[Math.floor(i / 12)]} ${String((i % 12) * 2).padStart(2, "0")}:00`
-    ),
-    cadence: "per hour",
+    stamps: hourStamps(7, 12),
+    cadence: "Per hour",
   }),
   "30D": buildView({
+    series: { n: 30, perDay: 1, dayOffset: 5 }, // Sat 25 Jul
     seed: 31220260,
     prevSeed: 77410031,
-    n: 30,
-    perDay: 1,
-    dayOffset: 5, // Sat 25 Jul
     base: 6360,
     prevBase: 5620,
     growth: 0.3,
     prevGrowth: 0.24,
     buckets: ["Jul 28", "Aug 3", "Aug 9", "Aug 15", "Aug 21"],
     stamps: dayStamps(2026, 6, 25, 30),
-    cadence: "per day",
+    cadence: "Per day",
   }),
   "90D": buildView({
+    series: { n: 90, perDay: 1, dayOffset: 1 }, // Tue 26 May
     seed: 90260526,
     prevSeed: 41330077,
-    n: 90,
-    perDay: 1,
-    dayOffset: 1, // Tue 26 May
     base: 5560,
     prevBase: 4680,
     growth: 0.62,
     prevGrowth: 0.5,
     buckets: ["Jun 2", "Jun 17", "Jul 2", "Jul 17", "Aug 1", "Aug 16"],
     stamps: dayStamps(2026, 4, 26, 90),
-    cadence: "per day",
+    cadence: "Per day",
   }),
 };
 
-/** A row the visitor pointed at. `factor` turns the window's pageview
- *  curve into that slice of it — a page keeps the pageview metric, a
- *  referrer is converted to sessions on the way. */
-type Focus = { label: string; factor: number; metric: string } | null;
-
-const PRESETS: Preset[] = ["7D", "30D", "90D"];
-
-/* Most of the fade lands on the panel's own bottom padding; only the
-   last rows ghost out, which is what keeps it reading as a dissolve
-   rather than a crop. */
-const PANEL_FADE =
-  "linear-gradient(180deg, #000 0%, #000 80%, rgba(0,0,0,0.86) 87%, " +
-  "rgba(0,0,0,0.52) 92%, rgba(0,0,0,0.2) 96.5%, transparent 100%)";
 const RANGES: Record<Preset, { label: string; window: string }> = {
-  "7D": { label: "last 7 days", window: "Aug 17 – Aug 23" },
-  "30D": { label: "last 30 days", window: "Jul 25 – Aug 23" },
-  "90D": { label: "last 90 days", window: "May 26 – Aug 23" },
+  "7D": { label: "Last 7 days", window: "Aug 17 – Aug 23" },
+  "30D": { label: "Last 30 days", window: "Jul 25 – Aug 23" },
+  "90D": { label: "Last 90 days", window: "May 26 – Aug 23" },
 };
 
-/* Sessions started in each of the last twelve minutes. */
+type Focus = { label: string; factor: number; metric: string } | null;
+
 const REALTIME_BARS = [
   0.38, 0.52, 0.44, 0.61, 0.73, 0.58, 0.66, 0.81, 0.7, 0.92, 0.84, 1,
 ];
 
-/* ── Icons ─────────────────────────────────────────────────────
-   One stroke weight, one 24-unit box, drawn rather than borrowed from a
-   font. The rail's routes are the app's real ones: /sites and /account,
-   with a site's own Overview, Setup and Settings beneath. */
-const ICON = {
-  site: "M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18M3.3 9.5h17.4M3.3 14.5h17.4M12 3c-2.3 2.5-3.5 5.5-3.5 9s1.2 6.5 3.5 9c2.3-2.5 3.5-5.5 3.5-9S14.3 5.5 12 3",
-  account:
-    "M4.8 20v-1.2A4.8 4.8 0 0 1 9.6 14h4.8a4.8 4.8 0 0 1 4.8 4.8V20M12 11a3.6 3.6 0 1 0 0-7.2 3.6 3.6 0 0 0 0 7.2",
-  overview: "M4 13h3.6v7H4zM10.2 4h3.6v16h-3.6zM16.4 9H20v11h-3.6z",
-  setup: "m8.5 8-4 4 4 4m7-8 4 4-4 4M13.5 4.5l-3 15",
-  settings:
-    "M4 7h9m3 0h4M4 17h4m3 0h9M14.5 7a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0M12 17a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0",
-  logout:
-    "M15 16.5 19.5 12 15 7.5M19.5 12H9M11 4H6.5A1.5 1.5 0 0 0 5 5.5v13A1.5 1.5 0 0 0 6.5 20H11",
-  sites: "M4.5 4.5h6v6h-6zM13.5 4.5h6v6h-6zM4.5 13.5h6v6h-6zM13.5 13.5h6v6h-6z",
-  chevron: "m8 10 4 4 4-4",
-  panel: "M4.5 5.5h15v13h-15zM9.75 5.5v13",
-  back: "m14 6-6 6 6 6",
-  forward: "m10 6 6 6-6 6",
-  share:
-    "M12 3.5v10M8.5 7 12 3.5 15.5 7M6.5 11.5V19a1 1 0 0 0 1 1h9a1 1 0 0 0 1-1v-7.5",
-  plus: "M12 5.5v13M5.5 12h13",
-  tabs: "M4.5 7h9v9h-9zM10.5 9.5h9v9h-9",
-} as const;
+const FADE_BOTTOM = `linear-gradient(to bottom, #000 calc(100% - 220px),
+  rgb(0 0 0/0.82) calc(100% - 165px), rgb(0 0 0/0.5) calc(100% - 105px),
+  rgb(0 0 0/0.18) calc(100% - 45px), transparent)`;
 
-function Icon({
-  path,
-  size = 15,
-  color,
-  className = "",
-}: {
-  path: string;
-  size?: number;
-  color?: string;
-  className?: string;
-}) {
-  return (
-    <svg
-      width={size}
-      height={size}
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="1.6"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      className={`shrink-0 ${className}`}
-      style={color ? { color } : undefined}
-      aria-hidden
-    >
-      <path d={path} />
-    </svg>
-  );
-}
+const ICON = { strokeWidth: 1.75, "aria-hidden": true } as const;
 
 export function DashboardMockup() {
   const [preset, setPreset] = useState<Preset>("7D");
   const [focus, setFocus] = useState<Focus>(null);
   const view = VIEWS[preset];
 
-  /* a slice of one window means nothing in the next one */
   const choosePreset = (p: Preset) => {
     setPreset(p);
     setFocus(null);
@@ -347,232 +266,179 @@ export function DashboardMockup() {
 
   return (
     <div className="relative">
-      {/* floor glow — grounds the panel against the spotlight behind it */}
       <div
         aria-hidden
-        className="pointer-events-none absolute -inset-x-4 top-1/2 -bottom-16 opacity-[0.16] blur-[110px]"
-        style={{
-          background: `radial-gradient(ellipse 55% 70% at 50% 100%, ${ACCENT} 0%, transparent 72%)`,
-        }}
+        className="pointer-events-none absolute inset-x-0 -top-1 h-48 rounded-2xl blur-lg"
+        style={{ background: HALO }}
       />
 
-      {/* 16:10 is the laptop this gets used on, held from xl up where the
-          panel is wide enough for it. And the panel doesn't end so much
-          as dissolve: the mask takes the border, the corners and the
-          last rows with it, so the screenshot melts into the glow and
-          the pulse line below instead of stopping at an edge. */}
       <div
-        className="relative flex flex-col overflow-hidden rounded-2xl border border-ink/10 pb-8 xl:aspect-[16/10]"
-        style={{
-          background: SURFACE_1,
-          boxShadow:
-            "0 1px 0 0 rgba(229,227,210,0.06) inset, 0 50px 100px -30px rgba(0,0,0,0.88)",
-          maskImage: PANEL_FADE,
-          WebkitMaskImage: PANEL_FADE,
-        }}
+        className="relative rounded-2xl p-px"
+        style={{ background: RIM, maskImage: FADE_BOTTOM }}
       >
-        <div
-          aria-hidden
-          className="absolute inset-x-0 top-0 z-10 h-px"
-          style={{
-            background: `linear-gradient(90deg, transparent 12%, ${ACCENT} 50%, transparent 88%)`,
-            opacity: 0.32,
-          }}
-        />
+        <div className="flex flex-col overflow-hidden rounded-[15px] bg-surface-1 pb-6 shadow-edge xl:aspect-16/10">
+          <SafariChrome />
 
-        <SafariChrome />
+          <div className="flex min-h-0 flex-1">
+            <Sidebar />
 
-        <div className="flex min-h-0 flex-1">
-          <Sidebar />
+            <main className="flex min-w-0 flex-1 flex-col">
+              <AppHeader preset={preset} onPreset={choosePreset} />
+              <Metrics view={view} charted={focus?.metric ?? "Pageviews"} />
 
-          <main className="flex min-w-0 flex-1 flex-col">
-            <AppHeader preset={preset} onPreset={choosePreset} />
-            <Metrics view={view} charted={focus?.metric ?? "Pageviews"} />
-
-            <div className="grid min-h-0 flex-1 grid-cols-1 gap-px bg-ink/8 lg:grid-cols-[1.58fr_1fr]">
-              <TrafficChart
-                view={view}
-                range={RANGES[preset].label}
-                focus={focus}
-                onClear={() => setFocus(null)}
-              />
-              <div className="grid min-h-0 grid-cols-1 gap-px bg-ink/8 lg:grid-rows-2">
-                <BarPanel
-                  title="Top pages"
-                  unit="views"
-                  rows={view.pages}
-                  shares={PAGE_SHARE}
-                  metric="Pageviews"
-                  scale={1}
+              <div className="grid min-h-0 flex-1 grid-cols-1 gap-px bg-ink/8 lg:grid-cols-[1.58fr_1fr]">
+                <TrafficChart
+                  view={view}
+                  range={RANGES[preset].label}
                   focus={focus}
-                  onPick={toggle}
+                  onClear={() => setFocus(null)}
                 />
-                <BarPanel
-                  title="Referrers"
-                  unit="sessions"
-                  rows={view.referrers}
-                  shares={REFERRER_SHARE}
-                  metric="Sessions"
-                  scale={1 / 2.65}
-                  focus={focus}
-                  onPick={toggle}
-                />
+                <div className="grid min-h-0 grid-cols-1 gap-px bg-ink/8 lg:grid-rows-2">
+                  <BarPanel
+                    title="Top pages"
+                    unit="Views"
+                    rows={view.pages}
+                    metric="Pageviews"
+                    scale={1}
+                    focus={focus}
+                    onPick={toggle}
+                  />
+                  <BarPanel
+                    title="Referrers"
+                    unit="Sessions"
+                    rows={view.referrers}
+                    metric="Sessions"
+                    scale={1 / PAGES_PER_SESSION}
+                    focus={focus}
+                    onPick={toggle}
+                  />
+                </div>
               </div>
-            </div>
-          </main>
+            </main>
+          </div>
         </div>
       </div>
     </div>
   );
 }
 
-/* ── Safari ────────────────────────────────────────────────────
-   One unified toolbar, because that is all Safari shows with a single
-   tab open: lights, sidebar, history, a narrow centred address field,
-   then share, new tab, tab overview. */
+const LIGHTS = ["bg-[#FF5F57]", "bg-[#FEBC2E]", "bg-[#28C840]"];
+
 function SafariChrome() {
-  const lights = ["#FF5F57", "#FEBC2E", "#28C840"];
   return (
-    <div
-      className="flex shrink-0 items-center gap-3 border-b border-ink/10 px-4 py-3"
-      style={{
-        background: SURFACE_2,
-        boxShadow: "0 1px 0 0 rgba(229,227,210,0.05) inset",
-      }}
-    >
+    <div className="flex h-12 shrink-0 items-center gap-4 border-b border-black/40 bg-linear-to-b from-surface-2 to-surface-1 px-4 shadow-edge">
       <div className="flex gap-2">
-        {lights.map((c) => (
+        {LIGHTS.map((c) => (
           <span
             key={c}
-            className="h-3 w-3 rounded-full"
-            style={{
-              background: c,
-              boxShadow: "0 0 0 0.5px rgba(0,0,0,0.3) inset",
-            }}
+            className={cn(
+              "size-3 rounded-full ring-1 ring-black/25 ring-inset",
+              c
+            )}
           />
         ))}
       </div>
 
-      <div className="ml-1 flex items-center gap-3 text-ink/45">
-        <Icon path={ICON.panel} size={16} />
-        <span className="h-4 w-px bg-ink/10" />
-        <Icon path={ICON.back} size={16} />
-        <Icon path={ICON.forward} size={16} className="opacity-35" />
-      </div>
-
-      <div className="flex min-w-0 flex-1 justify-center">
-        <div className="flex h-[26px] w-full max-w-[440px] items-center justify-center gap-1.5 rounded-md border border-ink/8 bg-ink/[0.05] px-3 shadow-[0_1px_2px_0_rgba(0,0,0,0.18)_inset]">
-          <svg
-            width="10"
-            height="10"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            className="shrink-0 text-ink/45"
-            aria-hidden
-          >
-            <rect x="4" y="11" width="16" height="10" rx="2" />
-            <path d="M7.5 11V7a4.5 4.5 0 0 1 9 0v4" />
-          </svg>
-          <span className="truncate text-[12px] text-ink/70">
-            app.pulseanalytics.io
-          </span>
+      <div className="hidden items-center gap-3.5 text-ink/45 sm:flex">
+        <PanelLeft {...ICON} size={16} />
+        <div className="flex items-center gap-2">
+          <ChevronLeft {...ICON} size={16} />
+          <ChevronRight {...ICON} size={16} className="text-ink/20" />
         </div>
       </div>
 
-      <div className="flex items-center gap-3 text-ink/40">
-        <Icon path={ICON.share} size={16} />
-        <Icon path={ICON.plus} size={16} />
-        <Icon path={ICON.tabs} size={16} />
+      <div className="flex min-w-0 flex-1 justify-center">
+        <div className="flex h-7 w-full max-w-md items-center gap-2 rounded-lg bg-black/25 px-3 ring-1 ring-ink/6">
+          <span className="flex min-w-0 flex-1 items-center justify-center gap-1.5">
+            <Lock {...ICON} size={11} className="shrink-0 text-ink/45" />
+            <span className="truncate text-[12px] text-ink/75">
+              app.pulseanalytics.io
+            </span>
+          </span>
+          <RotateCw {...ICON} size={12} className="shrink-0 text-ink/35" />
+        </div>
+      </div>
+
+      <div className="hidden items-center gap-3.5 text-ink/45 sm:flex">
+        <Share {...ICON} size={16} />
+        <Plus {...ICON} size={16} />
+        <Copy {...ICON} size={16} />
       </div>
     </div>
   );
 }
 
-/* ── Sidebar ───────────────────────────────────────────────────
-   Darker than the content beside it, the way a macOS rail is. Five
-   routes, all of which exist in the app: the site you are looking at
-   first, then the workspace, split by a hairline instead of a pair of
-   group headings that cost more than they explain. */
 function Sidebar() {
   return (
-    <aside
-      className="hidden w-[198px] shrink-0 flex-col border-r border-ink/8 md:flex"
-      style={{ background: BG }}
-    >
-      <div className="flex items-center gap-2.5 px-4 py-4">
-        <PulseLogo size={21} />
-        <span className="truncate text-[13px] font-semibold tracking-[-0.02em] text-ink">
-          Pulse Analytics
+    <aside className="hidden w-52 shrink-0 flex-col border-r border-ink/8 bg-charcoal md:flex">
+      <div className="flex h-14 shrink-0 items-center gap-2.5 border-b border-ink/8 px-4">
+        <PulseLogo size={22} />
+        <span className="truncate font-display text-[14px] font-semibold tracking-display text-ink">
+          Pulse
         </span>
       </div>
 
-      <div className="px-3">
-        <div
-          className="flex items-center gap-2 rounded-md px-2.5 py-2"
-          style={{ background: SURFACE_1 }}
-        >
-          <Icon path={ICON.site} size={13} className="text-ink/40" />
-          <span className="min-w-0 flex-1 truncate font-mono text-[11px] text-ink/80">
-            pulseanalytics.io
+      <div className="p-3">
+        <div className="flex items-center gap-2.5 rounded-lg border border-ink/8 bg-ink/3 p-1.5 pr-2">
+          <span className="grid size-7 shrink-0 place-items-center rounded-md bg-ink/6 text-ink/60">
+            <Globe {...ICON} size={14} />
           </span>
-          <Icon path={ICON.chevron} size={12} className="text-ink/35" />
+          <span className="min-w-0 flex-1">
+            <span className="block truncate text-[12px] font-medium text-ink">
+              pulseanalytics.io
+            </span>
+            <span className="block font-mono text-[10px] text-ink/40">
+              Site
+            </span>
+          </span>
+          <ChevronsUpDown {...ICON} size={13} className="text-ink/35" />
         </div>
       </div>
 
-      <nav className="mt-4 flex flex-col gap-0.5 px-3">
-        <NavItem icon={ICON.overview} label="Overview" active />
-        <NavItem icon={ICON.setup} label="Setup" />
-        <NavItem icon={ICON.settings} label="Settings" />
-        <span aria-hidden className="my-2.5 h-px bg-ink/8" />
-        <NavItem icon={ICON.sites} label="Sites" />
-        <NavItem icon={ICON.account} label="Account" />
+      <nav className="flex flex-col gap-0.5 px-3">
+        <NavItem icon={ChartColumn} label="Overview" active />
+        <NavItem icon={Code} label="Setup" />
+        <NavItem icon={SlidersHorizontal} label="Settings" />
+        <span aria-hidden className="mx-2.5 my-2 h-px bg-ink/6" />
+        <NavItem icon={LayoutGrid} label="Sites" />
+        <NavItem icon={User} label="Account" />
       </nav>
 
-      <div className="mt-auto flex items-center gap-2.5 px-4 py-4">
-        <span
-          className="grid h-[26px] w-[26px] shrink-0 place-items-center rounded-full font-mono text-[10px] font-semibold"
-          style={{
-            background: "rgba(229,227,210,0.07)",
-            color: "rgba(229,227,210,0.7)",
-          }}
-        >
+      <div className="mt-auto flex items-center gap-2.5 border-t border-ink/8 px-4 py-3">
+        <span className="grid size-7 shrink-0 place-items-center rounded-full bg-linear-to-b from-tangerine-soft to-tangerine text-[10px] font-semibold text-charcoal">
           AK
         </span>
-        <span className="min-w-0 flex-1 truncate text-[12px] text-ink/70">
+        <span className="min-w-0 flex-1 truncate text-[12px] text-ink/80">
           akdevv
         </span>
-        <Icon path={ICON.logout} size={14} className="text-ink/30" />
+        <LogOut {...ICON} size={14} className="text-ink/35" />
       </div>
     </aside>
   );
 }
 
 function NavItem({
-  icon,
+  icon: NavIcon,
   label,
   active = false,
 }: {
-  icon: string;
+  icon: LucideIcon;
   label: string;
   active?: boolean;
 }) {
   return (
     <span
-      className={`relative flex items-center gap-2.5 rounded-md px-2.5 py-[7px] text-[12px] ${
-        active ? "text-ink" : "text-ink/50"
-      }`}
-      style={active ? { background: SURFACE_2 } : undefined}
-    >
-      {active && (
-        <span
-          className="absolute top-1/2 left-0 h-[14px] w-[2px] -translate-y-1/2 rounded-full"
-          style={{ background: ACCENT }}
-        />
+      className={cn(
+        "flex h-8 items-center gap-2.5 rounded-md px-2.5 text-[12.5px]",
+        active ? "bg-ink/6 text-ink shadow-edge" : "text-ink/55"
       )}
-      <Icon path={icon} size={14} color={active ? ACCENT : undefined} />
-      <span className="min-w-0 flex-1 truncate">{label}</span>
+    >
+      <NavIcon
+        {...ICON}
+        size={15}
+        className={active ? "text-tangerine" : "text-ink/45"}
+      />
+      {label}
     </span>
   );
 }
@@ -585,73 +451,72 @@ function AppHeader({
   onPreset: (p: Preset) => void;
 }) {
   return (
-    <div className="flex shrink-0 items-center justify-between gap-4 border-b border-ink/8 px-5 py-3">
+    <div className="flex h-14 shrink-0 items-center justify-between gap-4 border-b border-ink/8 px-6">
       <div className="flex min-w-0 items-center gap-3">
-        <span className="text-[14px] font-medium tracking-[-0.01em] text-ink">
+        <span className="font-display text-[15px] font-semibold tracking-display text-ink">
           Overview
         </span>
-        <span className="h-3.5 w-px bg-ink/12" />
-        <span className="truncate font-mono text-[11px] text-ink/45">
+        <span className="hidden items-center gap-1.5 rounded-md border border-ink/8 bg-ink/3 px-2 py-1 text-[11.5px] text-ink/55 sm:inline-flex">
+          <CalendarDays {...ICON} size={12} className="text-ink/40" />
           {RANGES[preset].window}
         </span>
       </div>
 
       <div
-        className="flex shrink-0 items-center gap-0.5 rounded-lg border border-ink/8 p-0.5"
+        className="flex shrink-0 items-center rounded-lg bg-black/25 p-0.75 ring-1 ring-ink/6"
         role="group"
         aria-label="Date range"
       >
-        {PRESETS.map((p) => {
-          const on = p === preset;
-          return (
-            <button
-              key={p}
-              type="button"
-              onClick={() => onPreset(p)}
-              aria-pressed={on}
-              className={`cursor-pointer rounded-md px-2.5 py-1 font-mono text-[10px] font-semibold transition-colors duration-150 ease-[var(--ease-out)] ${
-                on
-                  ? "text-charcoal"
-                  : "text-ink/45 hover:bg-ink/[0.05] hover:text-ink/90"
-              }`}
-              style={on ? { background: ACCENT } : undefined}
-            >
-              {p}
-            </button>
-          );
-        })}
+        {PRESETS.map((p) => (
+          <button
+            key={p}
+            type="button"
+            onClick={() => onPreset(p)}
+            aria-pressed={p === preset}
+            className={cn(
+              "h-6.5 cursor-pointer rounded-md px-2.5 text-[11.5px] font-medium tabular-nums transition-colors duration-150 ease-out",
+              p === preset
+                ? "bg-surface-2 text-ink shadow-raised"
+                : "text-ink/45 hover:text-ink/85"
+            )}
+          >
+            {p}
+          </button>
+        ))}
       </div>
     </div>
   );
 }
 
-function Metrics({
-  view,
-  charted,
-}: {
-  view: ReturnType<typeof buildView>;
-  charted: string;
-}) {
+const METRIC_ICONS: Record<string, LucideIcon> = {
+  Pageviews: Eye,
+  Sessions: MousePointerClick,
+  "Unique visitors": Users,
+};
+
+function Metrics({ view, charted }: { view: View; charted: string }) {
   return (
-    <div className="grid shrink-0 grid-cols-2 gap-px bg-ink/8 lg:grid-cols-4">
+    <div className="grid shrink-0 grid-cols-2 gap-px border-b border-ink/8 bg-ink/8 lg:grid-cols-4">
       {view.metrics.map(({ label, value, delta }) => (
-        <Cell key={label} label={label} value={value} lit={label === charted}>
+        <Cell
+          key={label}
+          icon={METRIC_ICONS[label]}
+          label={label}
+          value={value}
+          lit={label === charted}
+        >
           <Delta value={delta} />
         </Cell>
       ))}
 
-      {/* The one figure here that isn't a window total, so it reads in
-          telemetry blue and shows its own last twelve minutes instead
-          of a comparison it doesn't have. */}
-      <Cell label="Active now" value="247" tone={POWDER} pip>
-        <div className="flex h-full items-end gap-[3px]">
+      <Cell icon={Activity} label="Active now" value="247" live>
+        <div className="flex h-full items-end gap-0.75">
           {REALTIME_BARS.map((h, i) => (
             <span
               key={i}
-              className="pa-bar-rise w-[3px] rounded-[1px]"
+              className="pa-bar-rise w-0.75 rounded-[1px] bg-powder"
               style={{
                 height: `${h * 100}%`,
-                background: POWDER,
                 opacity: 0.22 + h * 0.42,
                 ["--pa-delay" as string]: `${700 + i * 45}ms`,
               }}
@@ -663,75 +528,65 @@ function Metrics({
   );
 }
 
-/* All four cells share one skeleton, so the row keeps its rhythm whether
-   the last line is a comparison or a set of bars. */
 function Cell({
+  icon: CellIcon,
   label,
   value,
   children,
-  tone,
   lit = false,
-  pip = false,
+  live = false,
 }: {
+  icon: LucideIcon;
   label: string;
   value: string;
   children: React.ReactNode;
-  tone?: string;
   lit?: boolean;
-  pip?: boolean;
+  live?: boolean;
 }) {
   return (
-    <div className="relative px-5 py-4" style={{ background: SURFACE_1 }}>
-      {lit && (
-        <span
-          aria-hidden
-          className="absolute inset-x-0 top-0 h-[2px]"
-          style={{ background: ACCENT }}
-        />
-      )}
+    <div className="bg-surface-1 px-6 py-4">
       <div
-        className={`flex items-center gap-2 font-mono text-[10px] tracking-[0.12em] whitespace-nowrap uppercase ${
-          lit ? "text-ink/70" : "text-ink/45"
-        }`}
+        className={cn(
+          "flex items-center gap-2 text-[12.5px] whitespace-nowrap",
+          lit ? "text-ink/85" : "text-ink/55"
+        )}
       >
-        {pip && <LivePip />}
+        <CellIcon
+          {...ICON}
+          size={14}
+          className={
+            lit ? "text-tangerine" : live ? "text-powder" : "text-ink/40"
+          }
+        />
         {label}
       </div>
       <div
-        className="mt-3 text-[27px] leading-none whitespace-nowrap tabular-nums"
-        style={{
-          ...DISPLAY,
-          fontWeight: 600,
-          letterSpacing: "-0.03em",
-          color: tone ?? "var(--color-ink)",
-        }}
+        className={cn(
+          "mt-3 font-display text-[28px] leading-none font-semibold tracking-[-0.03em] whitespace-nowrap tabular-nums",
+          live ? "text-powder" : "text-ink"
+        )}
       >
         {value}
       </div>
-      <div className="mt-2.5 flex h-5 items-end">{children}</div>
+      <div className="mt-2.5 flex h-5 items-center">{children}</div>
     </div>
   );
 }
 
-/* ── Traffic chart ─────────────────────────────────────────────
-   Axis labels sit in HTML at the same fractions the gridlines use, so
-   the scale is genuinely aligned to the curve. Pointing at the plot
-   reads the nearest sample; leaving it returns to the window's peak.
-   A focused row rescales the whole thing rather than squashing the
-   slice against the floor. */
 function TrafficChart({
   view,
   range,
   focus,
   onClear,
 }: {
-  view: ReturnType<typeof buildView>;
+  view: View;
   range: string;
   focus: Focus;
   onClear: () => void;
 }) {
   const [hover, setHover] = useState<number | null>(null);
   const factor = focus?.factor ?? 1;
+  const metric = focus?.metric ?? "Pageviews";
 
   const plot = useMemo(() => {
     const values = view.values.map((v) => v * factor);
@@ -742,95 +597,64 @@ function TrafficChart({
       prevValues,
       yMax,
       ticks,
+      peak: Math.max(...values),
       path: chartPath(values, yMax),
       prevPath: chartPath(prevValues, yMax),
     };
   }, [view, factor]);
 
   const n = plot.values.length;
+  const top = (v: number) => (1 - v / plot.yMax) * 100;
   const at = Math.min(hover ?? view.peak, n - 1);
   const x = (at / (n - 1)) * 100;
-  const y = (1 - plot.values[at] / plot.yMax) * 100;
-  const yPrev = (1 - plot.prevValues[at] / plot.yMax) * 100;
-  /* the callout flips sides rather than walking off the plot */
-  const flip = x > 60;
+  const y = top(plot.values[at]);
+  const yPrev = top(plot.prevValues[at]);
+
+  const legend = [
+    { label: range, className: "bg-tangerine" },
+    { label: "Previous", className: "bg-powder/45" },
+  ];
 
   return (
-    <div
-      className="flex min-h-0 min-w-0 flex-col px-5 py-4"
-      style={{ background: SURFACE_1 }}
-    >
-      <div className="mb-4 flex shrink-0 items-start justify-between gap-3">
+    <div className="flex min-h-0 min-w-0 flex-col bg-surface-1 px-6 py-5">
+      <div className="mb-3 flex shrink-0 items-start justify-between gap-3">
         <div className="min-w-0">
           <div className="flex min-w-0 items-center gap-2">
-            <span className="text-[13px] text-ink/90">
-              {focus?.metric ?? "Pageviews"}
-            </span>
+            <span className="text-[13px] font-medium text-ink">{metric}</span>
             {focus && (
               <button
                 type="button"
                 onClick={onClear}
-                className="flex min-w-0 cursor-pointer items-center gap-1.5 rounded-full px-2 py-[3px] font-mono text-[10px] transition-colors duration-150 ease-[var(--ease-out)]"
-                style={{
-                  background: `color-mix(in oklab, ${ACCENT} 14%, transparent)`,
-                  color: ACCENT,
-                }}
+                className="flex min-w-0 cursor-pointer items-center gap-1.5 rounded-full bg-tangerine/14 px-2 py-0.75 font-mono text-[10px] text-tangerine"
               >
                 <span className="min-w-0 truncate">{focus.label}</span>
-                <svg
-                  width="8"
-                  height="8"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                  strokeWidth="3"
-                  strokeLinecap="round"
-                  className="shrink-0 opacity-70"
-                  aria-hidden
-                >
-                  <path d="M6 6l12 12M18 6 6 18" />
-                </svg>
+                <X {...ICON} size={10} className="shrink-0 opacity-70" />
               </button>
             )}
           </div>
-          <div className="mt-0.5 font-mono text-[10px] tracking-[0.12em] text-ink/45 uppercase">
-            {view.cadence}
-          </div>
+          <div className="mt-0.5 text-[12px] text-ink/40">{view.cadence}</div>
         </div>
-        <div className="flex shrink-0 gap-4 pt-0.5">
-          {[
-            { c: ACCENT, l: range, o: 1 },
-            { c: POWDER, l: "Previous", o: 0.45 },
-          ].map(({ c, l, o }) => (
+        <div className="hidden shrink-0 gap-4 pt-0.5 sm:flex">
+          {legend.map(({ label, className }) => (
             <span
-              key={l}
-              className="flex items-center gap-1.5 font-mono text-[10px] tracking-[0.12em] text-ink/50 uppercase"
+              key={label}
+              className="flex items-center gap-1.5 text-[11.5px] text-ink/50"
             >
-              <svg width="14" height="4" viewBox="0 0 14 4" aria-hidden>
-                <line
-                  x1="0"
-                  y1="2"
-                  x2="14"
-                  y2="2"
-                  stroke={c}
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  opacity={o}
-                />
-              </svg>
-              {l}
+              <span className={cn("h-0.5 w-3.5 rounded-full", className)} />
+              {label}
             </span>
           ))}
         </div>
       </div>
 
       <div className="flex min-h-0 flex-1 flex-col">
-        <div className="flex min-h-0 flex-1">
+        <div className="flex min-h-44 flex-1">
           <div className="relative w-9 shrink-0">
             {plot.ticks.map((t) => (
               <span
                 key={t}
-                className="absolute right-2 -translate-y-1/2 font-mono text-[10px] text-ink/40 tabular-nums"
-                style={{ top: `${(1 - t / plot.yMax) * 100}%` }}
+                className="absolute right-2.5 -translate-y-1/2 text-[11px] text-ink/35 tabular-nums"
+                style={{ top: `${top(t)}%` }}
               >
                 {tick(t)}
               </span>
@@ -838,30 +662,42 @@ function TrafficChart({
           </div>
 
           <div
-            className="relative min-h-0 min-w-0 flex-1 cursor-crosshair"
-            onMouseMove={(e) => {
+            className="relative min-w-0 flex-1 cursor-crosshair touch-pan-y"
+            onPointerMove={(e) => {
               const r = e.currentTarget.getBoundingClientRect();
               const f = (e.clientX - r.left) / r.width;
               setHover(Math.min(n - 1, Math.max(0, Math.round(f * (n - 1)))));
             }}
-            onMouseLeave={() => setHover(null)}
+            onPointerLeave={() => setHover(null)}
           >
             <svg
               viewBox={`0 0 ${CHART_W} ${CHART_H}`}
               preserveAspectRatio="none"
-              className="absolute inset-0 h-full w-full"
+              className="absolute inset-0 size-full"
               role="img"
-              aria-label={`${focus?.metric ?? "Pageviews"}${focus ? ` for ${focus.label}` : ""} over the ${range}, peaking at ${int(Math.max(...plot.values))}`}
+              aria-label={`${metric}${focus ? ` for ${focus.label}` : ""}, ${range.toLowerCase()}, peaking at ${int(plot.peak)}`}
             >
               <defs>
                 <linearGradient id="pa-chart-fill" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor={ACCENT} stopOpacity="0.3" />
-                  <stop offset="100%" stopColor={ACCENT} stopOpacity="0" />
+                  <stop
+                    offset="0%"
+                    stopColor="var(--color-tangerine)"
+                    stopOpacity="0.3"
+                  />
+                  <stop
+                    offset="100%"
+                    stopColor="var(--color-tangerine)"
+                    stopOpacity="0"
+                  />
                 </linearGradient>
                 <linearGradient id="pa-chart-line" x1="0" y1="0" x2="1" y2="0">
-                  <stop offset="0%" stopColor={ACCENT} stopOpacity="0.55" />
-                  <stop offset="30%" stopColor={ACCENT} />
-                  <stop offset="100%" stopColor={ACCENT_SOFT} />
+                  <stop
+                    offset="0%"
+                    stopColor="var(--color-tangerine)"
+                    stopOpacity="0.55"
+                  />
+                  <stop offset="30%" stopColor="var(--color-tangerine)" />
+                  <stop offset="100%" stopColor="var(--color-tangerine-soft)" />
                 </linearGradient>
               </defs>
 
@@ -870,13 +706,10 @@ function TrafficChart({
                   key={t}
                   x1="0"
                   x2={CHART_W}
-                  y1={(1 - t / plot.yMax) * CHART_H}
-                  y2={(1 - t / plot.yMax) * CHART_H}
-                  stroke={
-                    t === 0
-                      ? "rgba(229,227,210,0.12)"
-                      : "rgba(229,227,210,0.05)"
-                  }
+                  y1={(top(t) / 100) * CHART_H}
+                  y2={(top(t) / 100) * CHART_H}
+                  stroke="var(--color-ink)"
+                  strokeOpacity={t === 0 ? 0.12 : 0.05}
                   vectorEffect="non-scaling-stroke"
                 />
               ))}
@@ -890,7 +723,7 @@ function TrafficChart({
               <path
                 d={plot.prevPath}
                 fill="none"
-                stroke={POWDER}
+                stroke="var(--color-powder)"
                 strokeWidth="1.25"
                 strokeLinecap="round"
                 strokeLinejoin="round"
@@ -917,66 +750,40 @@ function TrafficChart({
               />
             </svg>
 
-            <div
-              aria-hidden
-              className="pointer-events-none absolute inset-y-0 w-px"
-              style={{
-                left: `${x}%`,
-                background:
-                  "linear-gradient(180deg, transparent, rgba(229,227,210,0.22) 14%, rgba(229,227,210,0.22) 94%, transparent)",
-              }}
-            />
-            <span
-              aria-hidden
-              className="pointer-events-none absolute h-1.5 w-1.5 -translate-x-1/2 -translate-y-1/2 rounded-full"
-              style={{
-                left: `${x}%`,
-                top: `${yPrev}%`,
-                background: POWDER,
-                opacity: 0.55,
-              }}
-            />
-            <span
-              aria-hidden
-              className="pointer-events-none absolute h-2.5 w-2.5 -translate-x-1/2 -translate-y-1/2 rounded-full"
-              style={{
-                left: `${x}%`,
-                top: `${y}%`,
-                background: ACCENT,
-                border: "2px solid oklch(0.2350 0 0)",
-                boxShadow: "0 0 0 3px var(--pa-accent-glow)",
-              }}
-            />
-            <div
-              aria-hidden
-              className="pointer-events-none absolute rounded-lg border border-ink/12 px-2.5 py-1.5 whitespace-nowrap shadow-[0_10px_24px_-10px_rgba(0,0,0,0.9)]"
-              style={{
-                left: `${x}%`,
-                top: `${Math.min(Math.max(y, 6), 66)}%`,
-                transform: flip
-                  ? "translate(calc(-100% - 12px), -50%)"
-                  : "translate(12px, -50%)",
-                background: SURFACE_2,
-              }}
-            >
-              <div className="font-mono text-[10px] tracking-[0.12em] text-ink/50 uppercase">
-                {view.stamps[at]}
-              </div>
-              <div className="mt-1 flex items-center gap-3 text-[12px] tabular-nums">
-                <span className="flex items-center gap-1.5 text-ink">
-                  <span
-                    className="h-1.5 w-1.5 rounded-full"
-                    style={{ background: ACCENT }}
-                  />
-                  {int(plot.values[at])}
-                </span>
-                <span className="flex items-center gap-1.5 text-ink/45">
-                  <span
-                    className="h-1.5 w-1.5 rounded-full"
-                    style={{ background: POWDER, opacity: 0.5 }}
-                  />
-                  {int(plot.prevValues[at])}
-                </span>
+            <div aria-hidden className="pointer-events-none">
+              <div
+                className="absolute inset-y-0 w-px bg-linear-to-b from-transparent via-ink/22 to-transparent"
+                style={{ left: `${x}%` }}
+              />
+              <span
+                className="absolute size-1.5 -translate-1/2 rounded-full bg-powder/55"
+                style={{ left: `${x}%`, top: `${yPrev}%` }}
+              />
+              <span
+                className="absolute size-2.5 -translate-1/2 rounded-full border-2 border-surface-1 bg-tangerine shadow-[0_0_0_3px_var(--pa-accent-glow)]"
+                style={{ left: `${x}%`, top: `${y}%` }}
+              />
+              <div
+                className={cn(
+                  "absolute -translate-y-1/2 rounded-lg border border-ink/12 bg-surface-2 px-2.5 py-1.5 whitespace-nowrap shadow-[0_10px_24px_-10px_rgb(0_0_0/0.9)]",
+                  x > 60 ? "-translate-x-[calc(100%+12px)]" : "translate-x-3"
+                )}
+                style={{
+                  left: `${x}%`,
+                  top: `${Math.min(Math.max(y, 6), 66)}%`,
+                }}
+              >
+                <div className="text-[11px] text-ink/50">{view.stamps[at]}</div>
+                <div className="mt-1 flex items-center gap-3 text-[12px] tabular-nums">
+                  <span className="flex items-center gap-1.5 text-ink">
+                    <span className="size-1.5 rounded-full bg-tangerine" />
+                    {int(plot.values[at])}
+                  </span>
+                  <span className="flex items-center gap-1.5 text-ink/45">
+                    <span className="size-1.5 rounded-full bg-powder/50" />
+                    {int(plot.prevValues[at])}
+                  </span>
+                </div>
               </div>
             </div>
           </div>
@@ -991,10 +798,7 @@ function TrafficChart({
             }}
           >
             {view.buckets.map((b) => (
-              <span
-                key={b}
-                className="text-center font-mono text-[10px] tracking-[0.12em] text-ink/45 uppercase"
-              >
+              <span key={b} className="text-center text-[11px] text-ink/40">
                 {b}
               </span>
             ))}
@@ -1005,90 +809,77 @@ function TrafficChart({
   );
 }
 
-/* ── Bar panels ────────────────────────────────────────────────
-   Share is drawn, not just counted, so the column reads at a glance.
-   Each row is a real control: pointing at one reveals its share of the
-   window, choosing one redraws the chart as that slice. */
 function BarPanel({
   title,
-  rows,
   unit,
-  shares,
+  rows,
   metric,
   scale,
   focus,
   onPick,
 }: {
   title: string;
-  rows: { label: string; hits: string; share: number }[];
   unit: string;
-  shares: { label: string; of: number }[];
+  rows: Row[];
   metric: string;
   scale: number;
   focus: Focus;
   onPick: (f: NonNullable<Focus>) => void;
 }) {
   return (
-    <div
-      className="flex min-h-0 min-w-0 flex-col px-5 py-4"
-      style={{ background: SURFACE_1 }}
-    >
+    <div className="flex min-h-0 min-w-0 flex-col bg-surface-1 px-6 py-5">
       <div className="mb-3 flex shrink-0 items-baseline justify-between gap-3">
-        <span className="text-[13px] text-ink/90">{title}</span>
-        <span className="font-mono text-[10px] tracking-[0.12em] text-ink/35 uppercase">
-          {unit}
-        </span>
+        <span className="text-[13px] font-medium text-ink">{title}</span>
+        <span className="text-[11.5px] text-ink/35">{unit}</span>
       </div>
-      <div className="flex flex-col gap-[3px]">
-        {rows.map(({ label, hits, share }, i) => {
+      <div className="flex flex-col gap-1">
+        {rows.map(({ label, of, hits, width }, i) => {
           const on = focus?.label === label;
-          const dimmed = focus !== null && !on;
           return (
             <button
               key={label}
               type="button"
               aria-pressed={on}
-              onClick={() =>
-                onPick({ label, factor: shares[i].of * scale, metric })
-              }
-              className={`group relative flex cursor-pointer items-center justify-between gap-3 overflow-hidden rounded-[4px] px-2 py-[7px] text-left text-[12px] transition-opacity duration-200 ease-[var(--ease-out)] focus-visible:-outline-offset-2 ${
-                dimmed ? "opacity-45 hover:opacity-100" : "opacity-100"
-              }`}
+              onClick={() => onPick({ label, factor: of * scale, metric })}
+              className={cn(
+                "group relative flex cursor-pointer items-center justify-between gap-3 overflow-hidden rounded-md px-2.5 py-1.5 text-left font-mono text-[11.5px] transition-opacity duration-200 ease-out focus-visible:-outline-offset-2",
+                focus && !on && "opacity-45 hover:opacity-100"
+              )}
             >
               <span
                 aria-hidden
-                className="pa-bar absolute inset-y-0 left-0 rounded-[4px] transition-[opacity,box-shadow] duration-200 ease-[var(--ease-out)]"
+                className={cn(
+                  "pa-bar absolute inset-y-0 left-0 rounded-md bg-tangerine transition-opacity duration-200 ease-out",
+                  on && "ring-1 ring-tangerine/55 ring-inset"
+                )}
                 style={{
-                  width: `${share * 100}%`,
-                  background: ACCENT,
-                  opacity: on ? 0.34 : 0.09 + share * 0.1,
-                  boxShadow: on
-                    ? `inset 0 0 0 1px color-mix(in oklab, ${ACCENT} 55%, transparent)`
-                    : undefined,
+                  width: `${width * 100}%`,
+                  opacity: on ? 0.26 : 0.05 + width * 0.07,
                   ["--pa-delay" as string]: `${450 + i * 60}ms`,
                 }}
               />
               <span
                 aria-hidden
-                className="absolute inset-0 rounded-[4px] bg-ink/[0.05] opacity-0 transition-opacity duration-150 ease-[var(--ease-out)] group-hover:opacity-100"
+                className="absolute inset-0 rounded-md bg-ink/5 opacity-0 transition-opacity duration-150 ease-out group-hover:opacity-100"
               />
               <span
-                className={`relative min-w-0 truncate font-mono ${
-                  on ? "text-ink" : "text-ink/85"
-                }`}
+                className={cn(
+                  "relative min-w-0 truncate",
+                  on ? "text-ink" : "text-ink/75"
+                )}
               >
                 {label}
               </span>
-              <span className="relative flex shrink-0 items-baseline gap-2 font-mono text-[11px] tabular-nums">
-                {/* the share only earns its space once you ask for it */}
+              <span className="relative flex shrink-0 items-center gap-2 tabular-nums">
                 <span
-                  className={`text-ink/40 transition-opacity duration-150 ease-[var(--ease-out)] ${
+                  className={cn(
+                    "text-ink/40 transition-opacity duration-150 ease-out",
                     on ? "opacity-100" : "opacity-0 group-hover:opacity-100"
-                  }`}
+                  )}
                 >
-                  {(shares[i].of * 100).toFixed(1)}%
+                  {(of * 100).toFixed(1)}%
                 </span>
-                <span className={on ? "text-ink" : "text-ink/60"}>{hits}</span>
+                <span className={on ? "text-ink" : "text-ink/55"}>{hits}</span>
               </span>
             </button>
           );
@@ -1098,37 +889,21 @@ function BarPanel({
   );
 }
 
-function LivePip() {
-  return (
-    <span className="relative flex h-1.5 w-1.5 shrink-0">
-      <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-powder opacity-60" />
-      <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-powder" />
-    </span>
-  );
-}
-
-/* Drawn rather than a glyph, so the arrow keeps the same stroke system
-   as the rest of the panel. The comparison window is named once, in the
-   chart legend, so it isn't repeated on all three cells. */
 function Delta({ value }: { value: number }) {
   const up = value >= 0;
+  const Arrow = up ? ArrowUp : ArrowDown;
   return (
-    <span
-      className={`inline-flex items-center gap-1.5 font-mono text-[10px] leading-none tabular-nums ${
-        up ? "text-powder/85" : "text-ink/50"
-      }`}
-    >
-      <svg
-        width="7"
-        height="7"
-        viewBox="0 0 12 12"
-        fill="currentColor"
-        aria-hidden
-        style={up ? undefined : { transform: "rotate(180deg)" }}
+    <span className="flex items-center gap-2 text-[11.5px]">
+      <span
+        className={cn(
+          "inline-flex items-center gap-0.5 rounded-full px-1.5 py-0.5 font-medium tabular-nums",
+          up ? "bg-powder/10 text-powder" : "bg-ink/6 text-ink/55"
+        )}
       >
-        <path d="M6 2.2 10.4 9.2H1.6z" />
-      </svg>
-      {Math.abs(value).toFixed(1)}%
+        <Arrow {...ICON} size={11} strokeWidth={2.25} />
+        {Math.abs(value).toFixed(1)}%
+      </span>
+      <span className="text-ink/35">vs previous</span>
     </span>
   );
 }

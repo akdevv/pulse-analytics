@@ -1,23 +1,21 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useRef, useState } from "react";
-import { ACCENT, ACCENT_SOFT, DISPLAY } from "./tokens";
+import { ArrowRight, Check, Copy, Hash } from "lucide-react";
+import { useEffect, useId, useRef, useState } from "react";
+import { siGithub } from "simple-icons";
+import { cn } from "@/lib/utils";
 
-/* ── Reveal — scroll-in with stagger. Reduced motion is handled in
-   the stylesheet, which collapses the transition for everyone. ── */
 export function Reveal({
   children,
   delay = 0,
-  className = "",
+  className,
   as: Tag = "div",
-  style,
 }: {
   children: React.ReactNode;
   delay?: number;
   className?: string;
   as?: React.ElementType;
-  style?: React.CSSProperties;
 }) {
   const ref = useRef<HTMLElement>(null);
   const [shown, setShown] = useState(false);
@@ -42,19 +40,18 @@ export function Reveal({
     <Tag
       ref={ref}
       data-shown={shown}
-      className={`pa-reveal ${className}`}
-      style={{ ...style, ["--pa-delay" as string]: `${delay}ms` }}
+      className={cn("pa-reveal", className)}
+      style={{ "--pa-delay": `${delay}ms` } as React.CSSProperties}
     >
       {children}
     </Tag>
   );
 }
 
-/* ── Buttons ───────────────────────────────────────────────── */
 export function PrimaryButton({
   href,
   children,
-  className = "",
+  className,
 }: {
   href: string;
   children: React.ReactNode;
@@ -63,15 +60,18 @@ export function PrimaryButton({
   return (
     <Link
       href={href}
-      className={`pa-btn group inline-flex items-center gap-2 rounded-full px-6 py-3 text-[14px] font-medium text-charcoal ${className}`}
-      style={{
-        background: `linear-gradient(180deg, ${ACCENT_SOFT}, ${ACCENT})`,
-        boxShadow:
-          "0 1px 0 0 rgba(229,227,210,0.35) inset, 0 8px 24px -8px var(--pa-accent-glow)",
-      }}
+      className={cn(
+        "pa-btn group inline-flex items-center gap-2 rounded-full bg-linear-to-b from-tangerine-soft to-tangerine px-6 py-3 text-[14px] font-medium text-charcoal shadow-glow",
+        className
+      )}
     >
       {children}
-      <Arrow />
+      <ArrowRight
+        aria-hidden
+        size={14}
+        strokeWidth={2.5}
+        className="relative z-10 transition-transform duration-200 ease-out group-hover:translate-x-0.5"
+      />
     </Link>
   );
 }
@@ -79,7 +79,7 @@ export function PrimaryButton({
 export function GhostButton({
   href,
   children,
-  className = "",
+  className,
   external = false,
 }: {
   href: string;
@@ -90,133 +90,140 @@ export function GhostButton({
   return (
     <Link
       href={href}
-      {...(external ? { target: "_blank", rel: "noreferrer" } : {})}
-      className={`group inline-flex items-center gap-2 rounded-full border border-ink/12 bg-ink/[0.02] px-6 py-3 text-[14px] text-ink/75 transition-[color,border-color,background-color,transform] duration-150 ease-[var(--ease-out)] hover:border-ink/25 hover:bg-ink/[0.04] hover:text-ink active:scale-[0.97] ${className}`}
+      {...(external && { target: "_blank", rel: "noreferrer" })}
+      className={cn(
+        "inline-flex items-center gap-2 rounded-full border border-ink/12 bg-ink/2 px-6 py-3 text-[14px] text-ink/75 transition-[color,border-color,background-color,transform] duration-150 ease-out hover:border-ink/25 hover:bg-ink/4 hover:text-ink active:scale-[0.97]",
+        className
+      )}
     >
       {children}
     </Link>
   );
 }
 
-export function Arrow({ size = 14 }: { size?: number }) {
+// Same mark as app/icon.svg; keep the two in sync.
+export function PulseLogo({ size = 28 }: { size?: number }) {
+  const id = useId();
+  return (
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 32 32"
+      aria-hidden
+      className="shrink-0 drop-shadow-[0_6px_16px_var(--pa-accent-glow)]"
+    >
+      <defs>
+        <linearGradient id={`${id}f`} x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stopColor="var(--color-tangerine-soft)" />
+          <stop offset="1" stopColor="var(--color-tangerine)" />
+        </linearGradient>
+        <clipPath id={`${id}c`}>
+          <rect width="32" height="32" rx="10.3" />
+        </clipPath>
+      </defs>
+      <g clipPath={`url(#${id}c)`}>
+        <rect width="32" height="32" fill="var(--color-ink)" fillOpacity=".4" />
+        <rect y="1" width="32" height="32" fill={`url(#${id}f)`} />
+      </g>
+      <g
+        transform="translate(6.72 6.72) scale(1.16)"
+        fill="var(--color-charcoal)"
+      >
+        <path
+          d="M2 12 L5 7 L8 9 L11 4 L14 6"
+          fill="none"
+          stroke="var(--color-charcoal)"
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+        <circle cx="14" cy="6" r="1.6" />
+      </g>
+    </svg>
+  );
+}
+
+export function SectionHeading({
+  label,
+  title,
+  muted,
+  lead,
+}: {
+  label: string;
+  title: string;
+  muted?: string;
+  lead?: React.ReactNode;
+}) {
+  return (
+    <header className="mb-16 md:mb-24">
+      <div className="mb-7 flex items-center gap-2">
+        <Hash
+          aria-hidden
+          size={14}
+          strokeWidth={2}
+          className="shrink-0 text-tangerine"
+        />
+        <span className="text-[13.5px] font-medium text-ink/80">{label}</span>
+        <span aria-hidden className="ml-3 h-px flex-1 bg-ink/10" />
+      </div>
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,7fr)_minmax(0,5fr)] lg:items-baseline-last lg:gap-14">
+        <h2 className="font-display text-[38px] leading-[1.02] font-semibold tracking-[-0.035em] text-balance text-ink sm:text-[48px] lg:text-[58px]">
+          {title}
+          {muted && <span className="block text-ink/35">{muted}</span>}
+        </h2>
+        {lead && (
+          <p className="max-w-md text-[15.5px] leading-relaxed text-pretty text-ink/60">
+            {lead}
+          </p>
+        )}
+      </div>
+    </header>
+  );
+}
+
+export function GitHubIcon({ size = 15 }: { size?: number }) {
   return (
     <svg
       width={size}
       height={size}
       viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2.5"
-      strokeLinecap="round"
-      className="relative z-10 transition-transform duration-200 ease-[var(--ease-out)] group-hover:translate-x-0.5"
+      fill="currentColor"
+      aria-hidden
     >
-      <path d="M5 12h14M13 6l6 6-6 6" />
+      <path d={siGithub.path} />
     </svg>
   );
 }
 
-/* ── Counters ──────────────────────────────────────────────── */
-export function AnimatedCounter({
-  end,
-  suffix = "",
-  duration = 1600,
-}: {
-  end: number;
-  suffix?: string;
-  duration?: number;
-}) {
-  const [count, setCount] = useState(0);
-  const ref = useRef<HTMLSpanElement>(null);
-  const started = useRef(false);
+export function CopyCommand({ command }: { command: string }) {
+  const [copied, setCopied] = useState(false);
 
   useEffect(() => {
-    const node = ref.current;
-    if (!node) return;
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        if (entry.isIntersecting && !started.current) {
-          started.current = true;
-          if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
-            setCount(end);
-            return;
-          }
-          const start = performance.now();
-          const tick = (now: number) => {
-            const progress = Math.min((now - start) / duration, 1);
-            const ease = 1 - Math.pow(1 - progress, 4);
-            setCount(Math.floor(ease * end));
-            if (progress < 1) requestAnimationFrame(tick);
-          };
-          requestAnimationFrame(tick);
+    if (!copied) return;
+    const t = setTimeout(() => setCopied(false), 1600);
+    return () => clearTimeout(t);
+  }, [copied]);
+
+  return (
+    <div className="inline-flex max-w-full items-center rounded-xl border border-ink/10 bg-charcoal/60 p-1 pl-4 shadow-edge backdrop-blur-sm">
+      <code className="truncate font-mono text-[12.5px] text-ink/80 sm:text-[13px]">
+        {command}
+      </code>
+      <span aria-hidden className="mx-3 h-5 w-px shrink-0 bg-ink/10" />
+      <button
+        type="button"
+        onClick={() =>
+          navigator.clipboard?.writeText(command).then(() => setCopied(true))
         }
-      },
-      { threshold: 0.3 }
-    );
-    observer.observe(node);
-    return () => observer.disconnect();
-  }, [end, duration]);
-
-  return (
-    <span ref={ref} className="font-mono tabular-nums">
-      {count.toLocaleString()}
-      {suffix}
-    </span>
-  );
-}
-
-/* ── Brand mark ────────────────────────────────────────────── */
-export function PulseLogo({ size = 28 }: { size?: number }) {
-  return (
-    <div
-      className="relative flex shrink-0 items-center justify-center rounded-[9px]"
-      style={{
-        width: size,
-        height: size,
-        background: `linear-gradient(180deg, ${ACCENT_SOFT}, ${ACCENT})`,
-        boxShadow:
-          "0 1px 0 0 rgba(229,227,210,0.4) inset, 0 6px 16px -6px var(--pa-accent-glow)",
-      }}
-    >
-      <svg
-        width={size * 0.58}
-        height={size * 0.58}
-        viewBox="0 0 16 16"
-        fill="none"
-        aria-hidden
+        aria-label={copied ? "Copied" : `Copy "${command}"`}
+        className="grid size-8 shrink-0 cursor-pointer place-items-center rounded-lg text-ink/55 transition-colors duration-150 ease-out hover:bg-ink/7 hover:text-ink"
       >
-        <path
-          d="M2 12 L5 7 L8 9 L11 4 L14 6"
-          stroke="oklch(0.2002 0 0)"
-          strokeWidth="2"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        />
-        <circle cx="14" cy="6" r="1.6" fill="oklch(0.2002 0 0)" />
-      </svg>
+        {copied ? (
+          <Check aria-hidden size={15} className="text-powder" />
+        ) : (
+          <Copy aria-hidden size={15} />
+        )}
+      </button>
     </div>
-  );
-}
-
-/* ── Section primitives ────────────────────────────────────── */
-export function SectionHeading({
-  line1,
-  line2,
-}: {
-  line1: string;
-  line2?: string;
-}) {
-  return (
-    <h2
-      className="max-w-3xl text-[40px] leading-[0.96] tracking-[-0.03em] text-ink sm:text-[52px] md:text-[68px]"
-      style={{ ...DISPLAY, fontWeight: 600 }}
-    >
-      {line1}
-      {line2 && (
-        <>
-          <br />
-          <span className="text-ink/55">{line2}</span>
-        </>
-      )}
-    </h2>
   );
 }

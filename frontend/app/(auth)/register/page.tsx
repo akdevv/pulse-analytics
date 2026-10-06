@@ -14,7 +14,6 @@ import {
   AuthSubmit,
 } from "@/components/auth/auth-ui";
 import { PasswordInput } from "@/components/common/password-input";
-import { POWDER } from "@/components/landing/tokens";
 import {
   Form,
   FormControl,
@@ -139,19 +138,11 @@ function PasswordRules({ value }: { value: string }) {
         return (
           <li
             key={label}
-            className="inline-flex items-center gap-1.5 rounded-md border px-2 py-[3px] text-[11px] leading-none transition-colors duration-150 ease-[var(--ease-out)]"
-            style={
+            className={`inline-flex items-center gap-1.5 rounded-md border px-2 py-[3px] text-[11px] leading-none transition-colors duration-150 ease-out ${
               met
-                ? {
-                    borderColor: `color-mix(in oklab, ${POWDER} 30%, transparent)`,
-                    background: `color-mix(in oklab, ${POWDER} 9%, transparent)`,
-                    color: POWDER,
-                  }
-                : {
-                    borderColor: "rgba(229,227,210,0.1)",
-                    color: "rgba(229,227,210,0.38)",
-                  }
-            }
+                ? "border-powder/30 bg-powder/9 text-powder"
+                : "border-ink/10 text-ink/38"
+            }`}
           >
             {met ? (
               <svg

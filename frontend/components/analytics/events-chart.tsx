@@ -131,7 +131,7 @@ export function EventsChart({
       ) : isLoading ? (
         <div className="flex flex-col gap-[3px]">
           {Array.from({ length: 4 }).map((_, i) => (
-            <Skeleton key={i} className="h-[30px] rounded-[4px]" />
+            <Skeleton key={i} className="h-[35px] rounded-[3px]" />
           ))}
         </div>
       ) : !data?.length ? (

@@ -55,8 +55,8 @@ export default function DashboardLayout({
         <AppSidebar />
         <div className="flex min-w-0 flex-1 flex-col border-l border-[var(--seam)] bg-background">
           <SiteHeader />
-          <main className="hide-scrollbar flex flex-1 flex-col overflow-y-auto">
-            {children}
+          <main className="hide-scrollbar flex-1 overflow-y-auto">
+            <div className="page-col flex min-h-full flex-col">{children}</div>
           </main>
         </div>
       </div>

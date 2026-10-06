@@ -1,5 +1,4 @@
 import { ramp, ridgePath } from "@/components/auth/ridge-silhouette";
-import { ACCENT, ACCENT_SOFT, DISPLAY } from "@/components/landing/tokens";
 
 /* ── The panel ─────────────────────────────────────────────────
    A range of density curves stacked and offset, each occluding the one
@@ -32,7 +31,7 @@ const FIGURES = [
   { v: "0.00%", k: "data loss" },
 ];
 
-export const AUTH_SKY = `linear-gradient(176deg, ${ACCENT_SOFT} 0%, ${ACCENT} 64%)`;
+export const AUTH_SKY = `linear-gradient(176deg, var(--color-tangerine-soft) 0%, var(--color-tangerine) 64%)`;
 
 const GRAIN =
   "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23n)'/%3E%3C/svg%3E\")";
@@ -70,8 +69,7 @@ function Figures({ size = "lg" }: { size?: "lg" | "sm" }) {
       {FIGURES.map(({ v, k }) => (
         <div key={k}>
           <div
-            className={`leading-none text-charcoal tabular-nums ${big ? "text-[22px]" : "text-[17px]"}`}
-            style={{ ...DISPLAY, fontWeight: 700, letterSpacing: "-0.03em" }}
+            className={`leading-none text-charcoal tabular-nums ${big ? "text-[22px]" : "text-[17px]"} font-display font-bold tracking-[-0.03em]`}
           >
             {v}
           </div>
@@ -97,10 +95,7 @@ export function AuthPanel() {
       <Grain />
 
       <div className="relative flex flex-1 flex-col justify-end p-14 pb-0 xl:p-16 xl:pb-0">
-        <h2
-          className="max-w-[11ch] pb-12 text-[clamp(2.6rem,4.4vw,4.8rem)] leading-[0.89] text-charcoal"
-          style={{ ...DISPLAY, fontWeight: 700, letterSpacing: "-0.052em" }}
-        >
+        <h2 className="max-w-[11ch] pb-12 font-display text-[clamp(2.6rem,4.4vw,4.8rem)] leading-[0.89] font-bold tracking-[-0.052em] text-charcoal">
           Ten thousand events a second.
         </h2>
       </div>

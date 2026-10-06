@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { cn } from "@/lib/utils";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 
@@ -51,6 +52,12 @@ function Arrow({ back }: { back?: boolean }) {
   );
 }
 
+const PAGER = "group flex max-w-[46%] flex-col gap-1.5";
+const PAGER_LABEL =
+  "inline-flex items-center gap-1.5 font-mono text-[10px] tracking-[0.18em] text-ink/55 uppercase";
+const PAGER_TITLE =
+  "text-[14.5px] text-ink/72 transition-colors duration-150 ease-out group-hover:text-ink";
+
 export default async function DocPage({
   params,
 }: {
@@ -66,25 +73,25 @@ export default async function DocPage({
 
   return (
     <div className="flex min-w-0 flex-1">
-      {/* Keyed on the slug so the entrance replays per page, once, and
-          stays out of the way of everything else on the screen. */}
       <main
         key={slug}
-        className="docs-enter min-w-0 flex-1 py-12 pb-28 lg:pl-10 xl:pl-12"
+        className="pa-lift min-w-0 flex-1 py-12 pb-28 lg:pl-10 xl:pl-12"
       >
         <div className="max-w-[68ch]">
-          <h1 className="docs-title">{doc.title}</h1>
+          <h1 className="mb-7 font-display text-[clamp(2.15rem,1.7rem+1.5vw,2.75rem)] leading-[1.05] font-medium tracking-[-0.034em] text-ink">
+            {doc.title}
+          </h1>
           <Markdown>{content}</Markdown>
 
           {(prev || next) && (
             <nav className="mt-20 flex items-start justify-between gap-8 border-t border-ink/8 pt-8">
               {prev ? (
-                <Link href={`/docs/${prev.slug}`} className="docs-pager group">
-                  <span className="docs-pager-label">
+                <Link href={`/docs/${prev.slug}`} className={PAGER}>
+                  <span className={PAGER_LABEL}>
                     <Arrow back />
                     Previous
                   </span>
-                  <span className="docs-pager-title">{prev.title}</span>
+                  <span className={PAGER_TITLE}>{prev.title}</span>
                 </Link>
               ) : (
                 <span />
@@ -92,13 +99,13 @@ export default async function DocPage({
               {next && (
                 <Link
                   href={`/docs/${next.slug}`}
-                  className="docs-pager group items-end text-right"
+                  className={cn(PAGER, "items-end text-right")}
                 >
-                  <span className="docs-pager-label">
+                  <span className={PAGER_LABEL}>
                     Next
                     <Arrow />
                   </span>
-                  <span className="docs-pager-title">{next.title}</span>
+                  <span className={PAGER_TITLE}>{next.title}</span>
                 </Link>
               )}
             </nav>

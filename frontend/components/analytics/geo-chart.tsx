@@ -30,7 +30,8 @@ export function GeoChart({ data, isLoading, error }: Props) {
   return (
     <RankedList
       title="Countries"
-      unit="views"
+      label="Country"
+      unit="Views"
       tone="var(--chart-3)"
       mono={false}
       rows={data?.map((d) => ({

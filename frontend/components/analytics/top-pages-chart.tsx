@@ -13,7 +13,8 @@ export function TopPagesChart({ data, isLoading, error }: Props) {
   return (
     <RankedList
       title="Top pages"
-      unit="views"
+      label="Page"
+      unit="Views"
       tone="var(--chart-1)"
       rows={data?.map((d) => ({ label: d.page, value: d.pageviews }))}
       isLoading={isLoading}

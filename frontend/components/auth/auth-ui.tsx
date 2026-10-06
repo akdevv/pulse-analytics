@@ -1,7 +1,5 @@
 import Link from "next/link";
 
-import { ACCENT, DISPLAY } from "@/components/landing/tokens";
-
 /** Shared by both fields on both pages, so they cannot drift apart.
  *
  *  Three things here are load-bearing rather than decorative.
@@ -44,10 +42,7 @@ export function AuthCard({
   return (
     <div className="w-full">
       <div className="pa-lift mb-9" style={{ ["--pa-delay" as string]: "0ms" }}>
-        <h1
-          className="text-[32px] leading-[1.04] text-ink"
-          style={{ ...DISPLAY, fontWeight: 600, letterSpacing: "-0.035em" }}
-        >
+        <h1 className="font-display text-[32px] leading-[1.04] font-semibold tracking-[-0.035em] text-ink">
           {title}
         </h1>
         <p className="mt-2.5 max-w-[34ch] text-[14px] leading-relaxed text-ink/45">
@@ -116,8 +111,7 @@ export function AuthSubmit({
       type="submit"
       disabled={loading}
       aria-busy={loading}
-      className="pa-btn mt-4 flex h-11 w-full cursor-pointer items-center justify-center gap-2 rounded-lg text-[15px] font-semibold text-charcoal hover:brightness-[1.05] disabled:cursor-not-allowed disabled:opacity-60"
-      style={{ background: ACCENT }}
+      className="pa-btn mt-4 flex h-11 w-full cursor-pointer items-center justify-center gap-2 rounded-lg bg-tangerine text-[15px] font-semibold text-charcoal hover:brightness-[1.05] disabled:cursor-not-allowed disabled:opacity-60"
     >
       {loading && (
         <span

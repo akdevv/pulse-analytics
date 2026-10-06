@@ -29,7 +29,7 @@ function Cell({
   pip?: boolean;
 }) {
   return (
-    <div className="panel px-5 py-4">
+    <div className="panel px-5 py-5">
       <p className="meta flex items-center gap-2">
         {pip && (
           <span className="relative flex size-1.5 shrink-0">
@@ -39,7 +39,7 @@ function Cell({
         )}
         {label}
       </p>
-      <div className="mt-3">{children}</div>
+      <div className="mt-3.5">{children}</div>
     </div>
   );
 }
@@ -71,10 +71,10 @@ export function OverviewCards({
       {STATS.map(({ key, label }, i) => (
         <Cell key={key} label={label}>
           {isLoading ? (
-            <Skeleton className="h-[30px] w-24" />
+            <Skeleton className="h-[34px] w-28" />
           ) : (
             <p
-              className="figure pa-fade-in text-[30px]"
+              className="figure pa-fade-in text-[34px]"
               style={{ ["--pa-delay" as string]: `${i * 70}ms` }}
             >
               {formatCompact(data?.[key] ?? 0)}
@@ -85,9 +85,9 @@ export function OverviewCards({
 
       <Cell label="Active now" pip>
         {activeLoading ? (
-          <Skeleton className="h-[30px] w-16" />
+          <Skeleton className="h-[34px] w-20" />
         ) : (
-          <p className="figure pa-fade-in text-[30px] text-secondary">
+          <p className="figure pa-fade-in text-[34px] text-secondary">
             {(activeSessions ?? 0).toLocaleString()}
           </p>
         )}

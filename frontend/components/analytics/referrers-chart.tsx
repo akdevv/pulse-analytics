@@ -13,7 +13,8 @@ export function ReferrersChart({ data, isLoading, error }: Props) {
   return (
     <RankedList
       title="Referrers"
-      unit="views"
+      label="Source"
+      unit="Views"
       tone="var(--chart-2)"
       rows={data?.map((d) => ({
         // An empty source is someone who typed the address or came from a

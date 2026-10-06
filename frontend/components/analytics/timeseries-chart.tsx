@@ -16,12 +16,12 @@ const chartConfig: ChartConfig = {
   sessions: { label: "Sessions", color: "var(--chart-2)" },
 };
 
+// Sans, not mono: the axis is read as a scale, not as a value to copy, and
+// mono at 10px on a dark ground was the least legible text on the page.
 const TICK = {
-  fontSize: 10,
-  fontFamily: "var(--font-mono)",
-  letterSpacing: "0.08em",
+  fontSize: 11,
   fill: "currentColor",
-  fillOpacity: 0.45,
+  fillOpacity: 0.5,
 };
 
 interface Props {
@@ -49,11 +49,17 @@ function Legend() {
 }
 
 export function TimeseriesChart({ data, isLoading, error, interval }: Props) {
+  const spansDays =
+    data && data.length > 1
+      ? new Date(data[data.length - 1].time).getDate() !==
+        new Date(data[0].time).getDate()
+      : false;
+
   const chartData = data?.map((d) => {
     const at = new Date(d.time);
     return {
       time:
-        interval === "hour"
+        interval === "hour" && !spansDays
           ? at.toLocaleTimeString("en", { hour: "numeric", hour12: true })
           : at.toLocaleDateString("en", { month: "short", day: "numeric" }),
       // The axis is short; the tooltip can afford to say which day too.
@@ -74,19 +80,19 @@ export function TimeseriesChart({ data, isLoading, error, interval }: Props) {
         <Legend />
       </div>
 
-      <div className="px-5 py-4">
+      <div className="px-4 py-5 pr-6">
         {error ? (
           <p className="py-16 text-center text-sm text-destructive">
             {error.message}
           </p>
         ) : isLoading ? (
-          <Skeleton className="h-[240px]" />
+          <Skeleton className="h-[380px]" />
         ) : !chartData?.length ? (
           <p className="py-24 text-center text-sm text-foreground/45">
             No traffic in this range.
           </p>
         ) : (
-          <ChartContainer config={chartConfig} className="h-[240px] w-full">
+          <ChartContainer config={chartConfig} className="h-[380px] w-full">
             <AreaChart
               data={chartData}
               margin={{ top: 6, right: 6, left: 0, bottom: 0 }}
@@ -96,23 +102,11 @@ export function TimeseriesChart({ data, isLoading, error, interval }: Props) {
                   <stop
                     offset="0%"
                     stopColor="var(--chart-1)"
-                    stopOpacity={0.22}
+                    stopOpacity={0.16}
                   />
                   <stop
                     offset="100%"
                     stopColor="var(--chart-1)"
-                    stopOpacity={0}
-                  />
-                </linearGradient>
-                <linearGradient id="sessGrad" x1="0" y1="0" x2="0" y2="1">
-                  <stop
-                    offset="0%"
-                    stopColor="var(--chart-2)"
-                    stopOpacity={0.14}
-                  />
-                  <stop
-                    offset="100%"
-                    stopColor="var(--chart-2)"
                     stopOpacity={0}
                   />
                 </linearGradient>
@@ -142,23 +136,22 @@ export function TimeseriesChart({ data, isLoading, error, interval }: Props) {
                 type="monotone"
                 dataKey="sessions"
                 stroke="var(--chart-2)"
-                strokeWidth={1.5}
-                strokeOpacity={0.75}
-                fill="url(#sessGrad)"
+                strokeWidth={1.25}
+                strokeOpacity={0.65}
+                fill="none"
                 dot={false}
                 activeDot={{ r: 3 }}
               />
-              {/* The lead series carries the accent's glow, so the two lines
-                  are told apart by weight and light rather than hue alone. */}
+              {/* Weight, not light: a glow on the stroke lit the fill under it
+                  and the whole plot read as a heat map. */}
               <Area
                 type="monotone"
                 dataKey="pageviews"
                 stroke="var(--chart-1)"
-                strokeWidth={2}
+                strokeWidth={1.75}
                 fill="url(#pvGrad)"
                 dot={false}
-                activeDot={{ r: 4 }}
-                style={{ filter: "drop-shadow(0 0 6px var(--pa-accent-glow))" }}
+                activeDot={{ r: 3.5 }}
               />
             </AreaChart>
           </ChartContainer>
