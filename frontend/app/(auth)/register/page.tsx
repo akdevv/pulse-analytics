@@ -9,6 +9,7 @@ import * as z from "zod";
 import {
   AUTH_INPUT,
   AUTH_LABEL,
+  AUTH_MESSAGE,
   AuthAltLink,
   AuthCard,
   AuthSubmit,
@@ -132,7 +133,7 @@ const PASSWORD_RULES: { label: string; test: (v: string) => boolean }[] = [
 function PasswordRules({ value }: { value: string }) {
   const { formDescriptionId } = useFormField();
   return (
-    <ul id={formDescriptionId} className="mt-2.5 flex flex-wrap gap-1.5">
+    <ul id={formDescriptionId} className="mt-1 flex flex-wrap gap-1.5">
       {PASSWORD_RULES.map(({ label, test }) => {
         const met = value.length > 0 && test(value);
         return (
@@ -141,7 +142,7 @@ function PasswordRules({ value }: { value: string }) {
             className={`inline-flex items-center gap-1.5 rounded-md border px-2 py-[3px] text-[11px] leading-none transition-colors duration-150 ease-out ${
               met
                 ? "border-powder/30 bg-powder/9 text-powder"
-                : "border-ink/10 text-ink/38"
+                : "border-ink/12 text-ink/50"
             }`}
           >
             {met ? (
@@ -217,12 +218,12 @@ export default function Register() {
       }
     >
       <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5">
           <FormField
             control={form.control}
             name="name"
             render={({ field }) => (
-              <FormItem className="space-y-1">
+              <FormItem className="gap-1.5">
                 <FormLabel className={AUTH_LABEL}>Name</FormLabel>
                 <FormControl>
                   <Input
@@ -233,7 +234,7 @@ export default function Register() {
                     {...field}
                   />
                 </FormControl>
-                <FormMessage className="text-[12px]" />
+                <FormMessage className={AUTH_MESSAGE} />
               </FormItem>
             )}
           />
@@ -242,7 +243,7 @@ export default function Register() {
             control={form.control}
             name="email"
             render={({ field }) => (
-              <FormItem className="space-y-1">
+              <FormItem className="gap-1.5">
                 <FormLabel className={AUTH_LABEL}>Email</FormLabel>
                 <FormControl>
                   <Input
@@ -259,10 +260,10 @@ export default function Register() {
                 </FormControl>
                 {/* FormDescription lands in aria-describedby; the raw <p>
                     this replaces was never announced. */}
-                <FormDescription className="text-[11px] leading-snug text-ink/35">
+                <FormDescription className="text-[12px] leading-snug text-ink/45">
                   Personal email only. Gmail, Outlook, iCloud and the like.
                 </FormDescription>
-                <FormMessage className="text-[12px]" />
+                <FormMessage className={AUTH_MESSAGE} />
               </FormItem>
             )}
           />
@@ -271,7 +272,7 @@ export default function Register() {
             control={form.control}
             name="password"
             render={({ field }) => (
-              <FormItem className="space-y-1">
+              <FormItem className="gap-1.5">
                 <FormLabel className={AUTH_LABEL}>Password</FormLabel>
                 <FormControl>
                   <PasswordInput
@@ -283,7 +284,7 @@ export default function Register() {
                   />
                 </FormControl>
                 <PasswordRules value={password} />
-                <FormMessage className="text-[12px]" />
+                <FormMessage className={AUTH_MESSAGE} />
               </FormItem>
             )}
           />
@@ -292,7 +293,7 @@ export default function Register() {
             control={form.control}
             name="confirmPassword"
             render={({ field }) => (
-              <FormItem className="space-y-1">
+              <FormItem className="gap-1.5">
                 <FormLabel className={AUTH_LABEL}>Confirm password</FormLabel>
                 <FormControl>
                   <PasswordInput
@@ -303,7 +304,7 @@ export default function Register() {
                     {...field}
                   />
                 </FormControl>
-                <FormMessage className="text-[12px]" />
+                <FormMessage className={AUTH_MESSAGE} />
               </FormItem>
             )}
           />

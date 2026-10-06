@@ -1,6 +1,6 @@
 import Link from "next/link";
 
-/** Shared by both fields on both pages, so they cannot drift apart.
+/** Shared by every field on both pages, so they cannot drift apart.
  *
  *  Three things here are load-bearing rather than decorative.
  *  `dark:bg-*` is required because the base Input ships `dark:bg-input/30`
@@ -8,23 +8,23 @@ import Link from "next/link";
  *  grey default outranks this fill on specificity and the tint never
  *  renders. The font size is set only from `md` up, so the base
  *  `text-base` survives on mobile and Safari does not zoom the page on
- *  focus. And the placeholder sits at /35 rather than /25, which is the
- *  difference between 5.5:1 and failing the 4.5:1 floor. */
+ *  focus. And the placeholder sits at /40, which clears the 4.5:1 floor
+ *  over the field fill. */
 export const AUTH_INPUT = [
-  "h-11 rounded-none border-0 border-b px-0 shadow-none md:text-[15px]",
-  "border-ink/18 bg-transparent dark:bg-transparent text-ink",
-  /* /28 would fail the 4.5:1 floor over this ground; /35 clears it */
-  "placeholder:text-ink/35",
-  "transition-[border-color,box-shadow] duration-150 ease-[var(--ease-out)]",
-  "hover:border-ink/32",
-  /* the ring is meaningless on a borderless field, so focus doubles the
-     rule instead, drawn as a shadow so nothing shifts by a pixel */
-  "focus-visible:ring-0 focus-visible:border-ring",
-  "focus-visible:shadow-[0_1px_0_0_var(--ring)]",
+  "h-11 rounded-lg border px-3.5 shadow-none md:text-[15px]",
+  "border-ink/10 bg-ink/[0.035] dark:bg-ink/[0.035] text-ink",
+  "placeholder:text-ink/40",
+  "transition-[border-color,background-color,box-shadow] duration-150 ease-[var(--ease-out)]",
+  "hover:border-ink/20",
+  "focus-visible:border-ring focus-visible:bg-ink/[0.05] dark:focus-visible:bg-ink/[0.05]",
+  "focus-visible:ring-[3px] focus-visible:ring-ring/20",
+  "aria-invalid:border-destructive/70 aria-invalid:focus-visible:ring-destructive/20 dark:aria-invalid:ring-destructive/20",
 ].join(" ");
 
 export const AUTH_LABEL =
-  "font-mono text-[10px] tracking-[0.18em] uppercase text-ink/40";
+  "text-[13px] font-medium text-ink/70 data-[error=true]:text-destructive";
+
+export const AUTH_MESSAGE = "text-[12.5px] leading-snug";
 
 export function AuthCard({
   title,
@@ -41,11 +41,11 @@ export function AuthCard({
 }) {
   return (
     <div className="w-full">
-      <div className="pa-lift mb-9" style={{ ["--pa-delay" as string]: "0ms" }}>
-        <h1 className="font-display text-[32px] leading-[1.04] font-semibold tracking-[-0.035em] text-ink">
+      <div className="pa-lift mb-8" style={{ ["--pa-delay" as string]: "0ms" }}>
+        <h1 className="font-display text-[30px] leading-[1.08] font-semibold tracking-[-0.035em] text-ink sm:text-[34px]">
           {title}
         </h1>
-        <p className="mt-2.5 max-w-[34ch] text-[14px] leading-relaxed text-ink/45">
+        <p className="mt-2.5 max-w-[36ch] text-[14.5px] leading-relaxed text-pretty text-ink/55">
           {subtitle}
         </p>
       </div>
@@ -54,7 +54,7 @@ export function AuthCard({
       {error && (
         <div
           role="alert"
-          className="mb-6 flex items-start gap-2.5 rounded-xl px-3.5 py-3 text-[13px] leading-snug text-destructive"
+          className="pa-lift mb-6 flex items-start gap-2.5 rounded-lg px-3.5 py-3 text-[13px] leading-snug text-destructive"
           style={{
             background:
               "color-mix(in oklab, var(--destructive) 12%, transparent)",
@@ -85,7 +85,7 @@ export function AuthCard({
       </div>
 
       <div
-        className="pa-lift mt-8 border-t border-ink/8 pt-6 text-[13px] text-ink/45"
+        className="pa-lift mt-8 text-center text-[13.5px] text-ink/55"
         style={{ ["--pa-delay" as string]: "120ms" }}
       >
         {footer}
@@ -111,7 +111,7 @@ export function AuthSubmit({
       type="submit"
       disabled={loading}
       aria-busy={loading}
-      className="pa-btn mt-4 flex h-11 w-full cursor-pointer items-center justify-center gap-2 rounded-lg bg-tangerine text-[15px] font-semibold text-charcoal hover:brightness-[1.05] disabled:cursor-not-allowed disabled:opacity-60"
+      className="pa-btn group mt-2 flex h-11 w-full cursor-pointer items-center justify-center gap-2 rounded-lg bg-tangerine text-[15px] font-semibold text-charcoal shadow-[inset_0_1px_0_0_rgba(255,255,255,0.25),0_8px_20px_-10px_var(--pa-accent-glow)] hover:brightness-[1.05] focus-visible:ring-[3px] focus-visible:ring-ring/40 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-60"
     >
       {loading && (
         <span
@@ -120,6 +120,22 @@ export function AuthSubmit({
         />
       )}
       <span className="relative z-10">{loading ? busy : idle}</span>
+      {!loading && (
+        <svg
+          width="15"
+          height="15"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2.25"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          className="relative z-10 transition-transform duration-150 ease-[var(--ease-out)] group-hover:translate-x-0.5"
+          aria-hidden
+        >
+          <path d="M5 12h14M13 6l6 6-6 6" />
+        </svg>
+      )}
     </button>
   );
 }
@@ -138,7 +154,7 @@ export function AuthAltLink({
       {prompt}{" "}
       <Link
         href={href}
-        className="font-medium text-ink/80 underline decoration-ink/20 underline-offset-4 transition-colors duration-150 ease-[var(--ease-out)] hover:text-ink hover:decoration-ink/50"
+        className="rounded-sm font-medium text-ink underline decoration-ink/25 underline-offset-4 transition-colors duration-150 ease-[var(--ease-out)] hover:decoration-ring focus-visible:ring-2 focus-visible:ring-ring/50 focus-visible:outline-none"
       >
         {label}
       </Link>

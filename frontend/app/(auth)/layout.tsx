@@ -19,7 +19,7 @@ export default function AuthLayout({
   return (
     <div className="dark grid min-h-dvh bg-charcoal lg:grid-cols-2">
       <div className="relative flex min-h-dvh flex-col lg:min-h-0">
-        <div className="mx-auto flex w-full max-w-86 flex-1 flex-col px-6 pt-9 pb-6 sm:pt-10">
+        <div className="mx-auto flex w-full max-w-[392px] flex-1 flex-col px-6 pt-9 pb-6 sm:pt-10">
           <header>
             <Link
               href="/"
