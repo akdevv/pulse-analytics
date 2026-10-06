@@ -9,6 +9,7 @@ import * as z from "zod";
 import {
   AUTH_INPUT,
   AUTH_LABEL,
+  AUTH_MESSAGE,
   AuthAltLink,
   AuthCard,
   AuthSubmit,
@@ -68,12 +69,12 @@ export default function Login() {
       }
     >
       <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-7">
+        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5">
           <FormField
             control={form.control}
             name="email"
             render={({ field }) => (
-              <FormItem className="space-y-1">
+              <FormItem className="gap-1.5">
                 <FormLabel className={AUTH_LABEL}>Email</FormLabel>
                 <FormControl>
                   {/* autoComplete was missing on every field, so password
@@ -90,7 +91,7 @@ export default function Login() {
                     {...field}
                   />
                 </FormControl>
-                <FormMessage className="text-[12px]" />
+                <FormMessage className={AUTH_MESSAGE} />
               </FormItem>
             )}
           />
@@ -99,7 +100,7 @@ export default function Login() {
             control={form.control}
             name="password"
             render={({ field }) => (
-              <FormItem className="space-y-1">
+              <FormItem className="gap-1.5">
                 <FormLabel className={AUTH_LABEL}>Password</FormLabel>
                 <FormControl>
                   <PasswordInput
@@ -110,7 +111,7 @@ export default function Login() {
                     {...field}
                   />
                 </FormControl>
-                <FormMessage className="text-[12px]" />
+                <FormMessage className={AUTH_MESSAGE} />
               </FormItem>
             )}
           />
