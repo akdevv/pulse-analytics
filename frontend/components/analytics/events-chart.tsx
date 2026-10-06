@@ -2,18 +2,13 @@
 
 import { useState } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
+import { formatCompact } from "@/lib/format";
 import { useEventProperties } from "@/hooks/useAnalytics";
 import type {
   EventStat,
   DateRangeParams,
   PropertyStat,
 } from "@/lib/types/analytics.types";
-
-function fmt(n: number): string {
-  if (n >= 1_000_000) return (n / 1_000_000).toFixed(1) + "M";
-  if (n >= 1_000) return (n / 1_000).toFixed(1) + "K";
-  return n.toLocaleString();
-}
 
 /** Rows arrive flat, ordered by key then count. Group them back per key so
     each property renders as its own small list of values. */
@@ -41,7 +36,7 @@ function PropertyBreakdown({
     name,
     dateRange
   );
-  const rows: PropertyStat[] = data?.data ?? [];
+  const rows: PropertyStat[] = data ?? [];
 
   if (error) {
     return (
@@ -93,7 +88,7 @@ function PropertyBreakdown({
                   {row.value === "" ? "(empty)" : row.value}
                 </span>
                 <span className="shrink-0 text-foreground/60 tabular-nums">
-                  {fmt(row.count)}
+                  {formatCompact(row.count)}
                 </span>
               </div>
             ))}
@@ -123,32 +118,28 @@ export function EventsChart({
   const max = data?.length ? Math.max(...data.map((d) => d.count), 1) : 1;
 
   return (
-    <div className="rounded-xl border border-border bg-card p-6">
-      <div className="mb-5 flex items-center justify-between">
-        <h2 className="text-sm font-semibold text-foreground">Custom Events</h2>
-        {data?.length ? (
-          <span className="text-xs text-muted-foreground">
-            {data.length} {data.length === 1 ? "event" : "events"}
-          </span>
-        ) : null}
+    <div className="panel flex flex-col px-5 py-4">
+      <div className="mb-3 flex shrink-0 items-baseline justify-between gap-3">
+        <span className="panel-title">Custom events</span>
+        <span className="meta">
+          {data?.length ? `${data.length} named` : "count · visitors"}
+        </span>
       </div>
 
       {error ? (
-        <p className="text-sm text-destructive">
-          Failed to load events: {error.message}
-        </p>
+        <p className="py-6 text-sm text-destructive">{error.message}</p>
       ) : isLoading ? (
-        <div className="space-y-3.5">
-          {Array.from({ length: 6 }).map((_, i) => (
-            <Skeleton key={i} className="h-8 w-full rounded-lg" />
+        <div className="flex flex-col gap-[3px]">
+          {Array.from({ length: 4 }).map((_, i) => (
+            <Skeleton key={i} className="h-[35px] rounded-[3px]" />
           ))}
         </div>
       ) : !data?.length ? (
-        <div className="flex h-32 flex-col items-center justify-center gap-1 px-4 text-center">
-          <p className="text-sm text-muted-foreground">
-            No custom events for this range
+        <div className="py-6">
+          <p className="text-sm text-foreground/45">
+            No custom events in this range.
           </p>
-          <p className="text-xs text-muted-foreground/70">
+          <p className="mt-1.5 text-xs text-foreground/35">
             Add{" "}
             <code className="font-mono">data-pulse-event=&quot;name&quot;</code>{" "}
             to a button, or call{" "}
@@ -156,8 +147,8 @@ export function EventsChart({
           </p>
         </div>
       ) : (
-        <div className="space-y-2.5">
-          {data.map((row, i) => {
+        <div className="flex flex-col gap-[3px]">
+          {data.map((row) => {
             const isOpen = expanded === row.eventName;
             return (
               <div key={row.eventName}>
@@ -165,38 +156,29 @@ export function EventsChart({
                   type="button"
                   onClick={() => setExpanded(isOpen ? null : row.eventName)}
                   aria-expanded={isOpen}
-                  className="flex w-full items-center gap-3 text-left"
+                  className="rank-row cursor-pointer"
+                  style={
+                    {
+                      "--share": row.count / max,
+                      "--bar": "var(--chart-1)",
+                    } as React.CSSProperties
+                  }
                 >
-                  <span className="w-5 shrink-0 text-right text-[11px] font-medium text-muted-foreground/40 tabular-nums">
-                    {i + 1}
+                  <span
+                    className="min-w-0 truncate font-mono text-foreground/85"
+                    title={row.eventName}
+                  >
+                    {row.eventName}
                   </span>
-                  <div className="min-w-0 flex-1">
-                    <div className="mb-1.5 flex items-center justify-between gap-3">
-                      <span
-                        className="truncate font-mono text-xs text-foreground/75"
-                        title={row.eventName}
-                      >
-                        {row.eventName}
-                      </span>
-                      <span className="shrink-0 text-xs text-foreground/80 tabular-nums">
-                        <span className="font-semibold">{fmt(row.count)}</span>
-                        <span className="ml-2 text-muted-foreground">
-                          {fmt(row.visitors)}{" "}
-                          {row.visitors === 1 ? "visitor" : "visitors"}
-                        </span>
-                      </span>
-                    </div>
-                    <div className="h-1 w-full overflow-hidden rounded-full bg-muted/60">
-                      <div
-                        className="h-full rounded-full transition-all duration-700 ease-out"
-                        style={{
-                          width: `${(row.count / max) * 100}%`,
-                          background:
-                            "linear-gradient(90deg, #ea580c 0%, #fb923c 100%)",
-                        }}
-                      />
-                    </div>
-                  </div>
+                  <span className="flex shrink-0 items-baseline gap-2 font-mono text-[11px] tabular-nums">
+                    <span className="rank-share text-foreground/40">
+                      {formatCompact(row.visitors)}{" "}
+                      {row.visitors === 1 ? "visitor" : "visitors"}
+                    </span>
+                    <span className="text-foreground/60">
+                      {formatCompact(row.count)}
+                    </span>
+                  </span>
                 </button>
 
                 {isOpen ? (

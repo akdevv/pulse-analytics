@@ -1,0 +1,12 @@
+#!/bin/sh
+# Typecheck before anything leaves the machine. Tests stay out of it: the
+# backend suite wants a database, and pre-push hooks that take a minute get
+# --no-verify'd until they may as well not exist.
+set -e
+
+for workspace in frontend backend; do
+  if [ -d "$workspace" ]; then
+    echo "→ $workspace typecheck"
+    (cd "$workspace" && pnpm typecheck)
+  fi
+done

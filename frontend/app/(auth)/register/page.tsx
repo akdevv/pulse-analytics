@@ -14,7 +14,6 @@ import {
   AuthSubmit,
 } from "@/components/auth/auth-ui";
 import { PasswordInput } from "@/components/common/password-input";
-import { POWDER } from "@/components/landing/tokens";
 import {
   Form,
   FormControl,
@@ -133,28 +132,17 @@ const PASSWORD_RULES: { label: string; test: (v: string) => boolean }[] = [
 function PasswordRules({ value }: { value: string }) {
   const { formDescriptionId } = useFormField();
   return (
-    <ul
-      id={formDescriptionId}
-      className="mt-2.5 flex flex-wrap gap-1.5"
-    >
+    <ul id={formDescriptionId} className="mt-2.5 flex flex-wrap gap-1.5">
       {PASSWORD_RULES.map(({ label, test }) => {
         const met = value.length > 0 && test(value);
         return (
           <li
             key={label}
-            className="inline-flex items-center gap-1.5 rounded-md border px-2 py-[3px] text-[11px] leading-none transition-colors duration-150 ease-[var(--ease-out)]"
-            style={
+            className={`inline-flex items-center gap-1.5 rounded-md border px-2 py-[3px] text-[11px] leading-none transition-colors duration-150 ease-out ${
               met
-                ? {
-                    borderColor: `color-mix(in oklab, ${POWDER} 30%, transparent)`,
-                    background: `color-mix(in oklab, ${POWDER} 9%, transparent)`,
-                    color: POWDER,
-                  }
-                : {
-                    borderColor: "rgba(229,227,210,0.1)",
-                    color: "rgba(229,227,210,0.38)",
-                  }
-            }
+                ? "border-powder/30 bg-powder/9 text-powder"
+                : "border-ink/10 text-ink/38"
+            }`}
           >
             {met ? (
               <svg
@@ -207,7 +195,9 @@ export default function Register() {
       await register(data.name, data.email, data.password);
       router.push("/dashboard");
     } catch (err) {
-      setError(err instanceof Error ? err.message : "An unknown error occurred");
+      setError(
+        err instanceof Error ? err.message : "An unknown error occurred"
+      );
     } finally {
       setLoading(false);
     }

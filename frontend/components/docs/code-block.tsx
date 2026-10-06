@@ -1,10 +1,8 @@
 "use client";
 
 import { useRef, useState, type ReactNode } from "react";
+import { Check, Copy } from "lucide-react";
 
-/* Wraps the <pre> that shiki produced and adds a copy button. The text comes
-   off the DOM node rather than the hast tree, so whatever the highlighter
-   rendered is what lands on the clipboard. */
 export function CodeBlock({ children }: { children: ReactNode }) {
   const ref = useRef<HTMLDivElement>(null);
   const [copied, setCopied] = useState(false);
@@ -18,44 +16,23 @@ export function CodeBlock({ children }: { children: ReactNode }) {
   };
 
   return (
-    <div className="docs-code group relative my-6">
-      <div ref={ref}>{children}</div>
+    <div className="group relative my-6">
+      <div
+        ref={ref}
+        className="pa-code overflow-x-auto rounded-xl border border-ink/8 bg-well py-4 shadow-well"
+      >
+        {children}
+      </div>
       <button
         type="button"
         onClick={copy}
         aria-label={copied ? "Copied" : "Copy code"}
-        className="docs-copy absolute top-2.5 right-2.5 inline-flex size-7 items-center justify-center rounded-md text-ink/55 transition-[color,background-color,transform] duration-150 ease-[var(--ease-out)] hover:bg-ink/[0.08] hover:text-ink active:scale-95"
+        className="absolute top-2.5 right-2.5 grid size-7 cursor-pointer place-items-center rounded-md text-ink/55 transition-[color,background-color,opacity] duration-150 ease-out group-hover:opacity-100 hover:bg-ink/8 hover:text-ink focus-visible:opacity-100 pointer-fine:opacity-0"
       >
         {copied ? (
-          <svg
-            width="13"
-            height="13"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2.2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            className="text-powder"
-            aria-hidden
-          >
-            <path d="M20 6 9 17l-5-5" />
-          </svg>
+          <Check aria-hidden size={13} className="text-powder" />
         ) : (
-          <svg
-            width="13"
-            height="13"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="1.8"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            aria-hidden
-          >
-            <rect x="9" y="9" width="11" height="11" rx="2" />
-            <path d="M5 15V5a2 2 0 0 1 2-2h10" />
-          </svg>
+          <Copy aria-hidden size={13} />
         )}
       </button>
     </div>

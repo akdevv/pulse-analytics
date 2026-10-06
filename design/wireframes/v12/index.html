@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>v12 — Pulse app design</title>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500&family=Bricolage+Grotesque:opsz,wght@12..96,600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="tokens.css">
+<style>
+  body{padding:40px 32px 72px;--t5:color-mix(in oklab,var(--ink) 56%,transparent)}
+  h1{font-family:var(--display);font-weight:600;letter-spacing:-0.03em;font-size:25px;margin-bottom:8px}
+  p.lede{color:var(--t5);font-size:14px;line-height:1.6;max-width:76ch}
+  h2{font-size:12px;font-weight:500;letter-spacing:.07em;text-transform:uppercase;color:var(--t5);margin:36px 0 14px}
+  .grid{display:grid;gap:20px;grid-template-columns:repeat(auto-fill,minmax(340px,1fr))}
+  a.card{display:block;background:var(--panel);border:1px solid var(--seam);border-radius:12px;overflow:hidden;transition:border-color .15s var(--ease)}
+  a.card:hover{border-color:color-mix(in oklab,var(--accent) 45%,transparent)}
+  .frame{height:250px;overflow:hidden;border-bottom:1px solid var(--seam);background:var(--bg)}
+  iframe{width:1440px;height:1000px;border:0;transform:scale(.28);transform-origin:0 0;pointer-events:none}
+  .cap{padding:14px 16px}
+  .cap b{display:block;font-size:14px;font-weight:500;margin-bottom:5px}
+  .cap span{font-size:12.5px;line-height:1.55;color:var(--t5)}
+  .note{margin-top:34px;border:1px solid var(--seam);border-radius:10px;padding:16px 18px;max-width:76ch}
+  .note b{font-size:13px;font-weight:500;display:block;margin-bottom:7px}
+  .note li{font-size:12.5px;line-height:1.6;color:var(--t5);margin-left:16px}
+  .old a{color:var(--t5);font-size:13px;margin-right:16px;text-decoration:underline;text-underline-offset:3px}
+</style></head><body>
+<h1>Pulse — app design, v12</h1>
+<p class="lede">B's measured column and card treatment as the base, A's instrument density on the analytics screen. Real numbers from the local database. Every screen holds at 390, 768, 1024, 1440 and 1920 with no horizontal scroll, and every text colour is at or above 4.5:1 on the surface it sits on.</p>
+<h2>Screens</h2>
+<div class="grid">
+  <a class="card" href="d-analytics.html"><div class="frame"><iframe src="d-analytics.html" scrolling="no"></iframe></div>
+    <div class="cap"><b>Analytics</b><span>A's density inside B's column. The pointer reads the series against the previous week; picking a row scopes the page to it.</span></div></a>
+  <a class="card" href="e-sites.html"><div class="frame"><iframe src="e-sites.html" scrolling="no"></iframe></div>
+    <div class="cap"><b>Sites</b><span>Cards answer "is it healthy and busy" — a week of shape, not a tracking id. The teaching empty state is shown below the cards so you can see both; in the app it is one or the other.</span></div></a>
+  <a class="card" href="f-setup.html"><div class="frame"><iframe src="f-setup.html" scrolling="no"></iframe></div>
+    <div class="cap"><b>Setup</b><span>Leads with whether it worked. The waiting strip becomes the dashboard when the first event lands.</span></div></a>
+  <a class="card" href="g-settings.html"><div class="frame"><iframe src="g-settings.html" scrolling="no"></iframe></div>
+    <div class="cap"><b>Settings</b><span>Two ordinary cards and one that is not, marked by its own edge rather than a red heading alone.</span></div></a>
+  <a class="card" href="h-ask.html"><div class="frame"><iframe src="h-ask.html" scrolling="no"></iframe></div>
+    <div class="cap"><b>Ask AI</b><span>The query sits under the answer rather than behind a disclosure — showing the SQL is the feature's whole claim.</span></div></a>
+  <a class="card" href="i-add-site.html"><div class="frame"><iframe src="i-add-site.html" scrolling="no"></iframe></div>
+    <div class="cap"><b>Add site</b><span>Two fields, with the snippet they are about to get shown beside them.</span></div></a>
+  <a class="card" href="j-account.html"><div class="frame"><iframe src="j-account.html" scrolling="no"></iframe></div>
+    <div class="cap"><b>Account</b><span>Password rules resolve as you type instead of failing after submit.</span></div></a>
+</div>
+<h2>States</h2>
+<div class="grid">
+  <a class="card" href="k-loading.html"><div class="frame"><iframe src="k-loading.html" scrolling="no"></iframe></div>
+    <div class="cap"><b>Loading</b><span>The shell it is about to become, at the same measurements, so nothing moves when data arrives.</span></div></a>
+  <a class="card" href="l-empty.html"><div class="frame"><iframe src="l-empty.html" scrolling="no"></iframe></div>
+    <div class="cap"><b>No events yet</b><span>One state with the three things that actually explain silence, instead of eight panels each saying "no data".</span></div></a>
+  <a class="card" href="m-failed.html"><div class="frame"><iframe src="m-failed.html" scrolling="no"></iframe></div>
+    <div class="cap"><b>Read path failed</b><span>Names which path broke, because a failed query does not mean lost events.</span></div></a>
+</div>
+<div class="note"><b>Two things here are not real yet</b>
+<ul>
+<li>The period deltas and the dashed previous-week line need a comparison the analytics API does not compute.</li>
+<li>The sparkline on each site card needs a per-site series in the sites list response.</li>
+</ul></div>
+<h2>The three earlier directions</h2>
+<p class="old"><a href="a-instrument.html">A — Instrument</a><a href="b-focused.html">B — Focused</a><a href="c-workbench.html">C — Workbench</a></p>
+</body></html>

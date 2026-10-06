@@ -1,10 +1,13 @@
 import { codeToHtml } from "shiki";
+import { transformerNotationHighlight } from "@shikijs/transformers";
 
-export type Lang = "typescript" | "sql" | "html";
+export type Lang = "typescript" | "tsx" | "sql" | "html";
 
-export async function highlight(code: string, lang: Lang): Promise<string> {
+// Server-only: mark a line with `// [!code highlight]` to emphasise it.
+export function highlight(code: string, lang: Lang) {
   return codeToHtml(code, {
     lang,
     theme: "vesper",
+    transformers: [transformerNotationHighlight()],
   });
 }

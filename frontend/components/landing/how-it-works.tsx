@@ -1,243 +1,224 @@
-import { ACCENT, DISPLAY, POWDER } from "./tokens";
+import { cn } from "@/lib/utils";
 import { Reveal, SectionHeading } from "./shared";
+import { CodeFrame } from "./code-frame";
 import { highlight, type Lang } from "./highlight";
+import { dots } from "./surfaces";
 
-const STEPS: {
-  n: string;
-  eyebrow: string;
+type Step = {
+  stage: string;
   title: string;
   description: string;
+  when: string;
+  stack: string[];
+  keyLine: string;
   file: string;
   lang: Lang;
   code: string;
-}[] = [
-  {
-    n: "01",
-    eyebrow: "Ingest",
-    title: "Fire and forget at the edge.",
-    description:
-      "Dockerized Express on AWS. Tracking ID resolves via Redis in under a millisecond. Server returns 204 No Content, then drops the payload on the queue. Client never waits on processing.",
-    file: "server/collect.ts",
-    lang: "typescript",
-    code: `app.post('/collect', async (req, res) => {
-  const siteId = await redis.get(
-    \`tk:\${req.headers['x-pulse-key']}\`
-  )
-  if (!siteId) return res.sendStatus(404)
+};
 
-  // fire-and-forget
-  res.sendStatus(204)
-  queue.publish('events.raw', {
-    siteId,
-    ts: Date.now(),
-    ...req.body,
-  })
-})`,
+// Real code from backend/src, trimmed of logging. `[!code highlight]` marks the key line.
+const STEPS: Step[] = [
+  {
+    stage: "Ingest",
+    title: "The request does almost nothing.",
+    description:
+      "Validate, look the site up in a Redis cache, rate-limit per site and per IP, put the event on a BullMQ queue, return 204. Parsing and geo lookups wait for the worker.",
+    when: "In the request · 4.8 ms p90",
+    stack: ["Express", "Redis", "BullMQ"],
+    keyLine: "Enqueue, then answer 204",
+    file: "backend/src/modules/ingestion/track.controller.ts",
+    lang: "typescript",
+    code: `export const track = async (req, res) => {
+  const parsed = TrackQuerySchema.safeParse(req.query)
+  if (!parsed.success) return res.status(204).send()
+
+  const site = await getCachedSite(parsed.data.tid)
+  if (!site) return res.status(204).send()
+
+  const [perSite, perIp] = await Promise.all([
+    checkSiteRateLimit(site.id, site.rateLimitTier),
+    checkIpRateLimit(extractClientIp(req)),
+  ])
+  if (!perSite.allowed || !perIp.allowed) return res.status(204).send()
+
+  await enqueue(buildRawEvent(parsed.data, req, site.id)) // [!code highlight]
+  res.status(204).send() // always 204, errors never reach the page [!code highlight]
+}`,
   },
   {
-    n: "02",
-    eyebrow: "Process",
-    title: "RabbitMQ absorbs the spikes.",
+    stage: "Process",
+    title: "A worker writes in batches.",
     description:
-      "Workers pull batches off the queue, validate, enrich with geo and UA data, and insert in bulk. When traffic spikes, the queue grows. No timeouts, no data loss — just backpressure that resolves itself.",
-    file: "workers/process.ts",
+      "The worker parses the user agent, looks up the country, then drops the IP. Rows go to the database 100 at a time. If the database is down it holds the batch and retries. A row the database rejects goes to a dead-letter queue, so one bad event can't block the rest.",
+    when: "In a worker · within 1 s",
+    stack: ["BullMQ worker", "TimescaleDB"],
+    keyLine: "One insert per 100 events",
+    file: "backend/src/workers/event.worker.ts",
     lang: "typescript",
-    code: `consumer.on('events.raw', async (batch) => {
-  const rows = batch
-    .map(enrich)     // geo, UA, referrer
-    .filter(valid)   // drop malformed
+    code: `const BATCH_SIZE = 100
+const FLUSH_INTERVAL_MS = 1000
 
-  await timescale.insertMany('events', rows)
+async function flushBatch() {
+  const toFlush = batch
+  batch = []
 
-  // ack only after successful persist
-  batch.ack()
-})`,
+  try {
+    await insertManyEvents(toFlush) // [!code highlight]
+  } catch (err) {
+    if (isPermanentWriteError(err)) {
+      await isolateAndQuarantine(toFlush) // bad rows → DLQ
+      return
+    }
+    batch = [...toFlush, ...batch] // transient: keep, retry
+    scheduleFlusher()
+  }
+}`,
   },
   {
-    n: "03",
-    eyebrow: "Query",
-    title: "TimescaleDB answers instantly.",
+    stage: "Query",
+    title: "Charts read rollups, not raw events.",
     description:
-      "Continuous aggregates pre-compute 1-minute, 1-hour, and 1-day rollups. Dashboards query the summary, not the raw events. Sub-second, no matter how deep the history.",
-    file: "db/queries.sql",
+      "TimescaleDB keeps hourly rollups up to date in the background, so a 30-day chart adds up a few hundred rows instead of scanning every event.",
+    when: "When a chart loads",
+    stack: ["TimescaleDB", "Next.js"],
+    keyLine: "Read the hourly rollup",
+    file: "backend/src/modules/analytics/analytics.repository.ts",
     lang: "sql",
-    code: `-- served from a continuous aggregate
-SELECT time_bucket('1 hour', ts) AS hour,
-       COUNT(*) AS views,
-       COUNT(DISTINCT user_id) AS uniques
-  FROM events_1h
- WHERE site_id = $1
-   AND ts > now() - interval '7 days'
- GROUP BY hour
- ORDER BY hour;`,
+    code: `SELECT
+  COALESCE(NULLIF(referrer, ''), 'Direct') AS source,
+  SUM(pageviews)::int                      AS pageviews
+FROM hourly_pageviews -- continuous aggregate [!code highlight]
+WHERE "siteId" = $1
+  AND bucket >= $2
+  AND bucket <  $3
+GROUP BY 1
+ORDER BY pageviews DESC
+LIMIT $4`,
   },
 ];
 
-const LANG_LABEL: Record<Lang, string> = {
-  typescript: "ts",
-  sql: "sql",
-  html: "html",
-};
+const DOTS = dots(
+  "radial-gradient(ellipse 70% 60% at 50% 55%, black 30%, transparent 80%)",
+  5,
+  24
+);
 
-async function CodePanel({
-  file,
-  lang,
-  code,
-}: {
-  file: string;
-  lang: Lang;
-  code: string;
-}) {
-  const html = await highlight(code, lang);
-  return (
-    <div
-      className="relative overflow-hidden rounded-2xl border border-ink/8"
-      style={{
-        background: "oklch(0.1560 0 0)",
-        boxShadow:
-          "0 0 0 1px rgba(229,227,210,0.03), 0 40px 80px -20px rgba(0,0,0,0.75), 0 0 60px oklch(0.6832 0.2107 38.6427 / 0.06)",
-      }}
-    >
-      {/* accent hairline top */}
-      <div
-        aria-hidden
-        className="absolute inset-x-0 -top-px h-px"
-        style={{
-          background: `linear-gradient(90deg, transparent 10%, ${ACCENT} 50%, transparent 90%)`,
-          opacity: 0.45,
-        }}
-      />
-
-      {/* title bar */}
-      <div
-        className="relative flex items-center border-b border-ink/6 px-4 py-3"
-        style={{ background: "oklch(0.1750 0 0)" }}
-      >
-        {/* traffic lights */}
-        <div className="flex shrink-0 items-center gap-1.5">
-          <span className="h-3 w-3 rounded-full bg-ink/15" />
-          <span className="h-3 w-3 rounded-full bg-ink/15" />
-          <span className="h-3 w-3 rounded-full bg-ink/15" />
-        </div>
-
-        {/* centered filename */}
-        <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
-          <span className="flex items-center gap-1.5 font-mono text-[12px] text-ink/55">
-            <svg
-              width="12"
-              height="12"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="1.75"
-              className="text-ink/60"
-            >
-              <path
-                strokeLinecap="round"
-                d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"
-              />
-              <polyline strokeLinecap="round" points="13 2 13 9 20 9" />
-            </svg>
-            {file}
-          </span>
-        </div>
-
-        {/* lang badge right */}
-        <span
-          className="ml-auto rounded px-2 py-0.5 font-mono text-[10px] tracking-[0.18em] uppercase"
-          style={{
-            background: "color-mix(in oklab, " + POWDER + " 12%, transparent)",
-            color: POWDER,
-          }}
-        >
-          {LANG_LABEL[lang]}
-        </span>
-      </div>
-
-      {/* code */}
-      <div
-        className="code-panel-body overflow-x-auto p-6 [&>pre]:bg-transparent! [&>pre]:p-0! [&>pre]:font-mono [&>pre]:text-[12.5px] [&>pre]:leading-[1.8]"
-        dangerouslySetInnerHTML={{ __html: html }}
-      />
-    </div>
-  );
+function keyLines(code: string) {
+  const lines = code
+    .split("\n")
+    .flatMap((l, i) => (l.includes("[!code highlight]") ? [i + 1] : []));
+  return lines.length > 1
+    ? `L${lines[0]}–${lines[lines.length - 1]}`
+    : `L${lines[0]}`;
 }
 
-export function HowItWorks() {
+export async function HowItWorks() {
+  const html = await Promise.all(STEPS.map((s) => highlight(s.code, s.lang)));
+
   return (
     <section
       id="how-it-works"
-      className="pa-alt relative overflow-hidden py-28 md:py-40"
+      className="relative isolate scroll-mt-20 py-24 md:py-32"
     >
-      <div
-        aria-hidden
-        className="absolute inset-0 opacity-[0.025]"
-        style={{
-          backgroundImage: `radial-gradient(circle at 1px 1px, #E5E3D2 1px, transparent 0)`,
-          backgroundSize: "32px 32px",
-          maskImage:
-            "radial-gradient(ellipse 60% 50% at 50% 50%, black 30%, transparent 80%)",
-        }}
-      />
+      <div aria-hidden className="absolute inset-0 -z-10" style={DOTS} />
 
-      <div className="relative mx-auto max-w-6xl px-6">
-        <Reveal className="mb-28 flex max-w-3xl flex-col items-start gap-6">
+      <div className="mx-auto max-w-6xl px-6">
+        <Reveal>
           <SectionHeading
-            line1="The pipeline, roughly"
-            line2="three moving parts."
+            label="How it works"
+            title="Three moving parts."
+            muted="One of them is in a hurry."
+            lead="The request path only accepts the event. Everything slow happens later, in a worker your visitors never wait on."
           />
-          <p className="max-w-lg text-[15px] leading-relaxed text-ink/60">
-            Collect hot, process async, persist for time. Every piece picked
-            because it refuses to blink under load.
-          </p>
         </Reveal>
 
-        <div className="flex flex-col gap-28">
-          {STEPS.map((step, i) => {
-            const reversed = i % 2 === 1;
-            return (
-              <Reveal
-                key={step.n}
-                className="grid grid-cols-1 items-center gap-10 lg:grid-cols-2 lg:gap-16"
-              >
-                <div
-                  className={`flex flex-col gap-5 ${
-                    reversed ? "lg:order-2" : ""
-                  }`}
-                >
-                  <div className="flex items-center gap-3">
-                    <span
-                      className="rounded px-2 py-0.5 font-mono text-[11px] text-charcoal tabular-nums"
-                      style={{ background: ACCENT }}
-                    >
-                      {step.n}
-                    </span>
-                    <span className="font-mono text-[11px] tracking-[0.22em] text-ink/60 uppercase">
-                      {step.eyebrow}
-                    </span>
-                  </div>
-                  <h3
-                    className="text-[32px] leading-[1.05] tracking-[-0.02em] text-ink md:text-[40px]"
-                    style={DISPLAY}
-                  >
-                    {step.title}
-                  </h3>
-                  <p className="max-w-md text-[15px] leading-relaxed text-ink/55">
-                    {step.description}
-                  </p>
-                </div>
-                <div className={reversed ? "lg:order-1" : ""}>
-                  <CodePanel
-                    file={step.file}
-                    lang={step.lang}
-                    code={step.code}
-                  />
-                </div>
-              </Reveal>
-            );
-          })}
-        </div>
+        <ol className="flex flex-col gap-20 lg:gap-28">
+          {STEPS.map((step, i) => (
+            <Reveal
+              as="li"
+              key={step.stage}
+              className={cn(
+                "grid grid-cols-1 gap-8 lg:items-stretch lg:gap-14",
+                i % 2
+                  ? "lg:grid-cols-[minmax(0,7fr)_minmax(0,5fr)]"
+                  : "lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)]"
+              )}
+            >
+              <StepText
+                step={step}
+                index={i}
+                className={i % 2 ? "lg:order-2" : undefined}
+              />
+              <CodeFrame file={step.file} lang={step.lang} html={html[i]} />
+            </Reveal>
+          ))}
+        </ol>
       </div>
     </section>
+  );
+}
+
+function StepText({
+  step,
+  index,
+  className,
+}: {
+  step: Step;
+  index: number;
+  className?: string;
+}) {
+  const rows = [
+    {
+      term: "Stage",
+      value: (
+        <>
+          {step.stage}
+          <span className="text-ink/30">
+            {" "}
+            · {index + 1} of {STEPS.length}
+          </span>
+        </>
+      ),
+    },
+    { term: "Runs", value: step.when },
+    { term: "Stack", value: step.stack.join(" · ") },
+    {
+      term: "Key line",
+      value: (
+        <>
+          <span className="font-mono text-tangerine-soft">
+            {keyLines(step.code)}
+          </span>
+          <span className="text-ink/30"> · </span>
+          {step.keyLine}
+        </>
+      ),
+    },
+  ];
+
+  return (
+    <div
+      className={cn("flex flex-col justify-between gap-8 lg:py-2", className)}
+    >
+      <div>
+        <h3 className="font-display text-[28px] leading-[1.1] font-semibold tracking-display text-balance text-ink sm:text-[34px]">
+          {step.title}
+        </h3>
+        <p className="mt-5 max-w-md text-[15px] leading-relaxed text-pretty text-ink/60">
+          {step.description}
+        </p>
+      </div>
+      <dl className="border-t border-ink/8 text-[13px]">
+        {rows.map(({ term, value }) => (
+          <div
+            key={term}
+            className="grid grid-cols-[6rem_minmax(0,1fr)] gap-4 border-b border-ink/8 py-2.5"
+          >
+            <dt className="text-ink/40">{term}</dt>
+            <dd className="text-ink/75 tabular-nums">{value}</dd>
+          </div>
+        ))}
+      </dl>
+    </div>
   );
 }

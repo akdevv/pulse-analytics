@@ -47,7 +47,7 @@ export function ResultTable({
 
   return (
     <div>
-      <div className="max-h-[26rem] overflow-auto rounded-lg border border-border [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-border [&::-webkit-scrollbar]:size-2">
+      <div className="max-h-[26rem] overflow-auto rounded-lg border border-border [&::-webkit-scrollbar]:size-2 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-border">
         <table className="w-full border-collapse text-sm">
           <caption className="sr-only">{caption}</caption>
           <thead className="sticky top-0 z-10">

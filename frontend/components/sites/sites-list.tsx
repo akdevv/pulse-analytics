@@ -1,46 +1,68 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import Link from "next/link";
+import { EmptyState, StepList } from "@/components/common/empty-state";
 import { SiteCard } from "@/components/sites/site-card";
-import { getSites } from "@/lib/api/sites.api";
-import type { Site } from "@/lib/types/site.types";
+import { Skeleton } from "@/components/ui/skeleton";
+import { useSites } from "@/hooks/useSites";
+import { getErrorMessage } from "@/lib/utils";
 
 export function SitesList() {
-  const [sites, setSites] = useState<Site[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { data: sites, isLoading, error } = useSites();
 
-  useEffect(() => {
-    (async () => {
-      try {
-        const data = await getSites();
-        setSites(data);
-      } catch (err) {
-        console.error("Failed to fetch sites:", err);
-      } finally {
-        setLoading(false);
-      }
-    })();
-  }, []);
-
-  if (loading) {
+  if (isLoading) {
     return (
-      <div className="text-sm text-muted-foreground">Loading sites...</div>
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        {Array.from({ length: 3 }).map((_, i) => (
+          <Skeleton key={i} className="h-32 rounded-xl" />
+        ))}
+      </div>
     );
   }
 
-  if (sites?.length === 0) {
+  // Distinct from the empty state below — a failed request used to render as
+  // "No sites yet", which reads as data loss.
+  if (error) {
     return (
-      <div className="text-sm text-muted-foreground">
-        No sites yet.{" "}
-        <Link
-          href="/dashboard/sites/new"
-          className="underline underline-offset-4"
-        >
-          Add your first site
-        </Link>
-        .
-      </div>
+      <p className="text-sm text-destructive">
+        {getErrorMessage(error, "Failed to load sites.")}
+      </p>
+    );
+  }
+
+  if (!sites?.length) {
+    return (
+      <EmptyState
+        title="Track your first site"
+        description="Give us a domain and you get a one-line snippet back. Events land as they happen — there is no nightly batch to wait for, and no cookie banner to add."
+        actions={[
+          { label: "Add a site", href: "/dashboard/sites/new", primary: true },
+          { label: "Read the docs", href: "/docs/quickstart" },
+        ]}
+      >
+        <StepList
+          marker="count"
+          items={[
+            {
+              title: "Add the site",
+              body: "A name and a domain. Two fields, nothing else to decide.",
+            },
+            {
+              title: "Paste one line",
+              body: (
+                <>
+                  A script tag in your{" "}
+                  <code className="font-mono text-[11px]">&lt;head&gt;</code>.
+                  Any stack, no build step.
+                </>
+              ),
+            },
+            {
+              title: "Watch it land",
+              body: "The first visit shows up live while you are still on the page.",
+            },
+          ]}
+        />
+      </EmptyState>
     );
   }
 

@@ -2,7 +2,6 @@ import Link from "next/link";
 
 import { AuthPanel, AuthPanelMobile } from "@/components/auth/auth-panel";
 import { PulseLogo } from "@/components/landing/shared";
-import { BG } from "@/components/landing/tokens";
 
 /* ── Auth chrome ───────────────────────────────────────────────
    Both auth pages shipped this background, logo and centring as
@@ -18,10 +17,7 @@ export default function AuthLayout({
   children: React.ReactNode;
 }) {
   return (
-    <div
-      className="dark grid min-h-dvh lg:grid-cols-2"
-      style={{ background: BG }}
-    >
+    <div className="dark grid min-h-dvh bg-charcoal lg:grid-cols-2">
       <div className="relative flex min-h-dvh flex-col lg:min-h-0">
         <div className="mx-auto flex w-full max-w-86 flex-1 flex-col px-6 pt-9 pb-6 sm:pt-10">
           <header>

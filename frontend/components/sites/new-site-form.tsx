@@ -12,7 +12,8 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { createSite } from "@/lib/api/sites.api";
+import { useCreateSite } from "@/hooks/useSites";
+import { getErrorMessage } from "@/lib/utils";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
@@ -34,6 +35,7 @@ type FormData = z.infer<typeof formSchema>;
 
 export function NewSiteForm() {
   const router = useRouter();
+  const createSite = useCreateSite();
   const form = useForm<FormData>({
     resolver: zodResolver(formSchema),
     defaultValues: { name: "", domain: "" },
@@ -41,14 +43,13 @@ export function NewSiteForm() {
 
   const onSubmit = async (data: FormData) => {
     try {
-      const res = await createSite(data);
-      toast.success(res.message ?? "Site created successfully!");
-      router.push(`/dashboard/sites/${res.data.id}/setup`);
-    } catch (err: unknown) {
-      const message =
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        (err as any)?.response?.data?.message ?? "Failed to create site";
-      toast.error(message);
+      // Through the mutation, so the cached sites list is invalidated and the
+      // new site is there when the user navigates back to it.
+      const site = await createSite.mutateAsync(data);
+      toast.success("Site created successfully!");
+      router.push(`/dashboard/sites/${site.id}/setup`);
+    } catch (err) {
+      toast.error(getErrorMessage(err, "Failed to create site"));
     }
   };
 
@@ -61,7 +62,7 @@ export function NewSiteForm() {
           render={({ field }) => (
             <FormItem>
               <FormLabel>
-                Site Name <span className="text-red-500">*</span>
+                Site Name <span className="text-destructive">*</span>
               </FormLabel>
               <FormControl>
                 <Input placeholder="My Awesome Website" {...field} />
@@ -80,7 +81,7 @@ export function NewSiteForm() {
           render={({ field }) => (
             <FormItem>
               <FormLabel>
-                Domain <span className="text-red-500">*</span>
+                Domain <span className="text-destructive">*</span>
               </FormLabel>
               <FormControl>
                 <Input placeholder="example.com" {...field} />
