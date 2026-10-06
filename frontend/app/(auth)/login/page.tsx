@@ -5,59 +5,46 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
-
 import {
   AUTH_INPUT,
-  AUTH_LABEL,
-  AUTH_MESSAGE,
   AuthAltLink,
   AuthCard,
+  AuthField,
   AuthSubmit,
+  EmailInput,
 } from "@/components/auth/auth-ui";
 import { PasswordInput } from "@/components/common/password-input";
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
+import { Form } from "@/components/ui/form";
 import { useAuth } from "@/contexts/auth.context";
+import { getErrorMessage } from "@/lib/utils";
 
 const loginSchema = z.object({
   email: z.email("Please enter a valid email address."),
   password: z.string().min(1, "Password is required."),
 });
 
-type LoginFormValues = z.infer<typeof loginSchema>;
+type LoginValues = z.infer<typeof loginSchema>;
 
-export default function Login() {
+export default function LoginPage() {
   const router = useRouter();
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
   const { login } = useAuth();
+  const [error, setError] = useState("");
 
-  const form = useForm<LoginFormValues>({
+  const form = useForm<LoginValues>({
     resolver: zodResolver(loginSchema),
     defaultValues: { email: "", password: "" },
   });
+  const busy = form.formState.isSubmitting;
 
-  async function onSubmit(data: LoginFormValues) {
+  const onSubmit = async ({ email, password }: LoginValues) => {
+    setError("");
     try {
-      setLoading(true);
-      setError("");
-      await login(data.email, data.password);
+      await login(email, password);
       router.push("/dashboard");
     } catch (err) {
-      setError(
-        err instanceof Error ? err.message : "An unknown error occurred"
-      );
-    } finally {
-      setLoading(false);
+      setError(getErrorMessage(err, "Sign in failed. Please try again."));
     }
-  }
+  };
 
   return (
     <AuthCard
@@ -70,53 +57,23 @@ export default function Login() {
     >
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5">
-          <FormField
-            control={form.control}
-            name="email"
-            render={({ field }) => (
-              <FormItem className="gap-1.5">
-                <FormLabel className={AUTH_LABEL}>Email</FormLabel>
-                <FormControl>
-                  {/* autoComplete was missing on every field, so password
-                      managers and browser autofill had nothing to match. */}
-                  <Input
-                    type="email"
-                    inputMode="email"
-                    autoComplete="email"
-                    autoCapitalize="none"
-                    spellCheck={false}
-                    placeholder="you@example.com"
-                    disabled={loading}
-                    className={AUTH_INPUT}
-                    {...field}
-                  />
-                </FormControl>
-                <FormMessage className={AUTH_MESSAGE} />
-              </FormItem>
-            )}
-          />
+          <AuthField control={form.control} name="email" label="Email">
+            {(field) => <EmailInput disabled={busy} {...field} />}
+          </AuthField>
 
-          <FormField
-            control={form.control}
-            name="password"
-            render={({ field }) => (
-              <FormItem className="gap-1.5">
-                <FormLabel className={AUTH_LABEL}>Password</FormLabel>
-                <FormControl>
-                  <PasswordInput
-                    autoComplete="current-password"
-                    placeholder="Your password"
-                    disabled={loading}
-                    className={AUTH_INPUT}
-                    {...field}
-                  />
-                </FormControl>
-                <FormMessage className={AUTH_MESSAGE} />
-              </FormItem>
+          <AuthField control={form.control} name="password" label="Password">
+            {(field) => (
+              <PasswordInput
+                autoComplete="current-password"
+                placeholder="Your password"
+                disabled={busy}
+                className={AUTH_INPUT}
+                {...field}
+              />
             )}
-          />
+          </AuthField>
 
-          <AuthSubmit loading={loading} idle="Sign in" busy="Signing in…" />
+          <AuthSubmit loading={busy} idle="Sign in" busy="Signing in…" />
         </form>
       </Form>
     </AuthCard>

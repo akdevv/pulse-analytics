@@ -81,8 +81,7 @@ const COMPONENTS: Components = {
     </blockquote>
   ),
   hr: () => <hr className="my-11 border-ink/10" />,
-  // className and style come from the highlighter; spreading the rest would
-  // put react-markdown's `node` on the element.
+  // Not spreading props keeps react-markdown's `node` off the DOM element.
   pre: ({ children, className, style }) => (
     <CodeBlock>
       <pre className={className} style={style}>
@@ -117,8 +116,7 @@ const PROSE = [
   INLINE_CODE,
 ].join(" ");
 
-// The rehype plugin runs synchronously, so grammars are loaded up front
-// and one highlighter is shared across every page.
+// The rehype plugin is synchronous, so grammars load up front into one shared highlighter.
 const LANGS = ["html", "bash", "ts", "tsx", "astro", "sql"];
 
 let highlighter: ReturnType<typeof createHighlighter> | null = null;

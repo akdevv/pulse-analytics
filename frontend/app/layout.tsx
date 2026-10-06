@@ -13,7 +13,6 @@ export default function RootLayout({
 }: {
   children: React.ReactNode;
 }) {
-  // The whole app is dark; the class lives on <html> so portals and native controls get it too.
   return (
     <html lang="en" className="dark">
       <body className="font-sans antialiased">

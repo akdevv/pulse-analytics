@@ -1,16 +1,13 @@
-/* Page order, titles, and the pure helpers that go with them. No node
-   built-ins in this file: the sidebar and the header are client
-   components and import it directly. The markdown loader lives in
-   lib/docs.ts. */
+// Imported by client components, so no node built-ins here.
 export const DOCS_VERSION = "v1";
 
-export type DocLink = {
+type DocLink = {
   slug: string;
   title: string;
   description: string;
 };
 
-export type DocGroup = {
+type DocGroup = {
   title: string;
   items: DocLink[];
 };
@@ -69,7 +66,6 @@ export function getDocLink(slug: string): DocLink | undefined {
   return DOCS.find((doc) => doc.slug === slug);
 }
 
-/** Previous and next page in reading order, for the footer pager. */
 export function getDocNeighbours(slug: string): {
   prev: DocLink | null;
   next: DocLink | null;
@@ -81,8 +77,6 @@ export function getDocNeighbours(slug: string): {
   };
 }
 
-/** GitHub-style anchor id, matched by the heading renderer and the on-page
-    contents list so both agree without a rehype plugin in between. */
 export function slugify(text: string): string {
   return text
     .toLowerCase()
@@ -93,8 +87,7 @@ export function slugify(text: string): string {
 
 export type Heading = { id: string; title: string };
 
-/** Top-level sections (## headings) for the contents rail. Fenced code is
-    stripped first, or a shell comment like "## build" becomes a heading. */
+// Fenced code is stripped first so a shell comment like "## build" is not a heading.
 export function extractHeadings(markdown: string): Heading[] {
   const body = markdown.replace(/```[\s\S]*?```/g, "");
   return [...body.matchAll(/^##\s+(.+)$/gm)].map((m) => ({

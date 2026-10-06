@@ -4,8 +4,7 @@ import { highlight } from "./highlight";
 import { PulseLogo, Reveal, SectionHeading } from "./shared";
 import { STAGE } from "./surfaces";
 
-// The SQL is what the prompt in backend/src/modules/ai/sql.prompt.md produces
-// for the question, and the rows are what that SQL returns.
+// Output of backend/src/modules/ai/sql.prompt.md for this question.
 const ASK_SQL = `SELECT country, SUM(pageviews)
 FROM ask_daily
 WHERE "deviceType" = 'mobile'
@@ -25,8 +24,6 @@ const EVENT_HTML = `<button data-pulse-event="signup">
 const REACT_HOOK = `usePulse({ siteId })
 // route changes are tracked`;
 
-// The throughput figure is the design target until the load test in
-// notes/finish.md has run; swap the value and the label together.
 const NUMBERS = [
   { value: "0", label: "Cookies set" },
   { value: "204", label: "Every ingest reply" },

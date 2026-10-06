@@ -10,11 +10,6 @@ const TABS = [
   { label: "Settings", segment: "/settings" },
 ];
 
-/**
- * Section tabs for one site, rendered by the page rather than the layout so a
- * page can hand its own scope controls to the left of the row — the date range
- * on analytics, nothing on the rest.
- */
 export function SiteTabs({ children }: { children?: React.ReactNode }) {
   const { id } = useParams<{ id: string }>();
   const pathname = usePathname();

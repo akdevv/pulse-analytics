@@ -10,13 +10,11 @@ import type {
   PropertyStat,
 } from "@/lib/types/analytics.types";
 
-/** Rows arrive flat, ordered by key then count. Group them back per key so
-    each property renders as its own small list of values. */
-function groupByKey(rows: PropertyStat[]): [string, PropertyStat[]][] {
+function groupByKey(rows: PropertyStat[]) {
   const groups = new Map<string, PropertyStat[]>();
   for (const row of rows) {
-    const existing = groups.get(row.key);
-    if (existing) existing.push(row);
+    const group = groups.get(row.key);
+    if (group) group.push(row);
     else groups.set(row.key, [row]);
   }
   return [...groups];
@@ -36,7 +34,7 @@ function PropertyBreakdown({
     name,
     dateRange
   );
-  const rows: PropertyStat[] = data ?? [];
+  const rows = data ?? [];
 
   if (error) {
     return (
@@ -115,7 +113,7 @@ export function EventsChart({
   error,
 }: Props) {
   const [expanded, setExpanded] = useState<string | null>(null);
-  const max = data?.length ? Math.max(...data.map((d) => d.count), 1) : 1;
+  const max = Math.max(1, ...(data ?? []).map((d) => d.count));
 
   return (
     <div className="panel flex flex-col px-5 py-4">
@@ -130,7 +128,7 @@ export function EventsChart({
         <p className="py-6 text-sm text-destructive">{error.message}</p>
       ) : isLoading ? (
         <div className="flex flex-col gap-[3px]">
-          {Array.from({ length: 4 }).map((_, i) => (
+          {Array.from({ length: 4 }, (_, i) => (
             <Skeleton key={i} className="h-[35px] rounded-[3px]" />
           ))}
         </div>

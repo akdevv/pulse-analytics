@@ -1,5 +1,5 @@
+import { Plus } from "lucide-react";
 import Link from "next/link";
-import { GoPlus } from "react-icons/go";
 import { Button } from "@/components/ui/button";
 import { SitesList } from "@/components/sites/sites-list";
 
@@ -10,7 +10,7 @@ export default function SitesPage() {
         <h1 className="figure text-[20px]">Sites</h1>
         <Button size="sm" className="cursor-pointer" asChild>
           <Link href="/dashboard/sites/new">
-            <GoPlus />
+            <Plus />
             <span>Add site</span>
           </Link>
         </Button>

@@ -1,14 +1,8 @@
+import Link from "next/link";
+
 import { ramp, ridgePath } from "@/components/auth/ridge-silhouette";
+import { PulseLogo } from "@/components/landing/shared";
 
-/* ── The panel ─────────────────────────────────────────────────
-   A range of density curves stacked and offset, each occluding the one
-   behind it. It is the shape a week of ingest makes, drawn as flat
-   silhouettes rather than glowing lines so it holds an edge.
-
-   Depth comes from tone, not opacity: each layer gets its own colour
-   ramping toward the ground, computed in oklch so the steps are
-   perceptually even. Stacking one shape at several opacities reads as a
-   single form behind tracing paper instead of as ranges. */
 const W = 600;
 const H = 280;
 const TONES = ramp(5, [0.63, 0.185, 40], [0.174, 0.014, 31]);
@@ -31,12 +25,29 @@ const FIGURES = [
   { v: "0.00%", k: "data loss" },
 ];
 
-export const AUTH_SKY = `linear-gradient(176deg, var(--color-tangerine-soft) 0%, var(--color-tangerine) 64%)`;
+const AUTH_SKY = `linear-gradient(176deg, var(--color-tangerine-soft) 0%, var(--color-tangerine) 64%)`;
 
 const GRAIN =
   "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23n)'/%3E%3C/svg%3E\")";
 
-function Ranges({ className }: { className?: string }) {
+// A final ridge in the page colour lets the mobile band fade into the form.
+const GROUND = ridgePath({
+  seed: 9901,
+  base: 250,
+  amp: 34,
+  w: W,
+  h: H,
+  bumps: 4,
+  sharp: 0.8,
+});
+
+function Ranges({
+  className,
+  ground = false,
+}: {
+  className?: string;
+  ground?: boolean;
+}) {
   return (
     <svg
       viewBox={`0 0 ${W} ${H}`}
@@ -47,11 +58,11 @@ function Ranges({ className }: { className?: string }) {
       {RIDGES.map(({ d, fill }, i) => (
         <path key={i} d={d} fill={fill} />
       ))}
+      {ground && <path d={GROUND} fill="var(--color-charcoal)" />}
     </svg>
   );
 }
 
-/* A gradient across a panel this wide bands without it. */
 function Grain() {
   return (
     <div
@@ -62,19 +73,18 @@ function Grain() {
   );
 }
 
-function Figures({ size = "lg" }: { size?: "lg" | "sm" }) {
-  const big = size === "lg";
+function Figures() {
   return (
-    <div className={`flex ${big ? "gap-10 xl:gap-12" : "gap-7"}`}>
+    <div className="flex gap-10 xl:gap-12">
       {FIGURES.map(({ v, k }) => (
         <div key={k}>
           <div
-            className={`leading-none text-charcoal tabular-nums ${big ? "text-[22px]" : "text-[17px]"} font-display font-bold tracking-[-0.03em]`}
+            className={`font-display text-[22px] leading-none font-bold tracking-[-0.03em] text-charcoal tabular-nums`}
           >
             {v}
           </div>
           <div
-            className={`mt-1.5 font-mono tracking-[0.16em] text-charcoal/60 uppercase ${big ? "text-[10px]" : "text-[9px]"}`}
+            className={`mt-1.5 font-mono text-[10px] tracking-[0.16em] text-charcoal/60 uppercase`}
           >
             {k}
           </div>
@@ -84,8 +94,6 @@ function Figures({ size = "lg" }: { size?: "lg" | "sm" }) {
   );
 }
 
-/** Desktop half. Sticky, so the taller register form scrolls past the
- *  landscape rather than stretching it. */
 export function AuthPanel() {
   return (
     <div
@@ -112,19 +120,25 @@ export function AuthPanel() {
   );
 }
 
-/** Small screens keep the range as a footer band, carrying the figures
- *  with it, so the form still sits entirely above the fold. */
 export function AuthPanelMobile() {
   return (
     <div
-      className="relative h-[186px] shrink-0 overflow-hidden lg:hidden"
+      className="relative h-[172px] shrink-0 overflow-hidden sm:h-[200px] lg:hidden"
       style={{ background: AUTH_SKY }}
     >
       <Grain />
-      <Ranges className="absolute inset-x-0 bottom-0 h-[74%] w-full" />
-      <div className="relative z-20 px-6 pt-5">
-        <Figures size="sm" />
-      </div>
+      <Ranges ground className="absolute inset-x-0 bottom-0 h-[78%] w-full" />
+      <header className="relative z-20 px-6 pt-[max(1.25rem,env(safe-area-inset-top))]">
+        <Link
+          href="/"
+          className="inline-flex items-center gap-2.5 rounded-full focus-visible:ring-2 focus-visible:ring-charcoal/60 focus-visible:outline-none"
+        >
+          <PulseLogo size={26} />
+          <span className="text-[15px] font-semibold tracking-[-0.02em] text-charcoal">
+            Pulse Analytics
+          </span>
+        </Link>
+      </header>
     </div>
   );
 }

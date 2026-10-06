@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { AxiosError } from "axios";
+import { isAxiosError } from "axios";
 import {
   ask,
   deleteConversation,
@@ -9,9 +9,11 @@ import {
 import type { AskResult } from "@/lib/types/ai.types";
 import { getErrorMessage } from "@/lib/utils";
 
+const conversationsKey = (siteId: string) => ["ai-conversations", siteId];
+
 export function useConversations(siteId: string) {
   return useQuery({
-    queryKey: ["ai-conversations", siteId],
+    queryKey: conversationsKey(siteId),
     queryFn: () => getConversations(siteId),
     enabled: !!siteId,
   });
@@ -22,9 +24,8 @@ export function useConversation(siteId: string, conversationId?: string) {
     queryKey: ["ai-conversation", siteId, conversationId],
     queryFn: () => getConversation(siteId, conversationId!),
     enabled: !!siteId && !!conversationId,
-    // Never refetched while open. New turns are held in local state and shown
-    // after this data; a background refetch would return those same turns from
-    // the server and render each one twice. It also re-runs SQL server-side.
+    // New turns live in local state; a refetch would return them again and
+    // render each one twice.
     staleTime: Infinity,
     refetchOnWindowFocus: false,
   });
@@ -32,19 +33,16 @@ export function useConversation(siteId: string, conversationId?: string) {
 
 export function useDeleteConversation(siteId: string) {
   const queryClient = useQueryClient();
-
   return useMutation({
     mutationFn: (conversationId: string) =>
       deleteConversation(siteId, conversationId),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["ai-conversations", siteId] });
-    },
+    onSuccess: () =>
+      queryClient.invalidateQueries({ queryKey: conversationsKey(siteId) }),
   });
 }
 
 export function useAsk(siteId: string) {
   const queryClient = useQueryClient();
-
   return useMutation<
     AskResult,
     Error,
@@ -54,17 +52,15 @@ export function useAsk(siteId: string) {
       try {
         return await ask(siteId, question, conversationId);
       } catch (err) {
-        // A 422 is SQL the model wrote and the database refused — that is an
-        // answer to show, not a failure to swallow. Anything else is a real error.
-        const body = (err as AxiosError<{ data?: AskResult }>).response?.data;
-        if (body?.data?.kind === "error") return body.data;
-        // Surface the server's own wording ("Too many questions, try again
-        // later") rather than axios's "Request failed with status code 429".
+        // A 422 carries SQL the database rejected; that is an answer to show.
+        if (isAxiosError<{ data?: AskResult }>(err)) {
+          const result = err.response?.data?.data;
+          if (result?.kind === "error") return result;
+        }
         throw new Error(getErrorMessage(err, "Ask failed"));
       }
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["ai-conversations", siteId] });
-    },
+    onSuccess: () =>
+      queryClient.invalidateQueries({ queryKey: conversationsKey(siteId) }),
   });
 }
