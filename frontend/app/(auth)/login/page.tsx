@@ -52,7 +52,20 @@ export default function LoginPage() {
       subtitle="Sign in to continue to Pulse Analytics."
       error={error}
       footer={
-        <AuthAltLink prompt="No account?" href="/register" label="Create one" />
+        <>
+          <AuthAltLink
+            prompt="No account?"
+            href="/register"
+            label="Create one"
+          />
+          <p className="mt-2">
+            <AuthAltLink
+              prompt="Just looking?"
+              href="/demo"
+              label="Try the live demo"
+            />
+          </p>
+        </>
       }
     >
       <Form {...form}>

@@ -1,6 +1,7 @@
 import Link from "next/link";
 
 import { AuthPanel, AuthPanelMobile } from "@/components/auth/auth-panel";
+import { LeaveDemo } from "@/components/demo/leave-demo";
 import { PulseLogo } from "@/components/landing/shared";
 
 export default function AuthLayout({
@@ -10,6 +11,7 @@ export default function AuthLayout({
 }) {
   return (
     <div className="dark grid min-h-dvh bg-charcoal lg:grid-cols-2">
+      <LeaveDemo />
       <div className="relative flex min-h-dvh flex-col lg:min-h-0">
         <AuthPanelMobile />
 

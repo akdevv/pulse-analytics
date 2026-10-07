@@ -13,7 +13,11 @@ const SECTIONS = [
   { label: "Install", href: "#install" },
 ];
 
-const LINKS = [...SECTIONS, { label: "Docs", href: "/docs" }];
+const LINKS = [
+  ...SECTIONS,
+  { label: "Docs", href: "/docs" },
+  { label: "Live demo", href: "/demo" },
+];
 
 const PILL =
   "rounded-full transition-colors duration-150 ease-out hover:bg-ink/6 hover:text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-tangerine";
@@ -110,6 +114,7 @@ export function Nav() {
         <Divider />
         <div className="hidden items-center md:flex">
           <NavLink href="/docs">Docs</NavLink>
+          <NavLink href="/demo">Demo</NavLink>
           <NavLink href="/login">Sign in</NavLink>
         </div>
 

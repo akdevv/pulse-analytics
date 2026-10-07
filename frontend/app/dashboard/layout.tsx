@@ -2,6 +2,7 @@
 
 import { AppSidebar } from "@/components/common/app-sidebar";
 import { SiteHeader } from "@/components/common/site-header";
+import { DemoBanner } from "@/components/demo/demo-banner";
 import { SidebarProvider } from "@/components/ui/sidebar";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useAuth } from "@/contexts/auth.context";
@@ -13,7 +14,7 @@ export default function DashboardLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const { user, isLoading } = useAuth();
+  const { user, isLoading, isDemo } = useAuth();
   const router = useRouter();
 
   useEffect(() => {
@@ -43,6 +44,7 @@ export default function DashboardLayout({
       <div className="flex h-dvh w-full bg-background">
         <AppSidebar />
         <div className="flex min-w-0 flex-1 flex-col border-l border-[var(--seam)] bg-background">
+          {isDemo && <DemoBanner />}
           <SiteHeader />
           <main className="hide-scrollbar flex-1 overflow-y-auto">
             <div className="page-col flex min-h-full flex-col">{children}</div>

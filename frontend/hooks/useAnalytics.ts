@@ -11,12 +11,14 @@ import {
   getTopPages,
 } from "@/lib/api/analytics.api";
 import { getAccessToken } from "@/lib/api/client";
+import { isDemo } from "@/lib/demo/mode";
 import type {
   DateRangeParams,
   RealtimeStats,
 } from "@/lib/types/analytics.types";
 
 const RECONNECT_MS = 5_000;
+const DEMO_TICK_MS = 4_000;
 
 function useRangeQuery<T>(
   key: string,
@@ -72,6 +74,8 @@ export function useRealtimeStream(siteId: string) {
 
   useEffect(() => {
     if (!siteId) return;
+    if (isDemo())
+      return simulateStream(siteId, setData, () => setIsLoading(false));
 
     const controller = new AbortController();
     let retry: ReturnType<typeof setTimeout> | undefined;
@@ -133,4 +137,29 @@ export function useRealtimeStream(siteId: string) {
   }, [siteId]);
 
   return { data, isLoading, error };
+}
+
+function simulateStream(
+  siteId: string,
+  onData: (stats: RealtimeStats) => void,
+  onReady: () => void
+) {
+  let tick = 0;
+  let timer: ReturnType<typeof setInterval> | undefined;
+  let stopped = false;
+
+  import("@/lib/demo/data").then(({ realtime }) => {
+    if (stopped) return;
+    const emit = () => {
+      onData(realtime(siteId, tick++));
+      onReady();
+    };
+    emit();
+    timer = setInterval(emit, DEMO_TICK_MS);
+  });
+
+  return () => {
+    stopped = true;
+    clearInterval(timer);
+  };
 }
