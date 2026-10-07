@@ -9,12 +9,14 @@ import {
   useState,
 } from "react";
 import * as authApi from "@/lib/api/auth.api";
-import { setAccessToken } from "@/lib/api/client";
+import { setAccessToken, setApiAdapter } from "@/lib/api/client";
+import { exitDemo, isDemo as inDemoMode } from "@/lib/demo/mode";
 import type { User } from "@/lib/types/user.types";
 
 interface AuthContextValue {
   user: User | null;
   isLoading: boolean;
+  isDemo: boolean;
   login: (email: string, password: string) => Promise<void>;
   register: (name: string, email: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
@@ -26,10 +28,15 @@ const AuthContext = createContext<AuthContextValue | null>(null);
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [isDemo] = useState(inDemoMode);
 
   useEffect(() => {
-    authApi
-      .refreshSession()
+    const ready = isDemo
+      ? import("@/lib/demo/adapter").then((m) => setApiAdapter(m.demoAdapter))
+      : Promise.resolve();
+
+    ready
+      .then(() => authApi.refreshSession())
       .then(({ accessToken }) => {
         setAccessToken(accessToken);
         return authApi.getMe();
@@ -40,7 +47,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setUser(null);
       })
       .finally(() => setIsLoading(false));
-  }, []);
+  }, [isDemo]);
 
   const startSession = useCallback(
     async (session: Promise<{ accessToken: string }>) => {
@@ -55,11 +62,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     () => ({
       user,
       isLoading,
+      isDemo,
       login: (email, password) => startSession(authApi.login(email, password)),
       register: (name, email, password) =>
         startSession(authApi.register(name, email, password)),
       refreshUser: async () => setUser(await authApi.getMe()),
       logout: async () => {
+        if (isDemo) return exitDemo("/");
         try {
           await authApi.logout();
         } finally {
@@ -68,7 +77,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         }
       },
     }),
-    [user, isLoading, startSession]
+    [user, isLoading, isDemo, startSession]
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

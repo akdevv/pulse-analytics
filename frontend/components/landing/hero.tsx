@@ -76,11 +76,8 @@ export function Hero() {
             >
               Get started
             </PrimaryButton>
-            <GhostButton
-              href="#how-it-works"
-              className="h-11 justify-center py-0"
-            >
-              See how it works
+            <GhostButton href="/demo" className="h-11 justify-center py-0">
+              Try the live demo
             </GhostButton>
           </div>
         </Reveal>

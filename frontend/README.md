@@ -1,36 +1,34 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Pulse frontend
 
-## Getting Started
+Next.js dashboard, landing page and docs for Pulse Analytics.
 
-First, run the development server:
+## Development
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+cp .env.example .env.local   # NEXT_PUBLIC_API_URL points at the backend
+pnpm install
+pnpm dev                     # http://localhost:3000
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+`pnpm typecheck`, `pnpm lint` and `pnpm build` are the checks CI cares about.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Live demo
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+`/demo` opens the real dashboard with no backend behind it. It sets a
+`pulse_demo` cookie and reloads into the dashboard, where every API call is
+answered in the browser:
 
-## Learn More
+- `lib/demo/adapter.ts` is an axios adapter that routes requests to the demo
+  handlers instead of the network.
+- `lib/demo/data.ts` generates deterministic traffic for two sample sites, so
+  charts, totals and breakdowns agree with each other for any date range.
+- `lib/demo/ai.ts` answers Ask AI from a fixed set of questions, built from the
+  same data.
+- The realtime panel is driven by a timer instead of the SSE stream.
 
-To learn more about Next.js, take a look at the following resources:
+Changes made in the demo (new sites, settings, conversations) live in memory
+and reset on reload. Exiting the demo, or opening the sign in or sign up page,
+clears the cookie.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Because nothing in the demo calls the API, the frontend can be deployed to
+Vercel on its own and the demo keeps working while the backend is down.

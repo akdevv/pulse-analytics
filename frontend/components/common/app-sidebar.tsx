@@ -60,7 +60,7 @@ function NavLink({
 export function AppSidebar() {
   const router = useRouter();
   const pathname = usePathname();
-  const { logout } = useAuth();
+  const { logout, isDemo } = useAuth();
 
   const handleLogout = async () => {
     await logout();
@@ -104,7 +104,7 @@ export function AppSidebar() {
             className="flex cursor-pointer items-center gap-2.5 rounded-md px-2.5 py-[7px] text-[13px] text-foreground/50 transition-colors duration-150 ease-[var(--ease-out)] hover:bg-foreground/[0.05] hover:text-foreground/90"
           >
             <LogOut className="size-4 shrink-0" />
-            <span>Log out</span>
+            <span>{isDemo ? "Exit demo" : "Log out"}</span>
           </button>
         </SidebarFooter>
       </SidebarContent>

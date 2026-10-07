@@ -1,4 +1,4 @@
-import axios, { type AxiosRequestConfig } from "axios";
+import axios, { type AxiosAdapter, type AxiosRequestConfig } from "axios";
 
 type Envelope<T> = { status: string; message: string; data: T };
 
@@ -23,6 +23,10 @@ const api = axios.create({
   withCredentials: true,
   headers: { "Content-Type": "application/json" },
 });
+
+export const setApiAdapter = (adapter: AxiosAdapter) => {
+  api.defaults.adapter = adapter;
+};
 
 api.interceptors.request.use((config) => {
   if (accessToken) config.headers.Authorization = `Bearer ${accessToken}`;
