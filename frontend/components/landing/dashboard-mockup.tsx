@@ -272,8 +272,8 @@ export function DashboardMockup() {
       />
 
       <div
-        className="pa-beam relative rounded-2xl p-px"
-        style={{ "--rim": RIM, maskImage: FADE_BOTTOM } as React.CSSProperties}
+        className="relative rounded-2xl p-px"
+        style={{ background: RIM, maskImage: FADE_BOTTOM }}
       >
         <div className="flex flex-col overflow-hidden rounded-[15px] bg-surface-1 pb-6 shadow-edge xl:aspect-16/10">
           <SafariChrome />

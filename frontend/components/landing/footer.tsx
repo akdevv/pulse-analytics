@@ -101,8 +101,8 @@ export function Footer() {
         aria-hidden
         className="pa-wordmark pointer-events-none mx-auto max-w-6xl overflow-hidden px-6 select-none"
       >
-        <span className="block translate-y-[18%] text-center font-display text-[clamp(96px,26vw,340px)] leading-[0.8] font-bold tracking-[-0.06em]">
-          Pulse
+        <span className="pa-dot block translate-y-[12%] text-center text-[clamp(88px,24vw,320px)] leading-[0.8] font-black tracking-[0.02em]">
+          PULSE
         </span>
       </div>
     </footer>

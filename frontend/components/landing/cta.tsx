@@ -25,22 +25,16 @@ export function CTA() {
     <section className="relative py-24 md:py-32">
       <div className="mx-auto max-w-6xl px-6">
         <Reveal>
-          <div className="pa-cta-border relative overflow-hidden rounded-3xl p-px">
+          <div className="relative overflow-hidden rounded-3xl border border-ink/8">
             <div
-              className="relative isolate overflow-hidden rounded-[23px] px-6 py-20 text-center md:py-28"
+              className="relative isolate overflow-hidden px-6 py-20 text-center md:py-28"
               style={{ background: GRADIENT }}
             >
-              <div aria-hidden className="pa-cta-orbit -z-10" />
               <div
                 aria-hidden
                 className="absolute inset-0 -z-10"
                 style={DOTS}
               />
-              <div aria-hidden className="pa-pulse-rings -z-10">
-                <span />
-                <span />
-                <span />
-              </div>
 
               <h2 className="pa-zoom mx-auto max-w-3xl font-display text-[38px] leading-[1.02] font-semibold tracking-[-0.035em] text-balance text-ink sm:text-[52px] md:text-[60px]">
                 See your traffic.

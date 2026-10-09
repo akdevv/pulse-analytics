@@ -3,7 +3,7 @@ import { highlight } from "./highlight";
 import { Reveal, SectionHeading } from "./shared";
 import { STAGE } from "./surfaces";
 import { AskTile, ClickTile, LiveTile, WELL } from "./features-live";
-import { CountUp, Spotlight } from "./motion";
+import { CountUp } from "./motion";
 
 // Output of backend/src/modules/ai/sql.prompt.md for this question.
 const ASK_SQL = `SELECT country, SUM(pageviews)
@@ -53,9 +53,10 @@ export async function Features() {
 
         <Reveal
           delay={80}
-          className="grid grid-cols-1 gap-3 md:grid-cols-2 lg:auto-rows-68 lg:grid-cols-4 lg:gap-4"
+          className="pa-panel grid grid-cols-1 gap-px overflow-hidden rounded-2xl bg-ink/8 md:grid-cols-2 lg:auto-rows-72 lg:grid-cols-4"
         >
           <Tile
+            id="MOD.11"
             title="Ask your data a question."
             description="The model writes the SQL, never runs it. A parser checks it's one read-only SELECT scoped to your site."
             className="md:col-span-2 lg:row-span-2"
@@ -103,6 +104,7 @@ export async function Features() {
           />
 
           <Tile
+            id="MOD.12"
             title="Who's on the site right now."
             description="A live count and event feed, streamed over server-sent events."
             className="md:col-span-2"
@@ -110,6 +112,7 @@ export async function Features() {
           />
 
           <Tile
+            id="MOD.13"
             title="No cookies, no stored IPs."
             description="The IP is used once for the country, then dropped."
             visual={
@@ -132,6 +135,7 @@ export async function Features() {
           />
 
           <Tile
+            id="MOD.14"
             title="Built for single-page apps."
             description="A React hook. Route changes count as pageviews."
             visual={
@@ -145,6 +149,7 @@ export async function Features() {
           />
 
           <Tile
+            id="MOD.15"
             title="Track clicks with one attribute."
             description="Add data-pulse-event to any element, or call trackEvent."
             className="md:col-span-2"
@@ -152,6 +157,7 @@ export async function Features() {
           />
 
           <Tile
+            id="MOD.16"
             title="By the numbers."
             description="10k/s is the design target until the load test runs."
             className="md:col-span-2"
@@ -178,24 +184,31 @@ export async function Features() {
 }
 
 function Tile({
+  id,
   title,
   description,
   visual,
   className,
 }: {
+  id: string;
   title: string;
   description: string;
   visual: React.ReactNode;
   className?: string;
 }) {
   return (
-    <Spotlight
-      tilt
+    <div
       className={cn(
-        "pa-rise flex min-h-64 flex-col overflow-hidden rounded-2xl border border-ink/8 bg-surface-1 transition-[border-color,transform] duration-300 ease-out hover:-translate-y-0.5 hover:border-ink/14",
+        "group/mod relative flex min-h-64 flex-col overflow-hidden bg-surface-1 transition-colors duration-300 ease-out hover:bg-surface-2/70",
         className
       )}
     >
+      <div className="relative flex items-center justify-between px-6 pt-5 font-mono text-[10.5px] tracking-[0.08em] text-ink/30 uppercase">
+        <span className="transition-colors duration-300 group-hover/mod:text-tangerine-soft">
+          {id}
+        </span>
+        <span aria-hidden className="pa-led pa-led-hover" data-on="false" />
+      </div>
       <div className="relative min-h-0 flex-1 overflow-hidden">
         <div aria-hidden className="absolute inset-0" style={STAGE} />
         <div className="relative h-full">{visual}</div>
@@ -208,7 +221,11 @@ function Tile({
           {description}
         </p>
       </div>
-    </Spotlight>
+      <span
+        aria-hidden
+        className="absolute inset-x-0 bottom-0 h-px origin-left scale-x-0 bg-tangerine transition-transform duration-500 ease-out group-hover/mod:scale-x-100"
+      />
+    </div>
   );
 }
 

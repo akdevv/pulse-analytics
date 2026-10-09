@@ -1,5 +1,6 @@
 @import url("https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,500;12..96,600;12..96,700&display=swap");
 @import url("https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,400&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Doto:wght@600;900&display=swap");
 @import url("https://fonts.googleapis.com/css2?family=JetBrains+Mono:ital,wght@0,100..800;1,100..800&display=swap");
 
 @import "tailwindcss";
@@ -31,6 +32,7 @@
   --tracking-display: -0.02em;
   --tracking-logo: -0.04em;
   --font-mono: JetBrains Mono, monospace;
+  --font-dot: "Doto", "JetBrains Mono", ui-monospace, monospace;
   --shadow-xl: var(--shadow-xl);
   --shadow-lg: var(--shadow-lg);
   --shadow-sm: var(--shadow-sm);
@@ -440,101 +442,97 @@
   animation-delay: var(--pa-delay, 0ms);
 }
 
-@keyframes pa-shimmer {
-  to {
-    background-position: -200% 0;
-  }
+/* Instrument system: panels, channels, LEDs, dot-matrix readouts. */
+.pa-dot {
+  font-family: var(--font-dot);
+  font-weight: 900;
+  letter-spacing: 0.02em;
+  line-height: 1;
 }
-.pa-shimmer-text {
-  color: var(--color-tangerine-soft);
-  background-image: linear-gradient(
-    100deg,
-    var(--color-tangerine-soft) 0%,
-    var(--color-tangerine) 30%,
-    oklch(0.9 0.08 70) 50%,
-    var(--color-tangerine) 70%,
-    var(--color-tangerine-soft) 100%
+.pa-panel {
+  border: 1px solid color-mix(in oklab, var(--color-ink) 9%, transparent);
+  background: var(--color-surface-1);
+  box-shadow:
+    inset 0 1px 0 rgb(229 227 210 / 0.04),
+    0 24px 48px -28px rgb(0 0 0 / 0.8);
+}
+.pa-channel {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 0.875rem;
+  background: var(--color-surface-1);
+  padding: 0.875rem 1rem 1rem;
+  transition: background-color 250ms var(--ease-out);
+}
+.pa-channel:hover {
+  background: color-mix(
+    in oklab,
+    var(--color-surface-2) 70%,
+    var(--color-surface-1)
   );
-  background-size: 200% 100%;
-  background-clip: text;
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  animation:
-    pa-word-in 900ms var(--ease-out) backwards,
-    pa-shimmer 6s linear infinite;
-  animation-delay: var(--pa-delay, 0ms), 0ms;
+}
+.pa-module {
+  background:
+    linear-gradient(
+      to bottom,
+      color-mix(in oklab, var(--color-ink) 5%, transparent),
+      transparent
+    ),
+    var(--color-well);
 }
 
-@keyframes pa-drift-a {
-  50% {
-    transform: translate(12%, 8%) scale(1.15);
-  }
-}
-@keyframes pa-drift-b {
-  50% {
-    transform: translate(-14%, 6%) scale(0.9);
-  }
-}
-@keyframes pa-drift-c {
-  50% {
-    transform: translate(6%, -10%) scale(1.2);
-  }
-}
-.pa-aurora {
-  position: absolute;
+.pa-led {
+  position: relative;
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  flex-shrink: 0;
   border-radius: 9999px;
-  filter: blur(70px);
-  opacity: 0.55;
-  will-change: transform;
+  background: color-mix(in oklab, var(--color-ink) 16%, transparent);
+  transition:
+    background-color 250ms var(--ease-out),
+    box-shadow 250ms var(--ease-out);
 }
-.pa-aurora-a {
-  top: -14%;
-  left: 18%;
-  width: 46%;
-  height: 420px;
-  background: color-mix(in oklab, var(--color-tangerine) 32%, transparent);
-  animation: pa-drift-a 18s ease-in-out infinite;
+.pa-led[data-on="true"] {
+  background: var(--color-tangerine);
+  box-shadow: 0 0 8px 1px var(--pa-accent-glow);
 }
-.pa-aurora-b {
-  top: 4%;
-  right: 10%;
-  width: 36%;
-  height: 340px;
-  background: color-mix(in oklab, var(--color-tangerine-soft) 22%, transparent);
-  animation: pa-drift-b 22s ease-in-out infinite;
-}
-.pa-aurora-c {
-  top: 30%;
-  left: 30%;
-  width: 40%;
-  height: 300px;
-  background: color-mix(in oklab, var(--color-powder) 12%, transparent);
-  animation: pa-drift-c 26s ease-in-out infinite;
-}
-
-.pa-tilt {
-  transform: rotateX(var(--tilt, 0deg)) scale(var(--tilt-scale, 1));
-  transform-origin: center top;
-  will-change: transform;
-}
-
-@keyframes pa-float {
-  50% {
-    transform: translateY(-10px);
+@keyframes pa-led-flash {
+  0% {
+    background: oklch(0.95 0.08 60);
+    box-shadow: 0 0 14px 4px var(--color-tangerine);
   }
 }
-.pa-float {
-  animation: pa-float 6s ease-in-out infinite;
+.pa-led-flash[data-on="true"] {
+  animation: pa-led-flash 600ms var(--ease-out);
 }
-@keyframes pa-chip-in {
+.group\/mod:hover .pa-led-hover {
+  background: var(--color-tangerine);
+  box-shadow: 0 0 10px 2px var(--pa-accent-glow);
+}
+
+@keyframes pa-digit-in {
   from {
     opacity: 0;
-    transform: translateY(10px) scale(0.94);
-    filter: blur(4px);
+    transform: translateY(-0.45em);
+    filter: blur(2px);
   }
 }
-.pa-chip-in {
-  animation: pa-chip-in 500ms var(--ease-out) backwards;
+.pa-digit {
+  animation: pa-digit-in 350ms var(--ease-out);
+}
+
+@keyframes pa-row-in {
+  from {
+    opacity: 0;
+    transform: translateX(-6px);
+  }
+}
+.pa-row-in > * {
+  animation: pa-row-in 450ms var(--ease-out) backwards;
+  animation-delay: var(--pa-delay, 0ms);
 }
 
 /* Scroll progress, where scroll-driven animations exist. */
@@ -554,11 +552,7 @@
     z-index: 60;
     height: 2px;
     transform-origin: left;
-    background: linear-gradient(
-      90deg,
-      var(--color-tangerine),
-      var(--color-tangerine-soft)
-    );
+    background: var(--color-tangerine);
     box-shadow: 0 0 12px var(--pa-accent-glow);
     animation: pa-progress linear both;
     animation-timeline: scroll(root);
@@ -594,47 +588,7 @@
   animation: pa-line-sweep 1600ms var(--ease-out) 500ms backwards;
 }
 
-/* Pointer spotlight on cards */
-.pa-spot {
-  position: relative;
-}
-.pa-spot::before,
-.pa-spot::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  border-radius: inherit;
-  pointer-events: none;
-  opacity: 0;
-  transition: opacity 300ms var(--ease-out);
-  z-index: 1;
-}
-.pa-spot::before {
-  background: radial-gradient(
-    420px circle at var(--mx, 50%) var(--my, 50%),
-    color-mix(in oklab, var(--color-tangerine) 9%, transparent),
-    transparent 60%
-  );
-}
-.pa-spot::after {
-  padding: 1px;
-  background: radial-gradient(
-    260px circle at var(--mx, 50%) var(--my, 50%),
-    color-mix(in oklab, var(--color-tangerine) 60%, transparent),
-    transparent 70%
-  );
-  mask:
-    linear-gradient(#000 0 0) content-box exclude,
-    linear-gradient(#000 0 0);
-}
-@media (hover: hover) and (pointer: fine) {
-  .pa-spot:hover::before,
-  .pa-spot:hover::after {
-    opacity: 1;
-  }
-}
-
-/* Pipeline */
+/* Round trip */
 .pa-grid-pan {
   background-image:
     linear-gradient(
@@ -648,77 +602,24 @@
     );
   background-size: 28px 28px;
   mask-image: radial-gradient(ellipse 80% 90% at 50% 50%, black, transparent);
-  animation: pa-grid-pan 14s linear infinite;
 }
-@keyframes pa-grid-pan {
-  to {
-    background-position: 28px 28px;
-  }
-}
-.pa-wire {
-  background: repeating-linear-gradient(
-    to bottom,
-    color-mix(in oklab, var(--color-ink) 22%, transparent) 0 3px,
-    transparent 3px 6px
+.pa-stage-glow {
+  background: radial-gradient(
+    260px circle at var(--px, 14%) var(--py, 23%),
+    color-mix(in oklab, var(--color-tangerine) 14%, transparent),
+    transparent 70%
   );
 }
-@media (min-width: 768px) {
-  .pa-wire {
-    background: repeating-linear-gradient(
-      to right,
-      color-mix(in oklab, var(--color-ink) 22%, transparent) 0 3px,
-      transparent 3px 6px
-    );
+@keyframes pa-halo {
+  50% {
+    transform: scale(1.35);
+    opacity: 0.6;
   }
 }
-@keyframes pa-packet-y {
-  from {
-    top: -3px;
-    opacity: 0;
-  }
-  20%,
-  80% {
-    opacity: 1;
-  }
-  to {
-    top: calc(100% - 3px);
-    opacity: 0;
-  }
-}
-@keyframes pa-packet-x {
-  from {
-    left: -3px;
-    opacity: 0;
-  }
-  20%,
-  80% {
-    opacity: 1;
-  }
-  to {
-    left: calc(100% - 3px);
-    opacity: 0;
-  }
-}
-.pa-packet {
-  position: absolute;
-  left: -2.5px;
-  top: -3px;
-  width: 6px;
-  height: 6px;
-  border-radius: 9999px;
-  background: var(--color-tangerine-soft);
-  box-shadow:
-    0 0 8px 2px var(--pa-accent-glow),
-    0 0 2px var(--color-tangerine);
-  animation: pa-packet-y 1.2s linear infinite;
-  animation-delay: var(--pa-delay, 0ms);
-}
-@media (min-width: 768px) {
-  .pa-packet {
-    top: -2.5px;
-    left: -3px;
-    animation-name: pa-packet-x;
-  }
+.pa-halo {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: pa-halo 1.6s ease-in-out infinite;
 }
 
 @keyframes pa-marquee {
@@ -763,7 +664,6 @@
 .pa-feed-in {
   animation: pa-feed-in 500ms var(--ease-out);
 }
-
 @keyframes pa-cursor {
   0% {
     transform: translate(26px, 22px);
@@ -820,7 +720,6 @@
 .pa-pop {
   animation: pa-pop 1400ms var(--ease-out) both;
 }
-
 @keyframes pa-blink {
   50% {
     opacity: 0;
@@ -848,173 +747,32 @@
   transform: none;
 }
 
-/* CTA */
-@property --pa-angle {
-  syntax: "<angle>";
-  initial-value: 0deg;
-  inherits: false;
+/* Type wall: outline words fill as the block scrolls up. */
+.pa-wall-word {
+  display: inline-block;
+  color: var(--color-ink);
 }
-@keyframes pa-spin {
-  to {
-    --pa-angle: 360deg;
-  }
+.pa-wall-word[data-tone="outline"] {
+  color: transparent;
+  -webkit-text-stroke: 1.5px
+    color-mix(in oklab, var(--color-ink) 45%, transparent);
 }
-.pa-cta-border {
-  background:
-    conic-gradient(
-      from var(--pa-angle),
-      transparent 0deg,
-      color-mix(in oklab, var(--color-tangerine) 80%, transparent) 40deg,
-      transparent 110deg,
-      transparent 180deg,
-      color-mix(in oklab, var(--color-powder) 45%, transparent) 230deg,
-      transparent 290deg
-    ),
-    color-mix(in oklab, var(--color-ink) 8%, transparent);
-  animation: pa-spin 8s linear infinite;
+.pa-wall-word[data-tone="accent"] {
+  color: var(--color-tangerine);
 }
-@keyframes pa-orbit {
-  to {
-    transform: translate(-50%, -50%) rotate(360deg);
-  }
-}
-.pa-cta-orbit {
-  position: absolute;
-  top: 100%;
-  left: 50%;
-  width: 140%;
-  aspect-ratio: 1;
-  transform: translate(-50%, -50%);
-  background: conic-gradient(
-    from 0deg,
-    transparent,
-    color-mix(in oklab, var(--color-tangerine) 22%, transparent),
-    transparent 30%,
-    color-mix(in oklab, var(--color-tangerine-soft) 14%, transparent) 60%,
-    transparent 75%
+
+.pa-wordmark span {
+  background-image: linear-gradient(
+    to bottom,
+    color-mix(in oklab, var(--color-ink) 14%, transparent),
+    color-mix(in oklab, var(--color-tangerine) 26%, transparent) 55%,
+    transparent 100%
   );
-  filter: blur(40px);
-  animation: pa-orbit 24s linear infinite;
-}
-@keyframes pa-ring {
-  from {
-    transform: translate(-50%, 50%) scale(0.2);
-    opacity: 0.7;
-  }
-  to {
-    transform: translate(-50%, 50%) scale(1);
-    opacity: 0;
-  }
-}
-.pa-pulse-rings {
-  position: absolute;
-  inset: 0;
-  overflow: hidden;
-}
-.pa-pulse-rings span {
-  position: absolute;
-  bottom: 0;
-  left: 50%;
-  width: 900px;
-  aspect-ratio: 1;
-  border-radius: 9999px;
-  border: 1px solid color-mix(in oklab, var(--color-tangerine) 35%, transparent);
-  animation: pa-ring 6s var(--ease-out) infinite;
-}
-.pa-pulse-rings span:nth-child(2) {
-  animation-delay: 2s;
-}
-.pa-pulse-rings span:nth-child(3) {
-  animation-delay: 4s;
-}
-
-/* ── Landing v2: hover + scroll ── */
-.pa-magnet {
-  transition:
-    translate 400ms var(--ease-out),
-    transform 150ms var(--ease-out),
-    filter 150ms var(--ease-out),
-    box-shadow 200ms var(--ease-out),
-    color 150ms var(--ease-out),
-    background-color 150ms var(--ease-out),
-    border-color 150ms var(--ease-out);
-}
-@media (hover: hover) and (pointer: fine) {
-  .pa-btn.pa-magnet:hover {
-    box-shadow:
-      inset 0 1px 0 rgb(229 227 210 / 0.35),
-      0 12px 32px -8px var(--pa-accent-glow),
-      0 0 0 4px color-mix(in oklab, var(--color-tangerine) 14%, transparent);
-  }
-}
-
-.pa-spot[data-tilt] {
-  transform: perspective(1000px) rotateX(var(--rx, 0deg))
-    rotateY(var(--ry, 0deg));
-  transition:
-    transform 500ms var(--ease-out),
-    border-color 300ms var(--ease-out),
-    translate 300ms var(--ease-out);
-  will-change: transform;
-}
-.pa-spot[data-tilt]:hover {
-  transition:
-    transform 120ms linear,
-    border-color 300ms var(--ease-out),
-    translate 300ms var(--ease-out);
-}
-
-.pa-cursor-dots {
-  position: absolute;
-  inset: 0;
-  opacity: 0;
-  transition: opacity 400ms var(--ease-out);
-  background-image: radial-gradient(
-    circle,
-    color-mix(in oklab, var(--color-tangerine-soft) 70%, transparent) 1.2px,
-    transparent 1.7px
-  );
-  background-size: 22px 22px;
-  mask-image: radial-gradient(
-    180px circle at var(--mx, -999px) var(--my, -999px),
-    black,
-    transparent
-  );
-  pointer-events: none;
-}
-
-.pa-beam {
-  background:
-    conic-gradient(
-      from var(--pa-angle),
-      transparent 0deg,
-      transparent 250deg,
-      color-mix(in oklab, var(--color-tangerine-soft) 90%, transparent) 300deg,
-      white 318deg,
-      transparent 340deg
-    ),
-    var(--rim);
-  animation: pa-spin 7s linear infinite;
-}
-
-/* Round trip stage */
-.pa-stage-glow {
-  background: radial-gradient(
-    260px circle at var(--px, 14%) var(--py, 23%),
-    color-mix(in oklab, var(--color-tangerine) 16%, transparent),
-    transparent 70%
-  );
-}
-@keyframes pa-halo {
-  50% {
-    transform: scale(1.35);
-    opacity: 0.6;
-  }
-}
-.pa-halo {
-  transform-box: fill-box;
-  transform-origin: center;
-  animation: pa-halo 1.6s ease-in-out infinite;
+  background-size: 100% 200%;
+  background-position: 0 0;
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
 }
 
 @supports (animation-timeline: view()) {
@@ -1034,45 +792,26 @@
       calc(26% + var(--i, 0) * 3%);
   }
 
-  @keyframes pa-rise {
+  @keyframes pa-wall-in {
     from {
-      opacity: 0;
-      translate: 0 48px;
-      scale: 0.94;
+      opacity: 0.12;
+      transform: translateY(0.25em);
     }
   }
-  .pa-rise {
-    animation: pa-rise linear both;
-    animation-timeline: view();
-    animation-range: entry 0% entry 90%;
+  .pa-wall {
+    view-timeline-name: --pa-wall;
   }
-
-  @keyframes pa-swing {
-    from {
-      opacity: 0;
-      transform: perspective(1400px) rotateY(-16deg) translateX(60px);
-    }
-  }
-  @keyframes pa-swing-left {
-    from {
-      opacity: 0;
-      transform: perspective(1400px) rotateY(16deg) translateX(-60px);
-    }
-  }
-  .pa-swing {
-    animation: pa-swing linear both;
-    animation-timeline: view();
-    animation-range: entry 0% cover 40%;
-  }
-  .pa-swing-left {
-    animation-name: pa-swing-left;
+  .pa-wall-word {
+    animation: pa-wall-in linear both;
+    animation-timeline: --pa-wall;
+    animation-range: cover calc(8% + var(--i, 0) * 7%) cover
+      calc(32% + var(--i, 0) * 7%);
   }
 
   @keyframes pa-zoom {
     from {
       opacity: 0.2;
       scale: 0.86;
-      letter-spacing: 0.02em;
     }
   }
   .pa-zoom {
@@ -1084,15 +823,14 @@
   @keyframes pa-hero-away {
     to {
       opacity: 0;
-      translate: 0 -80px;
-      scale: 0.96;
+      translate: 0 -60px;
       filter: blur(6px);
     }
   }
   .pa-hero-copy {
     animation: pa-hero-away linear both;
     animation-timeline: scroll(root);
-    animation-range: 0 75vh;
+    animation-range: 0 80vh;
   }
 
   @keyframes pa-wordmark {
@@ -1106,20 +844,6 @@
     animation-timeline: view();
     animation-range: entry 0% cover 60%;
   }
-}
-
-.pa-wordmark span {
-  background-image: linear-gradient(
-    to bottom,
-    color-mix(in oklab, var(--color-ink) 14%, transparent),
-    color-mix(in oklab, var(--color-tangerine) 26%, transparent) 55%,
-    transparent 100%
-  );
-  background-size: 100% 200%;
-  background-position: 0 0;
-  background-clip: text;
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
 }
 
 html:has(.pa-landing),

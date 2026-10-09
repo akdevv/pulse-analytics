@@ -149,12 +149,7 @@ export async function HowItWorks() {
                 index={i}
                 className={i % 2 ? "lg:order-2" : undefined}
               />
-              <CodeFrame
-                file={step.file}
-                lang={step.lang}
-                html={html[i]}
-                className={cn("pa-swing", i % 2 && "pa-swing-left lg:order-1")}
-              />
+              <CodeFrame file={step.file} lang={step.lang} html={html[i]} />
             </Reveal>
           ))}
         </ol>

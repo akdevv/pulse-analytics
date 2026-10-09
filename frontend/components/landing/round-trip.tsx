@@ -11,6 +11,7 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { Led } from "./instrument";
 import { useReducedMotion } from "./motion";
 
 // Stage geometry, in SVG user units. Top row runs right, bottom row runs back.
@@ -41,7 +42,7 @@ const STOPS: Stop[] = [
     x: 110,
     y: 100,
     title: "Someone loads a page.",
-    body: "The script sends one GET with the path, referrer and screen size. No cookie, nothing stored on the device.",
+    body: "The script sends one GET with the path, referrer, language and screen size. No cookies. A random visitor ID lives in localStorage.",
   },
   {
     icon: Zap,
@@ -216,12 +217,9 @@ export function RoundTrip() {
         <div className="mx-auto w-full max-w-6xl px-5 pt-16 sm:px-6 md:pt-20">
           <header className="mb-6 flex flex-col gap-3 md:mb-10 md:flex-row md:items-end md:justify-between">
             <div>
-              <p className="mb-3 inline-flex items-center gap-2 text-[12.5px] text-ink/50">
-                <span className="relative flex size-1.5">
-                  <span className="absolute inline-flex size-full animate-ping rounded-full bg-tangerine opacity-70" />
-                  <span className="relative inline-flex size-1.5 rounded-full bg-tangerine" />
-                </span>
-                Scroll to follow one event
+              <p className="mb-3 font-mono text-[11px] tracking-[0.08em] text-ink/40 uppercase">
+                <span className="text-ink/25">RT.10 · </span>Signal path ·
+                scroll to follow one event
               </p>
               <h2
                 id="round-trip-title"
@@ -360,9 +358,8 @@ export function RoundTrip() {
                     d={PATH}
                     fill="none"
                     stroke="var(--color-ink)"
-                    strokeOpacity="0.14"
-                    strokeWidth="2"
-                    strokeDasharray="2 8"
+                    strokeOpacity="0.12"
+                    strokeWidth="6"
                     strokeLinecap="round"
                   />
                   <path
@@ -380,9 +377,15 @@ export function RoundTrip() {
                     ref={packet}
                     transform={`translate(${STOPS[0].x} ${STOPS[0].y})`}
                   >
-                    <circle r="34" fill="url(#rt-halo)" className="pa-halo" />
-                    <circle r="7" fill="var(--color-tangerine-soft)" />
-                    <circle r="3" fill="white" fillOpacity="0.9" />
+                    <circle r="26" fill="url(#rt-halo)" className="pa-halo" />
+                    <rect
+                      x="-5"
+                      y="-5"
+                      width="10"
+                      height="10"
+                      rx="2"
+                      fill="var(--color-tangerine-soft)"
+                    />
                   </g>
                 </svg>
 
@@ -429,15 +432,20 @@ function StopCard({
       >
         <span
           className={cn(
-            "grid size-10 place-items-center rounded-2xl border backdrop-blur-sm transition-all duration-500 ease-out sm:size-14",
+            "pa-module relative grid size-10 place-items-center rounded-md border transition-all duration-500 ease-out sm:size-14",
             current
-              ? "border-tangerine/60 bg-tangerine/20 text-tangerine-soft shadow-[0_0_0_6px_color-mix(in_oklab,var(--color-tangerine)_10%,transparent),0_16px_40px_-10px_var(--pa-accent-glow)]"
+              ? "border-tangerine/60 text-tangerine-soft shadow-[0_0_0_4px_color-mix(in_oklab,var(--color-tangerine)_10%,transparent),0_16px_40px_-10px_var(--pa-accent-glow)]"
               : lit
-                ? "border-tangerine/25 bg-charcoal/90 text-tangerine-soft/80"
-                : "border-ink/10 bg-charcoal/90 text-ink/40"
+                ? "border-ink/20 text-ink/80"
+                : "border-ink/10 text-ink/35"
           )}
         >
           <Icon className="size-4 sm:size-5" />
+          <Led
+            on={lit}
+            pulse={current ? index : undefined}
+            className="absolute top-1 right-1 sm:top-1.5 sm:right-1.5"
+          />
         </span>
         <span
           className={cn(
@@ -447,7 +455,7 @@ function StopCard({
         >
           <span
             className={cn(
-              "block text-[10.5px] font-medium transition-colors duration-300 sm:text-[13px]",
+              "block font-mono text-[9.5px] tracking-[0.06em] uppercase transition-colors duration-300 sm:text-[11px]",
               lit ? "text-ink" : "text-ink/40"
             )}
           >

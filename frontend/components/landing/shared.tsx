@@ -5,7 +5,6 @@ import { ArrowRight, Check, Copy, Hash } from "lucide-react";
 import { useEffect, useId, useRef, useState } from "react";
 import { siGithub } from "simple-icons";
 import { cn } from "@/lib/utils";
-import { useMagnetic } from "./motion";
 
 export function Reveal({
   children,
@@ -58,13 +57,11 @@ export function PrimaryButton({
   children: React.ReactNode;
   className?: string;
 }) {
-  const magnetic = useMagnetic<HTMLAnchorElement>(0.18);
   return (
     <Link
       href={href}
-      {...magnetic}
       className={cn(
-        "pa-btn pa-magnet group inline-flex items-center gap-2 rounded-full bg-linear-to-b from-tangerine-soft to-tangerine px-6 py-3 text-[14px] font-medium text-charcoal shadow-glow",
+        "pa-btn group inline-flex items-center gap-2 rounded-full bg-linear-to-b from-tangerine-soft to-tangerine px-6 py-3 text-[14px] font-medium text-charcoal shadow-glow",
         className
       )}
     >
@@ -90,14 +87,12 @@ export function GhostButton({
   className?: string;
   external?: boolean;
 }) {
-  const magnetic = useMagnetic<HTMLAnchorElement>(0.12);
   return (
     <Link
       href={href}
       {...(external && { target: "_blank", rel: "noreferrer" })}
-      {...magnetic}
       className={cn(
-        "pa-magnet inline-flex items-center gap-2 rounded-full border border-ink/12 bg-ink/2 px-6 py-3 text-[14px] text-ink/75 transition-[color,border-color,background-color,transform] duration-150 ease-out hover:border-ink/25 hover:bg-ink/4 hover:text-ink active:scale-[0.97]",
+        "inline-flex items-center gap-2 rounded-full border border-ink/12 bg-ink/2 px-6 py-3 text-[14px] text-ink/75 transition-[color,border-color,background-color,transform] duration-150 ease-out hover:border-ink/25 hover:bg-ink/4 hover:text-ink active:scale-[0.97]",
         className
       )}
     >
