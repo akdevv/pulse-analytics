@@ -164,16 +164,12 @@ export function SectionHeading({
           className="shrink-0 text-tangerine"
         />
         <span className="text-[13.5px] font-medium text-ink/80">{label}</span>
-        <span aria-hidden className="pa-rule ml-3 h-px flex-1 bg-ink/10" />
+        <span aria-hidden className="ml-3 h-px flex-1 bg-ink/10" />
       </div>
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,7fr)_minmax(0,5fr)] lg:items-baseline-last lg:gap-14">
-        <h2 className="pa-scrub font-display text-[38px] leading-[1.02] font-semibold tracking-[-0.035em] text-balance text-ink sm:text-[48px] lg:text-[58px]">
-          <ScrubWords text={title} />
-          {muted && (
-            <span className="block text-ink/35">
-              <ScrubWords text={muted} offset={title.split(" ").length} />
-            </span>
-          )}
+        <h2 className="font-display text-[38px] leading-[1.02] font-semibold tracking-[-0.035em] text-balance text-ink sm:text-[48px] lg:text-[58px]">
+          {title}
+          {muted && <span className="block text-ink/35">{muted}</span>}
         </h2>
         {lead && (
           <p className="max-w-md text-[15.5px] leading-relaxed text-pretty text-ink/60">
@@ -230,25 +226,4 @@ export function CopyCommand({ command }: { command: string }) {
       </button>
     </div>
   );
-}
-
-// Words brighten one after another as the heading scrolls up the page.
-export function ScrubWords({
-  text,
-  offset = 0,
-}: {
-  text: string;
-  offset?: number;
-}) {
-  return text.split(" ").map((word, i, all) => (
-    <span key={i}>
-      <span
-        className="pa-scrub-word"
-        style={{ "--i": offset + i } as React.CSSProperties}
-      >
-        {word}
-      </span>
-      {i < all.length - 1 && " "}
-    </span>
-  ));
 }

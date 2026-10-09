@@ -95,3 +95,43 @@ export function CountUp({
     </span>
   );
 }
+
+// Tilts its child back in 3D and lets it settle flat as it scrolls up.
+export function ScrollTilt({ children }: { children: React.ReactNode }) {
+  const ref = useRef<HTMLDivElement>(null);
+  const reduced = useReducedMotion();
+
+  useEffect(() => {
+    const node = ref.current;
+    if (!node || reduced) return;
+    let raf = 0;
+    const update = () => {
+      raf = 0;
+      const r = node.getBoundingClientRect();
+      const vh = window.innerHeight;
+      // 0 while the top sits low in the viewport, 1 once it reaches 20%.
+      const t = Math.min(1, Math.max(0, (vh - r.top) / (vh * 0.8)));
+      node.style.setProperty("--tilt", `${((1 - t) * 14).toFixed(2)}deg`);
+      node.style.setProperty("--tilt-scale", `${(0.95 + t * 0.05).toFixed(4)}`);
+    };
+    const onScroll = () => {
+      if (!raf) raf = requestAnimationFrame(update);
+    };
+    update();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    window.addEventListener("resize", onScroll);
+    return () => {
+      cancelAnimationFrame(raf);
+      window.removeEventListener("scroll", onScroll);
+      window.removeEventListener("resize", onScroll);
+    };
+  }, [reduced]);
+
+  return (
+    <div className="[perspective:1800px]">
+      <div ref={ref} className="pa-tilt">
+        {children}
+      </div>
+    </div>
+  );
+}

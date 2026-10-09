@@ -60,12 +60,12 @@ export async function Install() {
               {STEPS.map((s, i) => (
                 <li
                   key={s.title}
-                  className="group/step grid grid-cols-[3rem_minmax(0,1fr)] border-b border-ink/8 py-6"
+                  className="grid grid-cols-[3rem_minmax(0,1fr)] border-b border-ink/8 py-6"
                 >
-                  <span className="grid size-7 place-items-center rounded-lg border border-ink/10 bg-ink/3 font-mono text-[12px] text-ink/50 tabular-nums shadow-edge transition-all duration-300 ease-out group-hover/step:-rotate-6 group-hover/step:border-tangerine group-hover/step:bg-tangerine group-hover/step:text-charcoal">
+                  <span className="grid size-7 place-items-center rounded-lg border border-ink/10 bg-ink/3 font-mono text-[12px] text-ink/50 tabular-nums shadow-edge">
                     {String(i + 1).padStart(2, "0")}
                   </span>
-                  <div className="transition-transform duration-300 ease-out group-hover/step:translate-x-1">
+                  <div>
                     <h3 className="font-display text-[19px] leading-snug font-semibold tracking-display text-ink">
                       {s.title}
                     </h3>

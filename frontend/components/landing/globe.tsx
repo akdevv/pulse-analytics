@@ -2,7 +2,6 @@
 
 import { useEffect, useRef, useState } from "react";
 import { cn } from "@/lib/utils";
-import { Channel, Rolling } from "./instrument";
 import { LAND_DOTS } from "./land-dots";
 import { useReducedMotion } from "./motion";
 
@@ -166,10 +165,30 @@ export function Globe() {
       ctx.beginPath();
       ctx.arc(cx, cy, R * 1.25, 0, Math.PI * 2);
       ctx.fill();
-      ctx.fillStyle = "rgb(20 20 20 / 0.9)";
+      // Sphere body, lit from the upper left, then a thin limb light.
+      const body = ctx.createRadialGradient(
+        cx - R * 0.35,
+        cy - R * 0.4,
+        R * 0.1,
+        cx,
+        cy,
+        R
+      );
+      body.addColorStop(0, "rgb(40 38 36)");
+      body.addColorStop(1, "rgb(17 17 17)");
+      ctx.fillStyle = body;
       ctx.beginPath();
       ctx.arc(cx, cy, R, 0, Math.PI * 2);
       ctx.fill();
+      const limb = ctx.createLinearGradient(cx, cy - R, cx, cy + R);
+      limb.addColorStop(0, "rgb(247 162 107 / 0.55)");
+      limb.addColorStop(0.5, "rgb(247 162 107 / 0.08)");
+      limb.addColorStop(1, "rgb(247 162 107 / 0)");
+      ctx.strokeStyle = limb;
+      ctx.lineWidth = 1.2;
+      ctx.beginPath();
+      ctx.arc(cx, cy, R, 0, Math.PI * 2);
+      ctx.stroke();
 
       // Land dots, bucketed by depth so each bucket is one fill colour.
       for (const b of buckets) b.length = 0;
@@ -354,8 +373,12 @@ export function Globe() {
 
         <div className="relative mx-auto flex h-full max-w-6xl flex-col justify-between px-5 pt-24 pb-10 sm:px-6 md:pt-28">
           <div className="max-w-xl">
-            <p className="mb-3 font-mono text-[11px] tracking-[0.08em] text-ink/40 uppercase">
-              <span className="text-ink/25">GL.07 · </span>Live view, demo data
+            <p className="mb-4 flex items-center gap-2 text-[13px] text-ink/55">
+              <span className="relative flex size-1.5">
+                <span className="absolute inline-flex size-full animate-ping rounded-full bg-tangerine opacity-60 motion-reduce:hidden" />
+                <span className="relative inline-flex size-1.5 rounded-full bg-tangerine" />
+              </span>
+              Live view · demo data
             </p>
             <h2
               id="globe-title"
@@ -397,22 +420,20 @@ export function Globe() {
               ))}
             </div>
 
-            <div className="pa-panel grid grid-cols-2 gap-px overflow-hidden rounded-2xl bg-ink/8 md:w-[400px]">
-              <Channel id="CH.08" label="Events/s" pulse={stats.rate}>
-                <Rolling
-                  value={stats.rate.toLocaleString("en-US")}
-                  roll={stats.rate < 20}
-                  className="text-[30px] text-ink"
-                />
-              </Channel>
-              <Channel id="CH.09" label="Today" led={false}>
-                <Rolling
-                  value={stats.total.toLocaleString("en-US")}
-                  roll={false}
-                  className="text-[30px] text-ink"
-                />
-              </Channel>
-            </div>
+            <dl className="flex gap-10 md:justify-end md:text-right">
+              <div>
+                <dt className="text-[12.5px] text-ink/45">Events per second</dt>
+                <dd className="mt-1 font-display text-[40px] leading-none font-semibold tracking-[-0.03em] text-ink tabular-nums sm:text-[48px]">
+                  {stats.rate.toLocaleString("en-US")}
+                </dd>
+              </div>
+              <div>
+                <dt className="text-[12.5px] text-ink/45">Today</dt>
+                <dd className="mt-1 font-display text-[40px] leading-none font-semibold tracking-[-0.03em] text-ink/70 tabular-nums sm:text-[48px]">
+                  {stats.total.toLocaleString("en-US")}
+                </dd>
+              </div>
+            </dl>
           </div>
         </div>
       </div>

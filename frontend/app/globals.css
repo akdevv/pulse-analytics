@@ -1,6 +1,5 @@
 @import url("https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,500;12..96,600;12..96,700&display=swap");
 @import url("https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,400&display=swap");
-@import url("https://fonts.googleapis.com/css2?family=Doto:wght@600;900&display=swap");
 @import url("https://fonts.googleapis.com/css2?family=JetBrains+Mono:ital,wght@0,100..800;1,100..800&display=swap");
 
 @import "tailwindcss";
@@ -32,7 +31,6 @@
   --tracking-display: -0.02em;
   --tracking-logo: -0.04em;
   --font-mono: JetBrains Mono, monospace;
-  --font-dot: "Doto", "JetBrains Mono", ui-monospace, monospace;
   --shadow-xl: var(--shadow-xl);
   --shadow-lg: var(--shadow-lg);
   --shadow-sm: var(--shadow-sm);
@@ -442,130 +440,55 @@
   animation-delay: var(--pa-delay, 0ms);
 }
 
-/* Instrument system: panels, channels, LEDs, dot-matrix readouts. */
-.pa-dot {
-  font-family: var(--font-dot);
-  font-weight: 900;
-  letter-spacing: 0.02em;
-  line-height: 1;
+/* Hero: the dashboard sits on a glowing horizon and settles flat on scroll. */
+.pa-tilt {
+  transform: rotateX(var(--tilt, 0deg)) scale(var(--tilt-scale, 1));
+  transform-origin: center top;
+  will-change: transform;
 }
-.pa-panel {
-  border: 1px solid color-mix(in oklab, var(--color-ink) 9%, transparent);
-  background: var(--color-surface-1);
-  box-shadow:
-    inset 0 1px 0 rgb(229 227 210 / 0.04),
-    0 24px 48px -28px rgb(0 0 0 / 0.8);
+@keyframes pa-horizon-in {
+  from {
+    opacity: 0;
+    transform: translateX(-50%) translateY(40px);
+  }
 }
-.pa-channel {
-  display: flex;
-  min-width: 0;
-  flex-direction: column;
-  justify-content: space-between;
-  gap: 0.875rem;
-  background: var(--color-surface-1);
-  padding: 0.875rem 1rem 1rem;
-  transition: background-color 250ms var(--ease-out);
-}
-.pa-channel:hover {
-  background: color-mix(
-    in oklab,
-    var(--color-surface-2) 70%,
-    var(--color-surface-1)
-  );
-}
-.pa-module {
-  background:
-    linear-gradient(
-      to bottom,
-      color-mix(in oklab, var(--color-ink) 5%, transparent),
-      transparent
-    ),
-    var(--color-well);
-}
-
-.pa-led {
-  position: relative;
-  display: inline-block;
-  width: 6px;
-  height: 6px;
-  flex-shrink: 0;
+.pa-horizon {
+  position: absolute;
+  top: -72px;
+  left: 50%;
+  width: min(2400px, 240%);
+  aspect-ratio: 1;
+  transform: translateX(-50%);
   border-radius: 9999px;
-  background: color-mix(in oklab, var(--color-ink) 16%, transparent);
-  transition:
-    background-color 250ms var(--ease-out),
-    box-shadow 250ms var(--ease-out);
-}
-.pa-led[data-on="true"] {
-  background: var(--color-tangerine);
-  box-shadow: 0 0 8px 1px var(--pa-accent-glow);
-}
-@keyframes pa-led-flash {
-  0% {
-    background: oklch(0.95 0.08 60);
-    box-shadow: 0 0 14px 4px var(--color-tangerine);
-  }
-}
-.pa-led-flash[data-on="true"] {
-  animation: pa-led-flash 600ms var(--ease-out);
-}
-.group\/mod:hover .pa-led-hover {
-  background: var(--color-tangerine);
-  box-shadow: 0 0 10px 2px var(--pa-accent-glow);
-}
-
-@keyframes pa-digit-in {
-  from {
-    opacity: 0;
-    transform: translateY(-0.45em);
-    filter: blur(2px);
-  }
-}
-.pa-digit {
-  animation: pa-digit-in 350ms var(--ease-out);
+  pointer-events: none;
+  border-top: 1px solid
+    color-mix(in oklab, var(--color-tangerine-soft) 55%, transparent);
+  background: radial-gradient(
+    closest-side,
+    transparent 92%,
+    color-mix(in oklab, var(--color-tangerine) 10%, transparent) 99%,
+    transparent 100%
+  );
+  box-shadow:
+    0 -24px 80px -20px
+      color-mix(in oklab, var(--color-tangerine) 45%, transparent),
+    inset 0 30px 60px -30px
+      color-mix(in oklab, var(--color-tangerine) 30%, transparent);
+  mask-image: linear-gradient(
+    to right,
+    transparent 22%,
+    black 42%,
+    black 58%,
+    transparent 78%
+  );
+  animation: pa-horizon-in 1400ms var(--ease-out) 400ms backwards;
 }
 
-@keyframes pa-row-in {
-  from {
-    opacity: 0;
-    transform: translateX(-6px);
-  }
-}
-.pa-row-in > * {
-  animation: pa-row-in 450ms var(--ease-out) backwards;
-  animation-delay: var(--pa-delay, 0ms);
-}
-
-/* Scroll progress, where scroll-driven animations exist. */
-.pa-progress {
-  display: none;
-}
-@supports (animation-timeline: scroll()) {
-  @keyframes pa-progress {
-    from {
-      transform: scaleX(0);
-    }
-  }
-  .pa-progress {
-    display: block;
-    position: fixed;
-    inset: 0 0 auto;
-    z-index: 60;
-    height: 2px;
-    transform-origin: left;
-    background: var(--color-tangerine);
-    box-shadow: 0 0 12px var(--pa-accent-glow);
-    animation: pa-progress linear both;
-    animation-timeline: scroll(root);
-  }
-}
-
-.pa-rule {
-  transform-origin: left;
-  transform: scaleX(0);
-  transition: transform 1100ms var(--ease-out) 200ms;
-}
-.pa-reveal[data-shown="true"] .pa-rule {
-  transform: scaleX(1);
+/* Round trip */
+.pa-comet {
+  box-shadow:
+    0 0 0 4px color-mix(in oklab, var(--color-tangerine) 22%, transparent),
+    0 0 18px 4px var(--pa-accent-glow);
 }
 
 @keyframes pa-line-sweep {
@@ -586,40 +509,6 @@
   background-size: 300% 100%;
   background-repeat: no-repeat;
   animation: pa-line-sweep 1600ms var(--ease-out) 500ms backwards;
-}
-
-/* Round trip */
-.pa-grid-pan {
-  background-image:
-    linear-gradient(
-      color-mix(in oklab, var(--color-ink) 4%, transparent) 1px,
-      transparent 1px
-    ),
-    linear-gradient(
-      90deg,
-      color-mix(in oklab, var(--color-ink) 4%, transparent) 1px,
-      transparent 1px
-    );
-  background-size: 28px 28px;
-  mask-image: radial-gradient(ellipse 80% 90% at 50% 50%, black, transparent);
-}
-.pa-stage-glow {
-  background: radial-gradient(
-    260px circle at var(--px, 14%) var(--py, 23%),
-    color-mix(in oklab, var(--color-tangerine) 14%, transparent),
-    transparent 70%
-  );
-}
-@keyframes pa-halo {
-  50% {
-    transform: scale(1.35);
-    opacity: 0.6;
-  }
-}
-.pa-halo {
-  transform-box: fill-box;
-  transform-origin: center;
-  animation: pa-halo 1.6s ease-in-out infinite;
 }
 
 @keyframes pa-marquee {
@@ -747,102 +636,18 @@
   transform: none;
 }
 
-/* Type wall: outline words fill as the block scrolls up. */
-.pa-wall-word {
-  display: inline-block;
-  color: var(--color-ink);
-}
-.pa-wall-word[data-tone="outline"] {
-  color: transparent;
-  -webkit-text-stroke: 1.5px
-    color-mix(in oklab, var(--color-ink) 45%, transparent);
-}
-.pa-wall-word[data-tone="accent"] {
-  color: var(--color-tangerine);
-}
-
-.pa-wordmark span {
-  background-image: linear-gradient(
-    to bottom,
-    color-mix(in oklab, var(--color-ink) 14%, transparent),
-    color-mix(in oklab, var(--color-tangerine) 26%, transparent) 55%,
-    transparent 100%
-  );
-  background-size: 100% 200%;
-  background-position: 0 0;
-  background-clip: text;
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-}
-
-@supports (animation-timeline: view()) {
-  @keyframes pa-scrub-fill {
-    from {
-      opacity: 0.16;
-      filter: blur(3px);
-    }
-  }
-  .pa-scrub {
-    view-timeline-name: --pa-scrub;
-  }
-  .pa-scrub-word {
-    animation: pa-scrub-fill linear both;
-    animation-timeline: --pa-scrub;
-    animation-range: cover calc(4% + var(--i, 0) * 3%) cover
-      calc(26% + var(--i, 0) * 3%);
-  }
-
-  @keyframes pa-wall-in {
-    from {
-      opacity: 0.12;
-      transform: translateY(0.25em);
-    }
-  }
-  .pa-wall {
-    view-timeline-name: --pa-wall;
-  }
-  .pa-wall-word {
-    animation: pa-wall-in linear both;
-    animation-timeline: --pa-wall;
-    animation-range: cover calc(8% + var(--i, 0) * 7%) cover
-      calc(32% + var(--i, 0) * 7%);
-  }
-
-  @keyframes pa-zoom {
-    from {
-      opacity: 0.2;
-      scale: 0.86;
-    }
-  }
-  .pa-zoom {
-    animation: pa-zoom linear both;
-    animation-timeline: view();
-    animation-range: entry 10% cover 45%;
-  }
-
+@supports (animation-timeline: scroll()) {
   @keyframes pa-hero-away {
     to {
       opacity: 0;
-      translate: 0 -60px;
+      translate: 0 -48px;
       filter: blur(6px);
     }
   }
   .pa-hero-copy {
     animation: pa-hero-away linear both;
     animation-timeline: scroll(root);
-    animation-range: 0 80vh;
-  }
-
-  @keyframes pa-wordmark {
-    from {
-      background-position: 0 100%;
-      translate: 0 30%;
-    }
-  }
-  .pa-wordmark span {
-    animation: pa-wordmark linear both;
-    animation-timeline: view();
-    animation-range: entry 0% cover 60%;
+    animation-range: 0 70vh;
   }
 }
 
