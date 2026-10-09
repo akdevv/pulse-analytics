@@ -928,6 +928,200 @@
   animation-delay: 4s;
 }
 
+/* ── Landing v2: hover + scroll ── */
+.pa-magnet {
+  transition:
+    translate 400ms var(--ease-out),
+    transform 150ms var(--ease-out),
+    filter 150ms var(--ease-out),
+    box-shadow 200ms var(--ease-out),
+    color 150ms var(--ease-out),
+    background-color 150ms var(--ease-out),
+    border-color 150ms var(--ease-out);
+}
+@media (hover: hover) and (pointer: fine) {
+  .pa-btn.pa-magnet:hover {
+    box-shadow:
+      inset 0 1px 0 rgb(229 227 210 / 0.35),
+      0 12px 32px -8px var(--pa-accent-glow),
+      0 0 0 4px color-mix(in oklab, var(--color-tangerine) 14%, transparent);
+  }
+}
+
+.pa-spot[data-tilt] {
+  transform: perspective(1000px) rotateX(var(--rx, 0deg))
+    rotateY(var(--ry, 0deg));
+  transition:
+    transform 500ms var(--ease-out),
+    border-color 300ms var(--ease-out),
+    translate 300ms var(--ease-out);
+  will-change: transform;
+}
+.pa-spot[data-tilt]:hover {
+  transition:
+    transform 120ms linear,
+    border-color 300ms var(--ease-out),
+    translate 300ms var(--ease-out);
+}
+
+.pa-cursor-dots {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  transition: opacity 400ms var(--ease-out);
+  background-image: radial-gradient(
+    circle,
+    color-mix(in oklab, var(--color-tangerine-soft) 70%, transparent) 1.2px,
+    transparent 1.7px
+  );
+  background-size: 22px 22px;
+  mask-image: radial-gradient(
+    180px circle at var(--mx, -999px) var(--my, -999px),
+    black,
+    transparent
+  );
+  pointer-events: none;
+}
+
+.pa-beam {
+  background:
+    conic-gradient(
+      from var(--pa-angle),
+      transparent 0deg,
+      transparent 250deg,
+      color-mix(in oklab, var(--color-tangerine-soft) 90%, transparent) 300deg,
+      white 318deg,
+      transparent 340deg
+    ),
+    var(--rim);
+  animation: pa-spin 7s linear infinite;
+}
+
+/* Round trip stage */
+.pa-stage-glow {
+  background: radial-gradient(
+    260px circle at var(--px, 14%) var(--py, 23%),
+    color-mix(in oklab, var(--color-tangerine) 16%, transparent),
+    transparent 70%
+  );
+}
+@keyframes pa-halo {
+  50% {
+    transform: scale(1.35);
+    opacity: 0.6;
+  }
+}
+.pa-halo {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: pa-halo 1.6s ease-in-out infinite;
+}
+
+@supports (animation-timeline: view()) {
+  @keyframes pa-scrub-fill {
+    from {
+      opacity: 0.16;
+      filter: blur(3px);
+    }
+  }
+  .pa-scrub {
+    view-timeline-name: --pa-scrub;
+  }
+  .pa-scrub-word {
+    animation: pa-scrub-fill linear both;
+    animation-timeline: --pa-scrub;
+    animation-range: cover calc(4% + var(--i, 0) * 3%) cover
+      calc(26% + var(--i, 0) * 3%);
+  }
+
+  @keyframes pa-rise {
+    from {
+      opacity: 0;
+      translate: 0 48px;
+      scale: 0.94;
+    }
+  }
+  .pa-rise {
+    animation: pa-rise linear both;
+    animation-timeline: view();
+    animation-range: entry 0% entry 90%;
+  }
+
+  @keyframes pa-swing {
+    from {
+      opacity: 0;
+      transform: perspective(1400px) rotateY(-16deg) translateX(60px);
+    }
+  }
+  @keyframes pa-swing-left {
+    from {
+      opacity: 0;
+      transform: perspective(1400px) rotateY(16deg) translateX(-60px);
+    }
+  }
+  .pa-swing {
+    animation: pa-swing linear both;
+    animation-timeline: view();
+    animation-range: entry 0% cover 40%;
+  }
+  .pa-swing-left {
+    animation-name: pa-swing-left;
+  }
+
+  @keyframes pa-zoom {
+    from {
+      opacity: 0.2;
+      scale: 0.86;
+      letter-spacing: 0.02em;
+    }
+  }
+  .pa-zoom {
+    animation: pa-zoom linear both;
+    animation-timeline: view();
+    animation-range: entry 10% cover 45%;
+  }
+
+  @keyframes pa-hero-away {
+    to {
+      opacity: 0;
+      translate: 0 -80px;
+      scale: 0.96;
+      filter: blur(6px);
+    }
+  }
+  .pa-hero-copy {
+    animation: pa-hero-away linear both;
+    animation-timeline: scroll(root);
+    animation-range: 0 75vh;
+  }
+
+  @keyframes pa-wordmark {
+    from {
+      background-position: 0 100%;
+      translate: 0 30%;
+    }
+  }
+  .pa-wordmark span {
+    animation: pa-wordmark linear both;
+    animation-timeline: view();
+    animation-range: entry 0% cover 60%;
+  }
+}
+
+.pa-wordmark span {
+  background-image: linear-gradient(
+    to bottom,
+    color-mix(in oklab, var(--color-ink) 14%, transparent),
+    color-mix(in oklab, var(--color-tangerine) 26%, transparent) 55%,
+    transparent 100%
+  );
+  background-size: 100% 200%;
+  background-position: 0 0;
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
 html:has(.pa-landing),
 html:has(.pa-landing) body {
   background-color: var(--color-charcoal);

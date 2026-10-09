@@ -42,7 +42,7 @@ export function CTA() {
                 <span />
               </div>
 
-              <h2 className="mx-auto max-w-3xl font-display text-[38px] leading-[1.02] font-semibold tracking-[-0.035em] text-balance text-ink sm:text-[52px] md:text-[60px]">
+              <h2 className="pa-zoom mx-auto max-w-3xl font-display text-[38px] leading-[1.02] font-semibold tracking-[-0.035em] text-balance text-ink sm:text-[52px] md:text-[60px]">
                 See your traffic.
                 <span className="block text-ink/35">
                   Leave your visitors alone.

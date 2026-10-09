@@ -101,23 +101,58 @@ export function CountUp({
 export function Spotlight({
   children,
   className,
+  tilt = false,
 }: {
   children: React.ReactNode;
   className?: string;
+  tilt?: boolean;
 }) {
   const ref = useRef<HTMLDivElement>(null);
   const onMove = (e: React.PointerEvent) => {
     const node = ref.current;
-    if (!node) return;
+    if (!node || e.pointerType !== "mouse") return;
     const r = node.getBoundingClientRect();
-    node.style.setProperty("--mx", `${e.clientX - r.left}px`);
-    node.style.setProperty("--my", `${e.clientY - r.top}px`);
+    const x = e.clientX - r.left;
+    const y = e.clientY - r.top;
+    node.style.setProperty("--mx", `${x}px`);
+    node.style.setProperty("--my", `${y}px`);
+    if (tilt) {
+      node.style.setProperty("--ry", `${(x / r.width - 0.5) * 5}deg`);
+      node.style.setProperty("--rx", `${(0.5 - y / r.height) * 5}deg`);
+    }
+  };
+  const onLeave = () => {
+    ref.current?.style.setProperty("--rx", "0deg");
+    ref.current?.style.setProperty("--ry", "0deg");
   };
   return (
-    <div ref={ref} onPointerMove={onMove} className={cn("pa-spot", className)}>
+    <div
+      ref={ref}
+      onPointerMove={onMove}
+      onPointerLeave={onLeave}
+      data-tilt={tilt || undefined}
+      className={cn("pa-spot", className)}
+    >
       {children}
     </div>
   );
+}
+
+// Pulls an element a few pixels toward the cursor.
+export function useMagnetic<T extends HTMLElement>(strength = 0.25) {
+  const ref = useRef<T>(null);
+  const onPointerMove = (e: React.PointerEvent) => {
+    const node = ref.current;
+    if (!node || e.pointerType !== "mouse") return;
+    const r = node.getBoundingClientRect();
+    const dx = (e.clientX - (r.left + r.width / 2)) * strength;
+    const dy = (e.clientY - (r.top + r.height / 2)) * strength;
+    node.style.translate = `${dx.toFixed(1)}px ${dy.toFixed(1)}px`;
+  };
+  const onPointerLeave = () => {
+    if (ref.current) ref.current.style.translate = "";
+  };
+  return { ref, onPointerMove, onPointerLeave };
 }
 
 // Tilts its child back in 3D and flattens it as it scrolls toward the middle.

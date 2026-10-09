@@ -190,8 +190,9 @@ function Tile({
 }) {
   return (
     <Spotlight
+      tilt
       className={cn(
-        "flex min-h-64 flex-col overflow-hidden rounded-2xl border border-ink/8 bg-surface-1 transition-[border-color,transform] duration-300 ease-out hover:-translate-y-0.5 hover:border-ink/14",
+        "pa-rise flex min-h-64 flex-col overflow-hidden rounded-2xl border border-ink/8 bg-surface-1 transition-[border-color,transform] duration-300 ease-out hover:-translate-y-0.5 hover:border-ink/14",
         className
       )}
     >

@@ -5,6 +5,7 @@ import { ArrowRight, Check, Copy, Hash } from "lucide-react";
 import { useEffect, useId, useRef, useState } from "react";
 import { siGithub } from "simple-icons";
 import { cn } from "@/lib/utils";
+import { useMagnetic } from "./motion";
 
 export function Reveal({
   children,
@@ -57,11 +58,13 @@ export function PrimaryButton({
   children: React.ReactNode;
   className?: string;
 }) {
+  const magnetic = useMagnetic<HTMLAnchorElement>(0.18);
   return (
     <Link
       href={href}
+      {...magnetic}
       className={cn(
-        "pa-btn group inline-flex items-center gap-2 rounded-full bg-linear-to-b from-tangerine-soft to-tangerine px-6 py-3 text-[14px] font-medium text-charcoal shadow-glow",
+        "pa-btn pa-magnet group inline-flex items-center gap-2 rounded-full bg-linear-to-b from-tangerine-soft to-tangerine px-6 py-3 text-[14px] font-medium text-charcoal shadow-glow",
         className
       )}
     >
@@ -87,12 +90,14 @@ export function GhostButton({
   className?: string;
   external?: boolean;
 }) {
+  const magnetic = useMagnetic<HTMLAnchorElement>(0.12);
   return (
     <Link
       href={href}
       {...(external && { target: "_blank", rel: "noreferrer" })}
+      {...magnetic}
       className={cn(
-        "inline-flex items-center gap-2 rounded-full border border-ink/12 bg-ink/2 px-6 py-3 text-[14px] text-ink/75 transition-[color,border-color,background-color,transform] duration-150 ease-out hover:border-ink/25 hover:bg-ink/4 hover:text-ink active:scale-[0.97]",
+        "pa-magnet inline-flex items-center gap-2 rounded-full border border-ink/12 bg-ink/2 px-6 py-3 text-[14px] text-ink/75 transition-[color,border-color,background-color,transform] duration-150 ease-out hover:border-ink/25 hover:bg-ink/4 hover:text-ink active:scale-[0.97]",
         className
       )}
     >
@@ -167,9 +172,13 @@ export function SectionHeading({
         <span aria-hidden className="pa-rule ml-3 h-px flex-1 bg-ink/10" />
       </div>
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,7fr)_minmax(0,5fr)] lg:items-baseline-last lg:gap-14">
-        <h2 className="font-display text-[38px] leading-[1.02] font-semibold tracking-[-0.035em] text-balance text-ink sm:text-[48px] lg:text-[58px]">
-          {title}
-          {muted && <span className="block text-ink/35">{muted}</span>}
+        <h2 className="pa-scrub font-display text-[38px] leading-[1.02] font-semibold tracking-[-0.035em] text-balance text-ink sm:text-[48px] lg:text-[58px]">
+          <ScrubWords text={title} />
+          {muted && (
+            <span className="block text-ink/35">
+              <ScrubWords text={muted} offset={title.split(" ").length} />
+            </span>
+          )}
         </h2>
         {lead && (
           <p className="max-w-md text-[15.5px] leading-relaxed text-pretty text-ink/60">
@@ -226,4 +235,25 @@ export function CopyCommand({ command }: { command: string }) {
       </button>
     </div>
   );
+}
+
+// Words brighten one after another as the heading scrolls up the page.
+export function ScrubWords({
+  text,
+  offset = 0,
+}: {
+  text: string;
+  offset?: number;
+}) {
+  return text.split(" ").map((word, i, all) => (
+    <span key={i}>
+      <span
+        className="pa-scrub-word"
+        style={{ "--i": offset + i } as React.CSSProperties}
+      >
+        {word}
+      </span>
+      {i < all.length - 1 && " "}
+    </span>
+  ));
 }

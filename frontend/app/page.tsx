@@ -1,6 +1,7 @@
 import { Nav } from "@/components/landing/nav";
 import { Hero } from "@/components/landing/hero";
-import { Pipeline } from "@/components/landing/pipeline";
+import { StackMarquee } from "@/components/landing/stack-marquee";
+import { RoundTrip } from "@/components/landing/round-trip";
 import { HowItWorks } from "@/components/landing/how-it-works";
 import { Features } from "@/components/landing/features";
 import { Install } from "@/components/landing/install";
@@ -13,7 +14,8 @@ export default function Home() {
       <Nav />
       <div aria-hidden className="pa-progress" />
       <Hero />
-      <Pipeline />
+      <StackMarquee />
+      <RoundTrip />
       <HowItWorks />
       <Features />
       <Install />

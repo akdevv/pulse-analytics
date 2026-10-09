@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { MousePointerClick, Eye } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useTicker } from "./motion";
@@ -73,4 +73,29 @@ function ChipCard({ chip }: { chip: Chip }) {
       </span>
     </div>
   );
+}
+
+// Brighter dots under the cursor, on top of the hero's dot grid.
+export function CursorDots() {
+  const ref = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const node = ref.current;
+    const host = node?.parentElement;
+    if (!node || !host) return;
+    const onMove = (e: PointerEvent) => {
+      if (e.pointerType !== "mouse") return;
+      const r = host.getBoundingClientRect();
+      node.style.setProperty("--mx", `${e.clientX - r.left}px`);
+      node.style.setProperty("--my", `${e.clientY - r.top}px`);
+      node.style.opacity = "1";
+    };
+    const onLeave = () => (node.style.opacity = "0");
+    host.addEventListener("pointermove", onMove);
+    host.addEventListener("pointerleave", onLeave);
+    return () => {
+      host.removeEventListener("pointermove", onMove);
+      host.removeEventListener("pointerleave", onLeave);
+    };
+  }, []);
+  return <div ref={ref} aria-hidden className="pa-cursor-dots" />;
 }

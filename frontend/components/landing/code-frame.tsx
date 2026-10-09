@@ -36,7 +36,7 @@ export function CodeFrame({
   return (
     <div
       className={cn(
-        "flex min-w-0 flex-col rounded-2xl border border-ink/8 bg-surface-1 p-1.5 shadow-[inset_0_1px_0_rgb(229_227_210/0.05),0_1px_2px_rgb(0_0_0/0.3),0_20px_44px_-20px_rgb(0_0_0/0.7)]",
+        "group/frame flex min-w-0 flex-col rounded-2xl border border-ink/8 bg-surface-1 p-1.5 shadow-[inset_0_1px_0_rgb(229_227_210/0.05),0_1px_2px_rgb(0_0_0/0.3),0_20px_44px_-20px_rgb(0_0_0/0.7)] transition-[border-color,box-shadow] duration-300 ease-out hover:border-tangerine/25",
         className
       )}
     >

@@ -2,7 +2,7 @@ import Link from "next/link";
 import { ChevronRight } from "lucide-react";
 import { GhostButton, PrimaryButton, Reveal } from "./shared";
 import { DashboardMockup } from "./dashboard-mockup";
-import { LiveChips } from "./hero-live";
+import { CursorDots, LiveChips } from "./hero-live";
 import { ScrollTilt } from "./motion";
 import { REPO } from "./site";
 import { dots } from "./surfaces";
@@ -21,6 +21,7 @@ export function Hero() {
   return (
     <section className="relative isolate overflow-hidden pt-28 pb-6 sm:pt-36 md:pt-40">
       <div aria-hidden className="absolute inset-0" style={DOTS} />
+      <CursorDots />
       <div aria-hidden className="absolute inset-0 overflow-hidden">
         <div className="pa-aurora pa-aurora-a" />
         <div className="pa-aurora pa-aurora-b" />
@@ -32,7 +33,7 @@ export function Hero() {
         style={{ background: GLOW }}
       />
 
-      <div className="relative mx-auto max-w-3xl px-5 text-center sm:px-6">
+      <div className="pa-hero-copy relative mx-auto max-w-3xl px-5 text-center sm:px-6">
         <Reveal>
           <Link
             href={`${REPO}/releases`}

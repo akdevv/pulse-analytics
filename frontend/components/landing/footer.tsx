@@ -37,7 +37,7 @@ const COLS = [
 
 export function Footer() {
   return (
-    <footer className="border-t border-ink/8 bg-charcoal">
+    <footer className="overflow-hidden border-t border-ink/8 bg-charcoal">
       <div className="mx-auto max-w-6xl px-6">
         <div className="grid grid-cols-3 gap-x-4 gap-y-10 py-14 sm:gap-x-8 md:grid-cols-[1.5fr_1fr_1fr_1fr] md:py-16">
           <div className="col-span-3 flex flex-col items-start gap-4 md:col-span-1">
@@ -96,6 +96,14 @@ export function Footer() {
             </a>
           </p>
         </div>
+      </div>
+      <div
+        aria-hidden
+        className="pa-wordmark pointer-events-none mx-auto max-w-6xl overflow-hidden px-6 select-none"
+      >
+        <span className="block translate-y-[18%] text-center font-display text-[clamp(96px,26vw,340px)] leading-[0.8] font-bold tracking-[-0.06em]">
+          Pulse
+        </span>
       </div>
     </footer>
   );
