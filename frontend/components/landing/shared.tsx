@@ -30,7 +30,7 @@ export function Reveal({
           observer.disconnect();
         }
       },
-      { threshold: 0.15, rootMargin: "0px 0px -80px 0px" }
+      { threshold: 0, rootMargin: "0px 0px -80px 0px" }
     );
     observer.observe(node);
     return () => observer.disconnect();
@@ -164,7 +164,7 @@ export function SectionHeading({
           className="shrink-0 text-tangerine"
         />
         <span className="text-[13.5px] font-medium text-ink/80">{label}</span>
-        <span aria-hidden className="ml-3 h-px flex-1 bg-ink/10" />
+        <span aria-hidden className="pa-rule ml-3 h-px flex-1 bg-ink/10" />
       </div>
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,7fr)_minmax(0,5fr)] lg:items-baseline-last lg:gap-14">
         <h2 className="font-display text-[38px] leading-[1.02] font-semibold tracking-[-0.035em] text-balance text-ink sm:text-[48px] lg:text-[58px]">

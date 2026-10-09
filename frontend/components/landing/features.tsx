@@ -1,8 +1,9 @@
-import { MousePointer2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { highlight } from "./highlight";
-import { PulseLogo, Reveal, SectionHeading } from "./shared";
+import { Reveal, SectionHeading } from "./shared";
 import { STAGE } from "./surfaces";
+import { AskTile, ClickTile, LiveTile, WELL } from "./features-live";
+import { CountUp, Spotlight } from "./motion";
 
 // Output of backend/src/modules/ai/sql.prompt.md for this question.
 const ASK_SQL = `SELECT country, SUM(pageviews)
@@ -25,19 +26,11 @@ const REACT_HOOK = `usePulse({ siteId })
 // route changes are tracked`;
 
 const NUMBERS = [
-  { value: "0", label: "Cookies set" },
-  { value: "204", label: "Every ingest reply" },
-  { value: "100", label: "Rows per insert" },
-  { value: "10k/s", label: "Target, load test pending" },
+  { value: 0, suffix: "", label: "Cookies set" },
+  { value: 204, suffix: "", label: "Every ingest reply" },
+  { value: 100, suffix: "", label: "Rows per insert" },
+  { value: 10, suffix: "k/s", label: "Target, load test pending" },
 ];
-
-const LIVE_FEED = [
-  { path: "/pricing", country: "DE", ago: "now" },
-  { path: "/docs/quickstart", country: "IN", ago: "4s" },
-  { path: "/", country: "US", ago: "9s" },
-];
-
-const WELL = "rounded-xl bg-well shadow-well";
 
 export async function Features() {
   const [sql, eventHtml, reactHook] = await Promise.all([
@@ -67,12 +60,10 @@ export async function Features() {
             description="The model writes the SQL, never runs it. A parser checks it's one read-only SELECT scoped to your site."
             className="md:col-span-2 lg:row-span-2"
             visual={
-              <div className="flex h-full flex-col justify-center gap-2.5 p-6 pb-2">
-                <Bubble side="right">
-                  Which countries sent the most mobile traffic this week?
-                </Bubble>
-                <div className="grid grid-cols-1 gap-2.5 lg:grid-cols-[minmax(0,1.3fr)_minmax(0,1fr)]">
-                  <Snippet html={sql} />
+              <AskTile
+                question="Which countries sent the most mobile traffic this week?"
+                sql={<Snippet html={sql} />}
+                table={
                   <table
                     className={cn(
                       WELL,
@@ -100,15 +91,14 @@ export async function Features() {
                       ))}
                     </tbody>
                   </table>
-                </div>
-                <div className="flex items-end gap-2.5">
-                  <PulseLogo size={24} />
-                  <Bubble side="left">
+                }
+                answer={
+                  <>
                     India sent the most, {ASK_ROWS[0].pageviews} pageviews, then
                     the US and Germany.
-                  </Bubble>
-                </div>
-              </div>
+                  </>
+                }
+              />
             }
           />
 
@@ -116,38 +106,7 @@ export async function Features() {
             title="Who's on the site right now."
             description="A live count and event feed, streamed over server-sent events."
             className="md:col-span-2"
-            visual={
-              <div className="grid h-full grid-cols-1 items-end gap-5 p-6 pb-2 sm:grid-cols-[auto_minmax(0,1fr)] sm:gap-8">
-                <div>
-                  <div className="flex items-center gap-2 text-[13px] text-ink/55">
-                    <span className="relative flex size-2">
-                      <span className="absolute inline-flex size-full animate-ping rounded-full bg-powder opacity-60 motion-reduce:hidden" />
-                      <span className="relative inline-flex size-2 rounded-full bg-powder" />
-                    </span>
-                    On the site now
-                  </div>
-                  <div className="mt-2 font-display text-[56px] leading-none font-semibold tracking-logo text-ink tabular-nums">
-                    247
-                  </div>
-                </div>
-                <ul className={cn(WELL, "px-4 py-2 font-mono text-[11.5px]")}>
-                  {LIVE_FEED.map((e) => (
-                    <li
-                      key={e.path}
-                      className="flex items-center gap-3 py-1 text-ink/55"
-                    >
-                      <span className="min-w-0 flex-1 truncate text-ink/75">
-                        {e.path}
-                      </span>
-                      <span>{e.country}</span>
-                      <span className="w-8 text-right text-ink/35">
-                        {e.ago}
-                      </span>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            }
+            visual={<LiveTile />}
           />
 
           <Tile
@@ -189,26 +148,7 @@ export async function Features() {
             title="Track clicks with one attribute."
             description="Add data-pulse-event to any element, or call trackEvent."
             className="md:col-span-2"
-            visual={
-              <div className="grid h-full grid-cols-1 items-center gap-6 p-6 pb-2 sm:grid-cols-[auto_minmax(0,1fr)] sm:gap-8">
-                <div className="relative mx-auto mt-8 w-fit sm:mx-0 sm:mt-6">
-                  <span className="inline-flex rounded-full bg-linear-to-b from-tangerine-soft to-tangerine px-5 py-2.5 text-[14px] font-medium text-charcoal shadow-glow">
-                    Sign up
-                  </span>
-                  <span className="absolute -top-9 left-1/2 flex -translate-x-1/2 items-center gap-1.5 rounded-full border border-powder/20 bg-powder/10 px-2.5 py-1 font-mono text-[11px] whitespace-nowrap text-powder">
-                    signup
-                    <span className="text-powder/60">+1</span>
-                  </span>
-                  <MousePointer2
-                    aria-hidden
-                    size={22}
-                    strokeWidth={1.5}
-                    className="absolute -right-3 -bottom-3 fill-ink text-charcoal"
-                  />
-                </div>
-                <Snippet html={eventHtml} />
-              </div>
-            }
+            visual={<ClickTile snippet={<Snippet html={eventHtml} />} />}
           />
 
           <Tile
@@ -217,13 +157,14 @@ export async function Features() {
             className="md:col-span-2"
             visual={
               <dl className="grid h-full grid-cols-2 content-center gap-x-6 gap-y-5 p-6 pb-2 sm:grid-cols-4 lg:grid-cols-2">
-                {NUMBERS.map(({ value, label }) => (
+                {NUMBERS.map(({ value, suffix, label }) => (
                   <div key={label} className="flex flex-col gap-1.5">
                     <dt className="order-2 text-[12.5px] leading-snug text-ink/45">
                       {label}
                     </dt>
                     <dd className="order-1 font-display text-[34px] leading-none font-semibold tracking-[-0.03em] text-ink tabular-nums">
-                      {value}
+                      <CountUp to={value} />
+                      {suffix}
                     </dd>
                   </div>
                 ))}
@@ -248,9 +189,9 @@ function Tile({
   className?: string;
 }) {
   return (
-    <div
+    <Spotlight
       className={cn(
-        "flex min-h-64 flex-col overflow-hidden rounded-2xl border border-ink/8 bg-surface-1 transition-colors duration-200 ease-out hover:border-ink/14",
+        "flex min-h-64 flex-col overflow-hidden rounded-2xl border border-ink/8 bg-surface-1 transition-[border-color,transform] duration-300 ease-out hover:-translate-y-0.5 hover:border-ink/14",
         className
       )}
     >
@@ -266,28 +207,7 @@ function Tile({
           {description}
         </p>
       </div>
-    </div>
-  );
-}
-
-function Bubble({
-  side,
-  children,
-}: {
-  side: "left" | "right";
-  children: React.ReactNode;
-}) {
-  return (
-    <div
-      className={cn(
-        "max-w-[85%] rounded-2xl px-4 py-2.5 text-[13.5px]",
-        side === "right"
-          ? "ml-auto rounded-br-md bg-ink/7 text-ink/85"
-          : "mr-auto rounded-bl-md border border-ink/8 text-ink/70"
-      )}
-    >
-      {children}
-    </div>
+    </Spotlight>
   );
 }
 

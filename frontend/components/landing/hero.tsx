@@ -2,6 +2,8 @@ import Link from "next/link";
 import { ChevronRight } from "lucide-react";
 import { GhostButton, PrimaryButton, Reveal } from "./shared";
 import { DashboardMockup } from "./dashboard-mockup";
+import { LiveChips } from "./hero-live";
+import { ScrollTilt } from "./motion";
 import { REPO } from "./site";
 import { dots } from "./surfaces";
 
@@ -19,6 +21,11 @@ export function Hero() {
   return (
     <section className="relative isolate overflow-hidden pt-28 pb-6 sm:pt-36 md:pt-40">
       <div aria-hidden className="absolute inset-0" style={DOTS} />
+      <div aria-hidden className="absolute inset-0 overflow-hidden">
+        <div className="pa-aurora pa-aurora-a" />
+        <div className="pa-aurora pa-aurora-b" />
+        <div className="pa-aurora pa-aurora-c" />
+      </div>
       <div
         aria-hidden
         className="absolute inset-0"
@@ -48,17 +55,19 @@ export function Hero() {
           </Link>
         </Reveal>
 
-        <Reveal delay={60}>
-          <h1 className="font-display text-[42px] leading-[0.95] font-semibold tracking-[-0.035em] text-balance text-ink sm:text-[64px] md:text-[80px]">
-            Event analytics{" "}
-            <span className="sm:block">
-              at{" "}
-              <span className="whitespace-nowrap text-tangerine-soft">
-                ridiculous scale.
-              </span>
+        <h1 className="font-display text-[42px] leading-[0.95] font-semibold tracking-[-0.035em] text-balance text-ink sm:text-[64px] md:text-[80px]">
+          <Words text="Event analytics" start={80} />{" "}
+          <span className="sm:block">
+            <Words text="at" start={240} />{" "}
+            <span className="whitespace-nowrap">
+              <Words
+                text="ridiculous scale."
+                start={300}
+                className="pa-shimmer-text"
+              />
             </span>
-          </h1>
-        </Reveal>
+          </span>
+        </h1>
 
         <Reveal delay={120}>
           <p className="mx-auto mt-6 max-w-md text-[15.5px] leading-relaxed text-pretty text-ink/65 sm:mt-7 sm:max-w-lg sm:text-[17px]">
@@ -84,10 +93,36 @@ export function Hero() {
       </div>
 
       <div className="relative mx-auto mt-16 max-w-7xl px-4 sm:mt-20 sm:px-6">
-        <Reveal delay={240}>
-          <DashboardMockup />
+        <Reveal delay={240} className="relative">
+          <LiveChips />
+          <ScrollTilt>
+            <DashboardMockup />
+          </ScrollTilt>
         </Reveal>
       </div>
     </section>
   );
+}
+
+// Each word blurs up in turn; the whole line stays one readable string.
+function Words({
+  text,
+  start,
+  className,
+}: {
+  text: string;
+  start: number;
+  className?: string;
+}) {
+  return text.split(" ").map((word, i, all) => (
+    <span key={i}>
+      <span
+        className={`pa-word ${className ?? ""}`}
+        style={{ "--pa-delay": `${start + i * 70}ms` } as React.CSSProperties}
+      >
+        {word}
+      </span>
+      {i < all.length - 1 && " "}
+    </span>
+  ));
 }
