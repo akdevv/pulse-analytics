@@ -7,8 +7,10 @@ import { RenderPass } from "three/addons/postprocessing/RenderPass.js";
 import { UnrealBloomPass } from "three/addons/postprocessing/UnrealBloomPass.js";
 import { OutputPass } from "three/addons/postprocessing/OutputPass.js";
 
-export type LabelKey = "sites" | "ingest" | "queue" | "worker" | "chart";
-export type LabelPos = { x: number; y: number; visible: boolean };
+export type LabelKey =
+  "sites" | "ingest" | "queue" | "worker" | "chart" | "now";
+// Screen position of an object's centre and its on-screen radius in px.
+export type LabelPos = { x: number; y: number; r: number; visible: boolean };
 
 // The composer's render target gets the clear colour sRGB-encoded once
 // before OutputPass encodes it again, so this is #161616 decoded twice.
@@ -40,12 +42,15 @@ const SHOTS: [number, THREE.Vector3, THREE.Vector3][] = [
   [1.0, new THREE.Vector3(-0.5, 5.4, 15.5), new THREE.Vector3(0.4, -0.6, 0)],
 ];
 
-const LABEL_POINTS: Record<LabelKey, THREE.Vector3> = {
-  sites: new THREE.Vector3(-10, 3.9, 0),
-  ingest: new THREE.Vector3(-4, 1.55, 0),
-  queue: new THREE.Vector3(-0.4, 1.35, 0),
-  worker: new THREE.Vector3(3.4, 1.05, 0),
-  chart: new THREE.Vector3(8.1, 0.9, 0),
+// Object centres and world-space radii for the focus ring. "sites" and "now"
+// are filled in once the sources and chart exist.
+const ANCHORS: Record<LabelKey, { at: THREE.Vector3; r: number }> = {
+  sites: { at: new THREE.Vector3(), r: 0.35 },
+  ingest: { at: new THREE.Vector3(-4, 0, 0), r: 1.2 },
+  queue: { at: new THREE.Vector3(-0.4, 0, 0), r: 1.0 },
+  worker: { at: new THREE.Vector3(3.4, 0, 0), r: 0.75 },
+  chart: { at: new THREE.Vector3(8.1, -1.4, 0), r: 2.4 },
+  now: { at: new THREE.Vector3(), r: 0.4 },
 };
 
 const STREAM_VERT = /* glsl */ `
@@ -194,6 +199,7 @@ export function createRoundTripScene(
   const camera = new THREE.PerspectiveCamera(42, 1, 0.1, 100);
 
   const sources = sourcePositions();
+  ANCHORS.sites.at.copy(sources[5]);
   const uniformsBase = {
     uTime: { value: 0 },
     uPixel: { value: dpr * (opts.mobile ? 2.4 : 2.0) },
@@ -377,13 +383,13 @@ export function createRoundTripScene(
   );
   const heights = new Float32Array(barCount);
   const grown = new Float32Array(barCount);
-  const NOW = (CHART.cols - 1) * CHART.rows; // front-right column, first row
+  const NOW = CHART.cols * CHART.rows - 1; // front-right, nearest the camera
   for (let c = 0; c < CHART.cols; c++)
     for (let r = 0; r < CHART.rows; r++) {
       const i = c * CHART.rows + r;
       heights[i] = baseHeight(c, r);
     }
-  heights[NOW] = 0.25;
+  heights[NOW] = 0.7;
   scene.add(bars);
 
   const barColor = new THREE.Color();
@@ -397,6 +403,11 @@ export function createRoundTripScene(
       CHART.z0 + r * CHART.step * 0.95
     );
   };
+  const nowBar = new THREE.Mesh(
+    new THREE.BoxGeometry(0.44, 1, 0.44),
+    new THREE.MeshBasicMaterial({ color: GLOW(HOT_SOFT, 1.7) })
+  );
+  scene.add(nowBar);
   const writeBars = (reveal: number) => {
     for (let i = 0; i < barCount; i++) {
       const c = Math.floor(i / CHART.rows);
@@ -407,11 +418,17 @@ export function createRoundTripScene(
         CHART.floor + h / 2,
         CHART.z0 + r * CHART.step * 0.95
       );
-      dummy.scale.set(1, h, 1);
+      if (i === NOW) {
+        // Today's bar is drawn unlit so it glows; hide its instance.
+        nowBar.position.copy(dummy.position);
+        nowBar.scale.set(1, h, 1);
+        dummy.scale.set(0, 0, 0);
+      } else {
+        dummy.scale.set(1, h, 1);
+      }
       dummy.updateMatrix();
       bars.setMatrixAt(i, dummy.matrix);
-      if (i === NOW) barColor.copy(HOT_SOFT).multiplyScalar(2.2);
-      else barColor.setRGB(0.14, 0.13, 0.12).lerp(HOT, 0.05 + (h / 3) * 0.25);
+      barColor.setRGB(0.14, 0.13, 0.12).lerp(HOT, 0.05 + (h / 3) * 0.25);
       bars.setColorAt(i, barColor);
     }
     bars.instanceMatrix.needsUpdate = true;
@@ -488,6 +505,7 @@ export function createRoundTripScene(
   let last = performance.now();
   let spawnT = 0;
   const project = new THREE.Vector3();
+  const edge = new THREE.Vector3();
 
   function resize() {
     width = canvas.clientWidth;
@@ -498,6 +516,11 @@ export function createRoundTripScene(
     camera.aspect = width / height;
     // Narrow screens need a wider lens to keep the scene in frame.
     camera.fov = width < height ? 60 : 42;
+    // On portrait screens the copy covers the lower half, so render the
+    // scene a little higher.
+    if (width < height)
+      camera.setViewOffset(width, height, 0, height * 0.09, width, height);
+    else camera.clearViewOffset();
     camera.updateProjectionMatrix();
   }
 
@@ -597,13 +620,19 @@ export function createRoundTripScene(
 
     composer.render();
 
-    // Screen positions for the HTML labels.
+    // Screen positions for the HTML labels and focus ring.
+    ANCHORS.now.at.copy(barTop(NOW));
     const out = {} as Record<LabelKey, LabelPos>;
-    for (const k of Object.keys(LABEL_POINTS) as LabelKey[]) {
-      project.copy(LABEL_POINTS[k]).project(camera);
+    for (const k of Object.keys(ANCHORS) as LabelKey[]) {
+      const { at, r } = ANCHORS[k];
+      edge.copy(at).addScaledVector(camera.up, r).project(camera);
+      project.copy(at).project(camera);
+      const x = (project.x * 0.5 + 0.5) * width;
+      const y = (-project.y * 0.5 + 0.5) * height;
       out[k] = {
-        x: (project.x * 0.5 + 0.5) * width,
-        y: (-project.y * 0.5 + 0.5) * height,
+        x,
+        y,
+        r: Math.abs((-edge.y * 0.5 + 0.5) * height - y),
         visible:
           project.z < 1 &&
           Math.abs(project.x) < 1.1 &&
