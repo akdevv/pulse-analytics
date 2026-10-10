@@ -485,6 +485,17 @@
 }
 
 /* Round trip */
+.pa-scene-label {
+  opacity: 0;
+  transition: opacity 400ms var(--ease-out);
+  will-change: transform;
+}
+.pa-scene-label[data-on="true"] {
+  opacity: 0.4;
+}
+.pa-scene-label-lit[data-on="true"] {
+  opacity: 1;
+}
 .pa-comet {
   box-shadow:
     0 0 0 4px color-mix(in oklab, var(--color-tangerine) 22%, transparent),

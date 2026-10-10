@@ -4,10 +4,10 @@ import { useEffect, useRef, useState } from "react";
 import { Hash } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useReducedMotion } from "./motion";
+import type { LabelKey, LabelPos } from "./round-trip-scene";
 
 type Stop = {
   name: string;
-  tech: string;
   ms: number;
   title: string;
   body: string;
@@ -18,266 +18,323 @@ type Stop = {
 const STOPS: Stop[] = [
   {
     name: "Browser",
-    tech: "pulse.js · 3 KB",
     ms: 0,
     title: "Someone opens a page.",
     body: "The script sends one GET with the path, referrer, language and screen size. No cookies. A random visitor ID lives in localStorage.",
   },
   {
     name: "Ingest",
-    tech: "Express",
     ms: 4.8,
     title: "Answered before it matters.",
-    body: "Validate, rate-limit, enqueue, return 204. That is the only part of the trip the visitor ever waits on.",
+    body: "Validate, rate-limit, enqueue, return 204. The blue sparks are those replies. It's the only part of the trip a visitor waits on.",
   },
   {
     name: "Queue",
-    tech: "BullMQ · Redis",
     ms: 5.4,
     title: "The queue takes the spike.",
-    body: "A burst of traffic piles up in Redis instead of in the database, so nothing upstream slows down.",
+    body: "When a launch hits, events pile up in Redis instead of in the database, so nothing upstream slows down.",
   },
   {
     name: "Worker",
-    tech: "Node worker",
     ms: 620,
     title: "A worker does the slow part.",
-    body: "It parses the user agent, looks up the country and drops the IP. Events are written 100 at a time.",
+    body: "It parses the user agent, looks up the country and drops the IP, then writes events 100 at a time.",
   },
   {
     name: "Database",
-    tech: "TimescaleDB",
     ms: 660,
     title: "Rollups keep themselves current.",
-    body: "Hourly rollups update in the background, so a 30-day chart adds up hundreds of rows instead of millions.",
+    body: "Each batch lands in TimescaleDB, and hourly rollups update in the background so charts add up hundreds of rows, not millions.",
   },
   {
     name: "Dashboard",
-    tech: "Next.js · SSE",
     ms: 900,
     title: "And it's on the chart.",
     body: "The realtime count ticks over an open connection. The whole trip took under a second.",
   },
 ];
 
+// Where each stop begins, as scroll progress through the section.
+const STARTS = [0, 0.14, 0.32, 0.52, 0.7, 0.86];
 const LAST = STOPS.length - 1;
-// Scroll spent holding still before the trip starts and after it ends.
-const LEAD = 0.08;
-const TAIL = 0.12;
+
+const LABELS: { key: LabelKey; text: string; sub: string; from: number }[] = [
+  { key: "sites", text: "Your websites", sub: "pulse.js", from: 0 },
+  { key: "ingest", text: "Ingest", sub: "204 · 4.8 ms", from: 1 },
+  { key: "queue", text: "Queue", sub: "BullMQ · Redis", from: 2 },
+  { key: "worker", text: "Worker", sub: "batches of 100", from: 3 },
+  {
+    key: "chart",
+    text: "TimescaleDB → Dashboard",
+    sub: "hourly rollups",
+    from: 4,
+  },
+];
 
 const clamp = (v: number) => Math.min(1, Math.max(0, v));
+
+function stopAt(p: number) {
+  let i = 0;
+  while (i < LAST && p >= STARTS[i + 1]) i++;
+  return i;
+}
+
+function clockAt(p: number) {
+  const i = stopAt(p);
+  if (i === LAST) return STOPS[LAST].ms;
+  const local = clamp((p - STARTS[i]) / (STARTS[i + 1] - STARTS[i]));
+  return STOPS[i].ms + (STOPS[i + 1].ms - STOPS[i].ms) * local;
+}
 
 function formatMs(ms: number) {
   return ms < 100 ? `${ms.toFixed(1)} ms` : `${(ms / 1000).toFixed(2)} s`;
 }
 
+type Scene = {
+  setProgress: (p: number) => void;
+  resize: () => void;
+  start: () => void;
+  stop: () => void;
+  dispose: () => void;
+};
+
 export function RoundTrip() {
   const section = useRef<HTMLElement>(null);
-  const track = useRef<HTMLDivElement>(null);
+  const canvas = useRef<HTMLCanvasElement>(null);
   const clock = useRef<HTMLSpanElement>(null);
+  const labels = useRef<Partial<Record<LabelKey, HTMLDivElement | null>>>({});
   const reduced = useReducedMotion();
   const [active, setActive] = useState(0);
+  const [failed, setFailed] = useState(false);
+  const [ready, setReady] = useState(false);
 
   useEffect(() => {
     const root = section.current;
-    if (!root) return;
+    const cv = canvas.current;
+    if (!root || !cv) return;
+    let scene: Scene | null = null;
+    let cancelled = false;
+    let visible = false;
     let raf = 0;
 
-    const render = (t: number) => {
-      const pos = t * LAST;
-      const i = Math.min(LAST, Math.floor(pos + 0.0001));
-      setActive(i);
-      track.current?.style.setProperty("--t", t.toFixed(4));
-      const next = Math.min(LAST, i + 1);
-      const ms = STOPS[i].ms + (STOPS[next].ms - STOPS[i].ms) * (pos - i);
-      if (clock.current) clock.current.textContent = formatMs(ms);
-    };
-
-    if (reduced) {
-      render(1);
-      return;
-    }
-    const update = () => {
-      raf = 0;
+    const progress = () => {
+      if (reduced) return 1;
       const r = root.getBoundingClientRect();
       const run = root.offsetHeight - window.innerHeight;
-      const p = run > 0 ? clamp(-r.top / run) : 1;
-      render(clamp((p - LEAD) / (1 - LEAD - TAIL)));
+      return run > 0 ? clamp(-r.top / run) : 1;
+    };
+    const update = () => {
+      raf = 0;
+      const p = progress();
+      setActive(stopAt(p));
+      if (clock.current) clock.current.textContent = formatMs(clockAt(p));
+      scene?.setProgress(p);
     };
     const onScroll = () => {
       if (!raf) raf = requestAnimationFrame(update);
     };
+    const onResize = () => {
+      scene?.resize();
+      onScroll();
+    };
+
+    const onLabels = (pos: Record<LabelKey, LabelPos>) => {
+      for (const k of Object.keys(pos) as LabelKey[]) {
+        const el = labels.current[k];
+        if (!el) continue;
+        const { x, y, visible: on } = pos[k];
+        el.style.transform = `translate(${x.toFixed(1)}px, ${y.toFixed(1)}px)`;
+        el.dataset.on = String(on);
+      }
+    };
+
+    // Load three.js only when the section is close.
+    const near = new IntersectionObserver(
+      ([e]) => {
+        if (!e.isIntersecting || scene || cancelled) return;
+        near.disconnect();
+        import("./round-trip-scene")
+          .then(({ createRoundTripScene }) => {
+            if (cancelled) return;
+            scene = createRoundTripScene(cv, {
+              mobile: window.innerWidth < 768,
+              reduced,
+              onLabels,
+            });
+            setReady(true);
+            update();
+            if (visible || reduced) scene.start();
+          })
+          .catch(() => setFailed(true));
+      },
+      { rootMargin: "800px 0px" }
+    );
+    near.observe(root);
+
+    // Render only while the section is on screen.
+    const onScreen = new IntersectionObserver(([e]) => {
+      visible = e.isIntersecting;
+      if (visible) scene?.start();
+      else scene?.stop();
+    });
+    onScreen.observe(root);
+
     update();
     window.addEventListener("scroll", onScroll, { passive: true });
-    window.addEventListener("resize", onScroll);
+    window.addEventListener("resize", onResize);
     return () => {
+      cancelled = true;
+      near.disconnect();
+      onScreen.disconnect();
       cancelAnimationFrame(raf);
       window.removeEventListener("scroll", onScroll);
-      window.removeEventListener("resize", onScroll);
+      window.removeEventListener("resize", onResize);
+      scene?.dispose();
     };
   }, [reduced]);
 
-  const jumpTo = (i: number) => {
-    const root = section.current;
-    if (!root) return;
-    const run = root.offsetHeight - window.innerHeight;
-    const p = LEAD + (i / LAST) * (1 - LEAD - TAIL);
-    const top = root.getBoundingClientRect().top + window.scrollY;
-    window.scrollTo({ top: top + p * run + 2, behavior: "smooth" });
-  };
+  const stop = STOPS[active];
 
   return (
     <section
       ref={section}
       id="round-trip"
       aria-labelledby="round-trip-title"
-      className={cn("relative", reduced ? "py-24" : "h-[300vh]")}
+      className={cn("relative", reduced || failed ? "" : "h-[420vh]")}
     >
       <div
         className={cn(
-          "flex items-center",
-          !reduced && "sticky top-0 h-svh overflow-hidden"
+          "relative overflow-hidden",
+          reduced || failed ? "" : "sticky top-0 h-svh min-h-[600px]"
         )}
       >
-        <div className="mx-auto w-full max-w-6xl px-6 pt-16">
-          <div className="mb-7 flex items-center gap-2">
-            <Hash
-              aria-hidden
-              size={14}
-              strokeWidth={2}
-              className="shrink-0 text-tangerine"
-            />
-            <span className="text-[13.5px] font-medium text-ink/80">
-              The round trip
-            </span>
-            <span aria-hidden className="ml-3 h-px flex-1 bg-ink/10" />
+        {!failed && (
+          <canvas
+            ref={canvas}
+            aria-hidden
+            className={cn(
+              "absolute inset-0 size-full transition-opacity duration-1000",
+              ready ? "opacity-100" : "opacity-0",
+              (reduced || failed) && "relative h-[70vh]"
+            )}
+          />
+        )}
+
+        {/* Labels that follow the scene. */}
+        <div aria-hidden className="pointer-events-none absolute inset-0">
+          {LABELS.map((l) => (
+            <div
+              key={l.key}
+              ref={(el) => {
+                labels.current[l.key] = el;
+              }}
+              data-on="false"
+              className={cn(
+                "pa-scene-label absolute top-0 left-0",
+                active >= l.from ? "pa-scene-label-lit" : ""
+              )}
+            >
+              <div className="-translate-x-1/2 -translate-y-full pb-2 text-center whitespace-nowrap">
+                <div className="text-[12px] font-medium text-ink sm:text-[13px]">
+                  {l.text}
+                </div>
+                <div className="hidden font-mono text-[10.5px] text-ink/45 sm:block">
+                  {l.sub}
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        <div
+          aria-hidden
+          className="pointer-events-none absolute inset-x-0 top-0 h-56 bg-linear-to-b from-charcoal via-charcoal/70 to-transparent"
+        />
+        <div
+          aria-hidden
+          className="pointer-events-none absolute inset-x-0 bottom-0 h-72 bg-linear-to-t from-charcoal via-charcoal/80 to-transparent"
+        />
+
+        <div
+          className={cn(
+            "relative mx-auto flex max-w-6xl flex-col justify-between px-6",
+            reduced || failed ? "py-24" : "h-full pt-24 pb-10 md:pt-28"
+          )}
+        >
+          <div>
+            <div className="mb-5 flex items-center gap-2">
+              <Hash
+                aria-hidden
+                size={14}
+                strokeWidth={2}
+                className="shrink-0 text-tangerine"
+              />
+              <span className="text-[13.5px] font-medium text-ink/80">
+                The round trip
+              </span>
+            </div>
+            <h2
+              id="round-trip-title"
+              className="max-w-xl font-display text-[34px] leading-[1.02] font-semibold tracking-[-0.035em] text-balance text-ink sm:text-[48px]"
+            >
+              From a click to a chart.{" "}
+              <span className="text-ink/35">In under a second.</span>
+            </h2>
           </div>
 
-          <h2
-            id="round-trip-title"
-            className="font-display text-[34px] leading-[1.02] font-semibold tracking-[-0.035em] text-balance text-ink sm:text-[44px] lg:text-[52px]"
-          >
-            From a click to a chart.{" "}
-            <span className="text-ink/35">In under a second.</span>
-          </h2>
-
-          <div className="mt-10 grid grid-cols-1 gap-6 md:mt-14 lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)] lg:items-end lg:gap-14">
-            <div>
-              <p className="text-[12.5px] text-ink/45">Since the click</p>
-              <p className="mt-2 font-display text-[64px] leading-none font-semibold tracking-[-0.045em] text-tangerine-soft tabular-nums sm:text-[88px] lg:text-[104px]">
-                <span ref={clock}>0.0 ms</span>
-              </p>
-            </div>
-
-            <div className="grid min-h-[132px] [&>*]:col-start-1 [&>*]:row-start-1">
-              {STOPS.map((s, i) => (
-                <div
-                  key={s.name}
-                  aria-hidden={!reduced && i !== active}
-                  className={cn(
-                    "self-end transition-[opacity,translate,filter] duration-500 ease-out",
-                    reduced
-                      ? i === LAST
-                        ? "opacity-100"
-                        : "hidden"
-                      : i === active
+          {reduced || failed ? (
+            <ol className="mt-12 grid gap-6 sm:grid-cols-2">
+              {STOPS.map((s) => (
+                <li key={s.name}>
+                  <p className="font-display text-[20px] font-semibold text-ink">
+                    {s.title}
+                  </p>
+                  <p className="mt-1.5 text-[15px] leading-relaxed text-ink/60">
+                    {s.body}
+                  </p>
+                </li>
+              ))}
+            </ol>
+          ) : (
+            <div className="grid grid-cols-1 items-end gap-6 md:grid-cols-[minmax(0,1fr)_auto]">
+              <div className="grid max-w-md [&>*]:col-start-1 [&>*]:row-start-1">
+                {STOPS.map((s, i) => (
+                  <div
+                    key={s.name}
+                    aria-hidden={i !== active}
+                    className={cn(
+                      "self-end transition-[opacity,translate,filter] duration-500 ease-out",
+                      i === active
                         ? "translate-y-0 opacity-100"
                         : cn(
                             "pointer-events-none opacity-0 blur-[2px]",
                             i < active ? "-translate-y-3" : "translate-y-3"
                           )
-                  )}
-                >
-                  <p className="font-display text-[24px] leading-tight font-semibold tracking-display text-balance text-ink sm:text-[30px]">
-                    {s.title}
-                  </p>
-                  <p className="mt-3 max-w-lg text-[15.5px] leading-relaxed text-pretty text-ink/60">
-                    {s.body}
-                  </p>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          <div
-            ref={track}
-            className="relative mt-14 md:mt-20"
-            style={{ "--t": 0 } as React.CSSProperties}
-          >
-            <div className="relative mx-[5px] h-px bg-ink/12">
-              <div
-                aria-hidden
-                className="absolute inset-0 origin-left bg-linear-to-r from-tangerine/40 to-tangerine-soft"
-                style={{ transform: "scaleX(var(--t))" }}
-              />
-              <span
-                aria-hidden
-                className="pa-comet absolute top-1/2 size-2.5 -translate-x-1/2 -translate-y-1/2 rounded-full bg-tangerine-soft"
-                style={{ left: "calc(var(--t) * 100%)" }}
-              />
-            </div>
-
-            <ol className="relative mt-5 h-10 sm:h-12">
-              {STOPS.map((s, i) => (
-                <li
-                  key={s.name}
-                  className={cn(
-                    "absolute top-0 w-max",
-                    i === 0
-                      ? "text-left"
-                      : i === LAST
-                        ? "-translate-x-full text-right"
-                        : "-translate-x-1/2 text-center"
-                  )}
-                  style={{ left: `${(i / LAST) * 100}%` }}
-                >
-                  <span
-                    aria-hidden
-                    className={cn(
-                      "absolute -top-[25px] size-2.5 rounded-full border transition-[background-color,border-color,box-shadow] duration-300",
-                      i === 0
-                        ? "left-0"
-                        : i === LAST
-                          ? "right-0"
-                          : "left-1/2 -translate-x-1/2",
-                      i <= active
-                        ? "border-tangerine-soft bg-tangerine-soft"
-                        : "border-ink/25 bg-charcoal",
-                      i === active &&
-                        "shadow-[0_0_0_5px_color-mix(in_oklab,var(--color-tangerine)_18%,transparent)]"
-                    )}
-                  />
-                  <button
-                    type="button"
-                    onClick={() => jumpTo(i)}
-                    aria-current={i === active ? "step" : undefined}
-                    className={cn(
-                      "cursor-pointer rounded-md px-1 py-0.5 transition-opacity duration-300",
-                      // Six labels don't fit side by side on a phone.
-                      i !== active &&
-                        "max-sm:pointer-events-none max-sm:opacity-0"
                     )}
                   >
-                    <span
-                      className={cn(
-                        "block text-[11.5px] font-medium transition-colors duration-300 sm:text-[13.5px]",
-                        i === active
-                          ? "text-ink"
-                          : i < active
-                            ? "text-ink/60"
-                            : "text-ink/35 hover:text-ink/60"
-                      )}
-                    >
-                      {s.name}
-                    </span>
-                    <span className="mt-0.5 hidden font-mono text-[11px] text-ink/35 sm:block">
-                      {s.tech}
-                    </span>
-                  </button>
-                </li>
-              ))}
-            </ol>
-          </div>
+                    <p className="font-mono text-[11px] tracking-[0.08em] text-tangerine-soft uppercase">
+                      {String(i + 1).padStart(2, "0")} / 06 · {s.name}
+                    </p>
+                    <p className="mt-2 font-display text-[24px] leading-tight font-semibold tracking-display text-balance text-ink sm:text-[28px]">
+                      {s.title}
+                    </p>
+                    <p className="mt-2 text-[15px] leading-relaxed text-pretty text-ink/60">
+                      {s.body}
+                    </p>
+                  </div>
+                ))}
+              </div>
+              <div className="md:text-right">
+                <p className="text-[12.5px] text-ink/45">Since the click</p>
+                <p className="mt-1 font-display text-[48px] leading-none font-semibold tracking-[-0.04em] text-tangerine-soft tabular-nums sm:text-[64px]">
+                  <span ref={clock}>0.0 ms</span>
+                </p>
+              </div>
+            </div>
+          )}
+          <span className="sr-only" aria-live="polite">
+            {stop.title}
+          </span>
         </div>
       </div>
     </section>
