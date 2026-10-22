@@ -2,6 +2,7 @@ import Link from "next/link";
 import { ChevronRight } from "lucide-react";
 import { GhostButton, PrimaryButton, Reveal } from "./shared";
 import { DashboardMockup } from "./dashboard-mockup";
+import { ScrollTilt } from "./motion";
 import { REPO } from "./site";
 import { dots } from "./surfaces";
 
@@ -10,6 +11,8 @@ const GLOW = [
   "radial-gradient(560px 380px at 50% 0%, color-mix(in oklab, var(--color-tangerine) 18%, transparent), transparent)",
   "radial-gradient(480px 220px at 50% 60%, color-mix(in oklab, var(--color-powder) 6%, transparent), transparent)",
 ].join(", ");
+
+const FACTS = ["3 KB script", "No cookies", "Self-hostable", "MIT licensed"];
 
 const DOTS = dots(
   "radial-gradient(ellipse 70% 55% at 50% 30%, black 20%, transparent 76%)"
@@ -25,7 +28,7 @@ export function Hero() {
         style={{ background: GLOW }}
       />
 
-      <div className="relative mx-auto max-w-3xl px-5 text-center sm:px-6">
+      <div className="pa-hero-copy relative mx-auto max-w-3xl px-5 text-center sm:px-6">
         <Reveal>
           <Link
             href={`${REPO}/releases`}
@@ -48,17 +51,19 @@ export function Hero() {
           </Link>
         </Reveal>
 
-        <Reveal delay={60}>
-          <h1 className="font-display text-[42px] leading-[0.95] font-semibold tracking-[-0.035em] text-balance text-ink sm:text-[64px] md:text-[80px]">
-            Event analytics{" "}
-            <span className="sm:block">
-              at{" "}
-              <span className="whitespace-nowrap text-tangerine-soft">
-                ridiculous scale.
-              </span>
+        <h1 className="font-display text-[42px] leading-[0.95] font-semibold tracking-[-0.035em] text-balance text-ink sm:text-[64px] md:text-[80px]">
+          <Words text="Event analytics" start={60} />{" "}
+          <span className="sm:block">
+            <Words text="at" start={200} />{" "}
+            <span className="whitespace-nowrap">
+              <Words
+                text="ridiculous scale."
+                start={260}
+                className="text-tangerine-soft"
+              />
             </span>
-          </h1>
-        </Reveal>
+          </span>
+        </h1>
 
         <Reveal delay={120}>
           <p className="mx-auto mt-6 max-w-md text-[15.5px] leading-relaxed text-pretty text-ink/65 sm:mt-7 sm:max-w-lg sm:text-[17px]">
@@ -81,13 +86,53 @@ export function Hero() {
             </GhostButton>
           </div>
         </Reveal>
+
+        <Reveal delay={240}>
+          <ul className="mt-8 flex flex-wrap items-center justify-center gap-x-5 gap-y-2 text-[12.5px] text-ink/45">
+            {FACTS.map((f) => (
+              <li key={f} className="flex items-center gap-2">
+                <span
+                  aria-hidden
+                  className="size-1 rounded-full bg-tangerine/80"
+                />
+                {f}
+              </li>
+            ))}
+          </ul>
+        </Reveal>
       </div>
 
       <div className="relative mx-auto mt-16 max-w-7xl px-4 sm:mt-20 sm:px-6">
-        <Reveal delay={240}>
-          <DashboardMockup />
+        <div aria-hidden className="pa-horizon" />
+        <Reveal delay={300}>
+          <ScrollTilt>
+            <DashboardMockup />
+          </ScrollTilt>
         </Reveal>
       </div>
     </section>
   );
+}
+
+// Each word blurs up in turn; the line still reads as one string.
+function Words({
+  text,
+  start,
+  className,
+}: {
+  text: string;
+  start: number;
+  className?: string;
+}) {
+  return text.split(" ").map((word, i, all) => (
+    <span key={i}>
+      <span
+        className={`pa-word ${className ?? ""}`}
+        style={{ "--pa-delay": `${start + i * 70}ms` } as React.CSSProperties}
+      >
+        {word}
+      </span>
+      {i < all.length - 1 && " "}
+    </span>
+  ));
 }
