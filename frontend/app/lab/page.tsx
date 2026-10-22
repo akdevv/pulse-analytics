@@ -2,11 +2,9 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { ArrowLeft, ArrowUpRight } from "lucide-react";
 import { PulseLogo } from "@/components/landing/shared";
-import { FollowEvent } from "@/components/lab/follow-event";
-import { SpikeAbsorber } from "@/components/lab/spike-absorber";
-import { TrafficSim } from "@/components/lab/traffic-sim";
-import { VisitorVsServer } from "@/components/lab/visitor-vs-server";
-import { WithWithout } from "@/components/lab/with-without";
+import { Diorama } from "@/components/lab/gl/diorama";
+import { GlobeTrip } from "@/components/lab/gl/globe-trip";
+import { Reservoir } from "@/components/lab/gl/reservoir";
 
 export const metadata: Metadata = {
   title: "Lab · Pulse Analytics",
@@ -15,44 +13,28 @@ export const metadata: Metadata = {
 
 const EXPERIMENTS = [
   {
-    id: "follow",
-    name: "Follow one event",
+    id: "miniature",
+    name: "Pulse in miniature",
     explains:
-      "The whole path, one stop at a time, with a plain sentence at each stop.",
-    fit: "A direct replacement for the round-trip section. Works with scroll or as auto-play.",
-    Component: FollowEvent,
+      "Every part of the pipeline as a physical object: a gate, a conveyor, a press, a silo, a screen.",
+    fit: "Replaces the particle section. Reads instantly, and the spike button shows why the queue exists.",
+    Component: Diorama,
   },
   {
-    id: "spike",
-    name: "Spike absorber",
+    id: "reservoir",
+    name: "The queue is a reservoir",
     explains:
-      "Why the queue exists: arrivals spike, the queue swells, database writes stay calm.",
-    fit: "A second section after the round trip, or the visual for the queue step.",
-    Component: SpikeAbsorber,
+      "Traffic as water: a glass tank fills during a spike while a valve keeps writes to the database steady.",
+    fit: "Replaces the particle section. One idea, told very clearly: why a launch can't take the database down.",
+    Component: Reservoir,
   },
   {
-    id: "with-without",
-    name: "With and without the queue",
+    id: "globe",
+    name: "Round trip around the world",
     explains:
-      "What would go wrong without this design, side by side under the same spike.",
-    fit: "The strongest argument for the architecture. Good under How it works.",
-    Component: WithWithout,
-  },
-  {
-    id: "visitor",
-    name: "Visitor vs. server",
-    explains:
-      "The visitor's part ends at 4.8 ms; everything else runs in the background.",
-    fit: "A compact explainer for the 204 and async idea. Familiar to developers as a trace.",
-    Component: VisitorVsServer,
-  },
-  {
-    id: "sim",
-    name: "Traffic simulator",
-    explains:
-      "Every request as a dot. You can turn traffic up and watch each part react.",
-    fit: "An interactive toy for curious visitors, or a docs page.",
-    Component: TrafficSim,
+      "One visit on a real globe: São Paulo to your server, a 204 back, a batch written, then your dashboard in Bangalore.",
+    fit: "Replaces the particle section, or merges with the globe that's already on the page.",
+    Component: GlobeTrip,
   },
 ];
 
@@ -80,12 +62,13 @@ export default function LabPage() {
       <div className="mx-auto max-w-6xl px-5 sm:px-6">
         <section className="pt-16 pb-10 md:pt-20">
           <h1 className="max-w-3xl font-display text-[40px] leading-[1.02] font-semibold tracking-[-0.035em] text-balance text-ink sm:text-[56px]">
-            Ways to explain the round trip
+            WebGL round trip experiments
           </h1>
           <p className="mt-5 max-w-2xl text-[16px] leading-relaxed text-ink/60">
-            Five working experiments to replace the 3D particle section. Each
-            one explains a different part of the idea. Pick one, or a
-            combination, and it goes on the landing page.
+            Three WebGL directions to replace the particle section. Each one is
+            driven by scroll, like the current section: the scene pins and the
+            camera moves from step to step. Pick one and it goes on the landing
+            page.
           </p>
           <nav aria-label="Experiments" className="mt-8 flex flex-wrap gap-2">
             {EXPERIMENTS.map((e, i) => (

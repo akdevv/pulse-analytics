@@ -797,3 +797,36 @@ html {
   scrollbar-color: color-mix(in oklab, var(--foreground) 22%, transparent)
     transparent;
 }
+
+/* Lab: scroll-driven WebGL stage. */
+.pa-stage-tag {
+  opacity: 0;
+  text-shadow:
+    0 0 6px rgb(22 22 22),
+    0 0 14px rgb(22 22 22);
+  transition: opacity 0.35s ease;
+}
+.pa-stage-tag[data-on="true"][data-focus="false"] {
+  opacity: 0.4;
+}
+.pa-stage-tag[data-on="true"][data-focus="all"],
+.pa-stage-tag[data-on="true"][data-focus="true"] {
+  opacity: 1;
+}
+.pa-stage-tag[data-focus="false"] .pa-stage-sub {
+  display: none;
+}
+.pa-stage-caption {
+  animation: pa-stage-in 0.5s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+}
+@keyframes pa-stage-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .pa-stage-caption {
+    animation: none;
+  }
+}
