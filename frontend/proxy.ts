@@ -2,7 +2,7 @@ import { NextResponse, type NextRequest } from "next/server";
 import { DEMO_COOKIE } from "@/lib/demo/mode";
 
 const GUEST_ONLY = ["/", "/login", "/register"];
-const OPEN = ["/demo", "/docs"];
+const OPEN = ["/demo", "/docs", "/lab"];
 
 export function proxy(req: NextRequest) {
   const { pathname } = req.nextUrl;
