@@ -121,10 +121,10 @@ export default function LabPage() {
             For comparison
           </p>
           <h2 className="mt-2 font-display text-[26px] font-semibold tracking-[-0.03em] text-ink">
-            The current WebGL particle scene
+            The miniature on the landing page
           </h2>
           <p className="mt-2 max-w-xl text-[14.5px] text-ink/55">
-            Still on the landing page until you pick a replacement.
+            Experiment A, polished and shipped as the round-trip section.
           </p>
           <Link
             href="/#round-trip"

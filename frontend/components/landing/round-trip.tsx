@@ -1,17 +1,14 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { Hash, Zap } from "lucide-react";
+import { Zap } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useReducedMotion } from "./motion";
 import type { LabelKey, LabelPos } from "./round-trip-scene";
 
-type Legend = "event" | "reply" | "batch";
-
 type Step = {
   name: string;
   anchor: LabelKey;
-  legend: Legend;
   ms: number;
   title: string;
   body: string;
@@ -23,7 +20,6 @@ const STEPS: Step[] = [
   {
     name: "Browser",
     anchor: "sites",
-    legend: "event",
     ms: 0,
     title: "A visitor opens your page.",
     body: "Each orange pill is a pageview leaving the browser. The 3 KB script sends the path, referrer and screen size, and sets no cookies.",
@@ -31,7 +27,6 @@ const STEPS: Step[] = [
   {
     name: "Ingest",
     anchor: "ingest",
-    legend: "reply",
     ms: 4.8,
     title: "Pulse answers right away.",
     body: "The gate is the ingest API. It checks the event, drops it in the queue and replies 204. The blue pills flying back are those replies: the visitor is done after 4.8 ms.",
@@ -39,7 +34,6 @@ const STEPS: Step[] = [
   {
     name: "Queue",
     anchor: "queue",
-    legend: "event",
     ms: 5.4,
     title: "Events wait on the conveyor.",
     body: "The belt is a Redis queue. A launch just hit: watch it fill up and the lights on the rail climb, while the database stays calm.",
@@ -47,7 +41,6 @@ const STEPS: Step[] = [
   {
     name: "Worker",
     anchor: "worker",
-    legend: "batch",
     ms: 620,
     title: "The worker presses batches.",
     body: "It reads the browser, looks up the country and throws the IP away. Each crate holds 100 events, written to the database in one go.",
@@ -55,7 +48,6 @@ const STEPS: Step[] = [
   {
     name: "Database",
     anchor: "chart",
-    legend: "batch",
     ms: 660,
     title: "Crates land in the database.",
     body: "TimescaleDB stores each batch and keeps hourly totals up to date, so charts add up hundreds of rows instead of millions.",
@@ -63,7 +55,6 @@ const STEPS: Step[] = [
   {
     name: "Dashboard",
     anchor: "now",
-    legend: "event",
     ms: 900,
     title: "Your dashboard updates.",
     body: "The count ticks up and today's bar grows. Less than a second after the click, the pageview is on your chart.",
@@ -78,24 +69,6 @@ const TAGS: Record<LabelKey, string> = {
   chart: "Database",
   now: "Dashboard",
 };
-
-const LEGEND: { key: Legend; label: string; swatch: string }[] = [
-  {
-    key: "event",
-    label: "One pageview",
-    swatch: "size-2 rounded-full bg-tangerine",
-  },
-  {
-    key: "reply",
-    label: "204 reply",
-    swatch: "size-2 rounded-full bg-powder",
-  },
-  {
-    key: "batch",
-    label: "Crate of 100",
-    swatch: "size-2.5 rounded-[2px] bg-tangerine-soft",
-  },
-];
 
 // Where each step begins, as scroll progress through the section.
 const STARTS = [0, 0.14, 0.32, 0.52, 0.7, 0.86];
@@ -137,6 +110,8 @@ export function RoundTrip() {
   const section = useRef<HTMLElement>(null);
   const canvas = useRef<HTMLCanvasElement>(null);
   const clock = useRef<HTMLSpanElement>(null);
+  const waited = useRef<HTMLSpanElement>(null);
+  const heading = useRef<HTMLDivElement>(null);
   const fills = useRef<(HTMLSpanElement | null)[]>([]);
   const tags = useRef<Partial<Record<LabelKey, HTMLDivElement | null>>>({});
   const reduced = useReducedMotion();
@@ -167,7 +142,16 @@ export function RoundTrip() {
       const i = stepAt(p);
       activeRef.current = i;
       setActive(i);
-      if (clock.current) clock.current.textContent = formatMs(clockAt(p));
+      // The headline makes way once the camera starts its tour.
+      if (heading.current && !reduced) {
+        const fade = clamp((p - 0.02) / 0.04);
+        heading.current.style.opacity = (1 - fade).toFixed(3);
+        heading.current.style.translate = `0 ${(-fade * 12).toFixed(1)}px`;
+      }
+      const ms = clockAt(p);
+      if (clock.current) clock.current.textContent = formatMs(ms);
+      if (waited.current)
+        waited.current.textContent = formatMs(Math.min(ms, STEPS[1].ms));
       fills.current.forEach((el, k) => {
         if (!el) return;
         const f = k < i ? 1 : k === i ? localAt(p, i) : 0;
@@ -193,7 +177,7 @@ export function RoundTrip() {
         const ring = Math.min(Math.max(r + 14, 22), 220);
         el.style.transform = `translate(${x.toFixed(1)}px, ${y.toFixed(1)}px)`;
         el.style.setProperty("--ring", `${(ring * 2).toFixed(0)}px`);
-        el.dataset.on = String(on);
+        el.dataset.on = String(on && k === focus);
         el.dataset.focus = String(k === focus);
       }
     };
@@ -282,39 +266,33 @@ export function RoundTrip() {
           />
         )}
 
-        {/* Name tags and the focus ring, positioned by the scene. */}
+        {/* The name of the station in focus, and a ring around it. */}
         {!flat && (
           <div aria-hidden className="pointer-events-none absolute inset-0">
-            {(Object.keys(TAGS) as LabelKey[]).map((k) => {
-              const n = STEPS.findIndex((s) => s.anchor === k);
-              return (
-                <div
-                  key={k}
-                  ref={(el) => {
-                    tags.current[k] = el;
-                  }}
-                  data-on="false"
-                  data-focus="false"
-                  className="pa-tag absolute top-0 left-0"
-                >
-                  <span className="pa-tag-ring" />
-                  <span className="pa-tag-label">
-                    {n >= 0 && <span className="pa-tag-num">{n + 1}</span>}
-                    {TAGS[k]}
-                  </span>
-                </div>
-              );
-            })}
+            {(Object.keys(TAGS) as LabelKey[]).map((k) => (
+              <div
+                key={k}
+                ref={(el) => {
+                  tags.current[k] = el;
+                }}
+                data-on="false"
+                data-focus="false"
+                className="pa-tag absolute top-0 left-0"
+              >
+                <span className="pa-tag-ring" />
+                <span className="pa-tag-label">{TAGS[k]}</span>
+              </div>
+            ))}
           </div>
         )}
 
         <div
           aria-hidden
-          className="pointer-events-none absolute inset-x-0 top-0 h-56 bg-linear-to-b from-charcoal via-charcoal/70 to-transparent"
+          className="pointer-events-none absolute inset-x-0 top-0 h-40 bg-linear-to-b from-charcoal to-transparent"
         />
         <div
           aria-hidden
-          className="pointer-events-none absolute inset-x-0 bottom-0 h-[22rem] bg-linear-to-t from-charcoal via-charcoal/85 to-transparent"
+          className="pointer-events-none absolute inset-x-0 bottom-0 h-3/5 bg-linear-to-t from-charcoal via-charcoal/70 to-transparent md:h-2/5 md:via-charcoal/30"
         />
 
         <div
@@ -323,21 +301,14 @@ export function RoundTrip() {
             flat ? "py-24" : "h-full pt-24 pb-8 md:pt-28"
           )}
         >
-          <div>
-            <div className="mb-4 flex items-center gap-2">
-              <Hash
-                aria-hidden
-                size={14}
-                strokeWidth={2}
-                className="shrink-0 text-tangerine"
-              />
-              <span className="text-[13.5px] font-medium text-ink/80">
-                The round trip
-              </span>
-            </div>
+          <div ref={heading} className="max-w-xl">
+            <p className="mb-4 flex items-center gap-2 text-[13px] text-ink/55">
+              <span className="size-1.5 rounded-full bg-tangerine" />
+              The round trip
+            </p>
             <h2
               id="round-trip-title"
-              className="max-w-xl font-display text-[28px] leading-[1.02] font-semibold tracking-[-0.035em] text-balance text-ink sm:text-[46px]"
+              className="font-display text-[36px] leading-[0.98] font-semibold tracking-[-0.04em] text-balance text-ink sm:text-[52px] lg:text-[60px]"
             >
               Follow one pageview{" "}
               <span className="text-ink/35">from click to chart.</span>
@@ -345,122 +316,106 @@ export function RoundTrip() {
           </div>
 
           {flat ? (
-            <ol className="mt-12 grid gap-6 sm:grid-cols-2">
+            <ol className="mt-12 grid gap-8 sm:grid-cols-2">
               {STEPS.map((s, i) => (
                 <li key={s.name}>
                   <p className="font-mono text-[11px] tracking-[0.08em] text-tangerine-soft uppercase">
-                    Step {i + 1} · {s.name}
+                    {String(i + 1).padStart(2, "0")} · {s.name}
                   </p>
-                  <p className="mt-1.5 font-display text-[20px] font-semibold text-ink">
+                  <p className="mt-1.5 font-display text-[22px] leading-tight font-semibold tracking-display text-ink">
                     {s.title}
                   </p>
-                  <p className="mt-1.5 text-[15px] leading-relaxed text-ink/60">
+                  <p className="mt-2 text-[15px] leading-relaxed text-pretty text-ink/60">
                     {s.body}
                   </p>
                 </li>
               ))}
             </ol>
           ) : (
-            <div className="flex flex-col gap-5">
-              <div className="grid grid-cols-1 items-end gap-5 md:grid-cols-[minmax(0,30rem)_minmax(0,1fr)]">
-                <div className="rounded-2xl border border-ink/10 bg-charcoal/75 p-4 shadow-[0_24px_48px_-24px_rgb(0_0_0/0.8)] backdrop-blur-md sm:p-5">
-                  <div className="grid [&>*]:col-start-1 [&>*]:row-start-1">
-                    {STEPS.map((s, i) => (
-                      <div
-                        key={s.name}
-                        aria-hidden={i !== active}
-                        className={cn(
-                          "transition-[opacity,translate] duration-500 ease-out",
-                          i === active
-                            ? "translate-y-0 opacity-100"
-                            : cn(
-                                "pointer-events-none opacity-0",
-                                i < active ? "-translate-y-2" : "translate-y-2"
-                              )
-                        )}
-                      >
-                        <p className="font-mono text-[11px] tracking-[0.08em] text-tangerine-soft uppercase">
-                          Step {i + 1} of 6 · {s.name}
-                        </p>
-                        <p className="mt-2 font-display text-[22px] leading-tight font-semibold tracking-display text-balance text-ink sm:text-[26px]">
-                          {s.title}
-                        </p>
-                        <p className="mt-2 text-[14px] leading-relaxed text-pretty text-ink/65 sm:text-[14.5px]">
-                          {s.body}
-                        </p>
-                      </div>
-                    ))}
-                  </div>
-                  <ul className="mt-3 flex flex-wrap gap-2 border-t border-ink/8 pt-3 sm:mt-4 sm:pt-4">
-                    {LEGEND.map((l) => (
-                      <li
-                        key={l.key}
-                        className={cn(
-                          "items-center gap-2 rounded-full border px-2.5 py-1 text-[12px] transition-colors duration-300",
-                          l.key === step.legend
-                            ? "flex border-tangerine/40 bg-tangerine/10 text-ink"
-                            : "hidden border-ink/10 text-ink/45 sm:flex"
-                        )}
-                      >
-                        <span aria-hidden className={l.swatch} />
-                        {l.label}
-                      </li>
-                    ))}
-                  </ul>
+            <div>
+              <div className="grid grid-cols-1 items-end gap-6 md:grid-cols-[minmax(0,1fr)_auto]">
+                <div className="relative min-h-[156px] max-w-md">
+                  {STEPS.map((s, i) => (
+                    <div
+                      key={s.name}
+                      aria-hidden={i !== active}
+                      className={cn(
+                        "absolute inset-x-0 bottom-0 transition-[opacity,translate,filter] duration-500 ease-out",
+                        i === active
+                          ? "translate-y-0 opacity-100"
+                          : "pointer-events-none translate-y-3 opacity-0 blur-[3px]"
+                      )}
+                    >
+                      <p className="font-mono text-[11px] tracking-[0.08em] text-tangerine-soft uppercase">
+                        {String(i + 1).padStart(2, "0")} / 06 · {s.name}
+                      </p>
+                      <p className="mt-1.5 font-display text-[24px] leading-tight font-semibold tracking-display text-ink sm:text-[28px]">
+                        {s.title}
+                      </p>
+                      <p className="mt-2 text-[15px] leading-relaxed text-pretty text-ink/60">
+                        {s.body}
+                      </p>
+                      {s.anchor === "queue" && (
+                        <button
+                          type="button"
+                          tabIndex={i === active ? 0 : -1}
+                          onClick={() => sceneRef.current?.spike()}
+                          className="mt-3 inline-flex cursor-pointer items-center gap-1.5 text-[14px] font-medium text-tangerine-soft transition-colors hover:text-ink"
+                        >
+                          <Zap size={14} /> Send another spike
+                        </button>
+                      )}
+                    </div>
+                  ))}
                 </div>
 
-                <div className="flex items-baseline justify-between gap-4 md:block md:text-right">
-                  <p className="text-[12.5px] text-ink/50">
-                    Time since the visitor clicked
-                  </p>
-                  <p className="font-display text-[34px] leading-none font-semibold tracking-[-0.04em] text-tangerine-soft tabular-nums sm:text-[60px] md:mt-1">
-                    <span ref={clock}>0.0 ms</span>
-                  </p>
-                  <p className="mt-2 hidden text-[12.5px] text-ink/45 md:block">
-                    {active === 0
-                      ? "The trip starts when the page loads."
-                      : "The visitor only waited 4.8 ms. The rest runs in the background."}
-                  </p>
-                  <button
-                    type="button"
-                    onClick={() => sceneRef.current?.spike()}
-                    className="mt-4 hidden cursor-pointer items-center gap-1.5 rounded-full border border-ink/12 bg-charcoal/70 px-3.5 py-1.5 text-[13px] text-ink/75 backdrop-blur transition-colors hover:border-tangerine/50 hover:text-ink md:inline-flex"
-                  >
-                    <Zap size={13} className="text-tangerine" /> Launch a
-                    traffic spike
-                  </button>
-                </div>
+                <dl className="flex gap-10 md:justify-end md:text-right">
+                  <div>
+                    <dt className="text-[12.5px] text-ink/45">
+                      Since the click
+                    </dt>
+                    <dd className="mt-1 font-display text-[40px] leading-none font-semibold tracking-[-0.03em] text-ink tabular-nums sm:text-[48px]">
+                      <span ref={clock}>0.0 ms</span>
+                    </dd>
+                  </div>
+                  <div>
+                    <dt className="text-[12.5px] text-ink/45">
+                      Visitor waited
+                    </dt>
+                    <dd className="mt-1 font-display text-[40px] leading-none font-semibold tracking-[-0.03em] text-ink/70 tabular-nums sm:text-[48px]">
+                      <span ref={waited}>0.0 ms</span>
+                    </dd>
+                  </div>
+                </dl>
               </div>
 
-              <ol
-                aria-label="Steps"
-                className="grid grid-cols-6 gap-1.5 sm:gap-2"
-              >
+              <ol aria-label="Steps" className="mt-7 grid grid-cols-6 gap-2">
                 {STEPS.map((s, i) => (
                   <li key={s.name}>
                     <button
                       type="button"
                       onClick={() => jumpTo(i)}
                       aria-current={i === active ? "step" : undefined}
-                      className="group w-full cursor-pointer pt-2 text-left"
+                      aria-label={`Step ${i + 1}: ${s.name}`}
+                      className="group block w-full cursor-pointer py-2 text-left"
                     >
-                      <span className="relative block h-[3px] overflow-hidden rounded-full bg-ink/12">
+                      <span className="relative block h-px overflow-hidden bg-ink/12">
                         <span
                           ref={(el) => {
                             fills.current[i] = el;
                           }}
-                          className="absolute inset-0 origin-left scale-x-0 rounded-full bg-tangerine-soft"
+                          className="absolute inset-0 origin-left scale-x-0 bg-tangerine-soft"
                         />
                       </span>
                       <span
                         className={cn(
-                          "mt-2 hidden text-[12px] transition-colors duration-300 sm:block",
+                          "mt-2.5 hidden text-[12px] transition-colors duration-300 md:block",
                           i === active
-                            ? "text-ink"
-                            : "text-ink/40 group-hover:text-ink/70"
+                            ? "text-ink/80"
+                            : "text-ink/30 group-hover:text-ink/60"
                         )}
                       >
-                        {i + 1}. {s.name}
+                        {s.name}
                       </span>
                     </button>
                   </li>

@@ -648,6 +648,7 @@ export function createRoundTripScene(
   let stored = 12480;
   let gateFlash = 0;
   let pageFlash = 0;
+  let pageLevel = -1;
   let liveBar = 0.35;
   let dashDirty = true;
 
@@ -765,7 +766,7 @@ export function createRoundTripScene(
     camera.bottom = -viewH / 2;
     // The headline sits top left and the copy bottom left, so on wide
     // screens the table moves right; everywhere it lifts a little.
-    const shiftX = aspect > 1.2 ? -width * 0.11 : 0;
+    const shiftX = aspect > 1.2 ? -width * 0.15 : 0;
     camera.setViewOffset(width, height, shiftX, height * 0.05, width, height);
     camera.updateProjectionMatrix();
   }
@@ -825,7 +826,13 @@ export function createRoundTripScene(
     frameMat.emissiveIntensity = 2 + gateFlash * 2.5;
     scanMat.opacity = gateFlash * 0.22;
     signMat.color.setScalar(1 + gateFlash * 1.2);
-    if (pageFlash > 0.02 || dt === 0) drawPage(pageFlash);
+    // Redrawing the page re-uploads its texture, so only do it when the
+    // toast's brightness visibly changes.
+    const toast = Math.round(pageFlash * 4);
+    if (toast !== pageLevel) {
+      pageLevel = toast;
+      drawPage(toast / 4);
+    }
     piston.position.y =
       2.4 - smooth(press > 0.5 ? (1 - press) * 2 : press * 2) * 0.62;
     lampMat.emissiveIntensity = 2.2 + press * 3;

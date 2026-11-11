@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { ArrowRight, Check, Copy, Hash } from "lucide-react";
+import { ArrowRight, Check, Copy } from "lucide-react";
 import { useEffect, useId, useRef, useState } from "react";
 import { siGithub } from "simple-icons";
 import { cn } from "@/lib/utils";
@@ -156,18 +156,12 @@ export function SectionHeading({
 }) {
   return (
     <header className="mb-16 md:mb-24">
-      <div className="mb-7 flex items-center gap-2">
-        <Hash
-          aria-hidden
-          size={14}
-          strokeWidth={2}
-          className="shrink-0 text-tangerine"
-        />
-        <span className="text-[13.5px] font-medium text-ink/80">{label}</span>
-        <span aria-hidden className="ml-3 h-px flex-1 bg-ink/10" />
-      </div>
+      <p className="mb-5 flex items-center gap-2 text-[13px] text-ink/55">
+        <span aria-hidden className="size-1.5 rounded-full bg-tangerine" />
+        {label}
+      </p>
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,7fr)_minmax(0,5fr)] lg:items-baseline-last lg:gap-14">
-        <h2 className="font-display text-[38px] leading-[1.02] font-semibold tracking-[-0.035em] text-balance text-ink sm:text-[48px] lg:text-[58px]">
+        <h2 className="font-display text-[36px] leading-[0.98] font-semibold tracking-[-0.04em] text-balance text-ink sm:text-[52px] lg:text-[60px]">
           {title}
           {muted && <span className="block text-ink/35">{muted}</span>}
         </h2>

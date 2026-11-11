@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { ChevronRight } from "lucide-react";
+import { cn } from "@/lib/utils";
 import { GhostButton, PrimaryButton, Reveal } from "./shared";
 import { DashboardMockup } from "./dashboard-mockup";
 import { ScrollTilt } from "./motion";
@@ -89,8 +90,15 @@ export function Hero() {
 
         <Reveal delay={240}>
           <ul className="mt-8 flex flex-wrap items-center justify-center gap-x-5 gap-y-2 text-[12.5px] text-ink/45">
-            {FACTS.map((f) => (
-              <li key={f} className="flex items-center gap-2">
+            {FACTS.map((f, i) => (
+              <li
+                key={f}
+                // Three fit on one line on a phone; the fourth would wrap.
+                className={cn(
+                  "items-center gap-2",
+                  i === FACTS.length - 1 ? "hidden sm:flex" : "flex"
+                )}
+              >
                 <span
                   aria-hidden
                   className="size-1 rounded-full bg-tangerine/80"

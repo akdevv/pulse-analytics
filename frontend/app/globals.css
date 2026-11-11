@@ -550,21 +550,6 @@
   border-color: color-mix(in oklab, var(--color-tangerine) 40%, transparent);
   backdrop-filter: blur(8px);
 }
-.pa-tag-num {
-  display: grid;
-  place-items: center;
-  width: 17px;
-  height: 17px;
-  border-radius: 9999px;
-  font-family: var(--font-mono);
-  font-size: 10px;
-  background: color-mix(in oklab, var(--color-ink) 10%, transparent);
-  color: color-mix(in oklab, var(--color-ink) 60%, transparent);
-}
-.pa-tag[data-focus="true"] .pa-tag-num {
-  background: var(--color-tangerine);
-  color: var(--color-charcoal);
-}
 .pa-comet {
   box-shadow:
     0 0 0 4px color-mix(in oklab, var(--color-tangerine) 22%, transparent),
