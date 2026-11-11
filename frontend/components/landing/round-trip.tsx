@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { Hash } from "lucide-react";
+import { Hash, Zap } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useReducedMotion } from "./motion";
 import type { LabelKey, LabelPos } from "./round-trip-scene";
@@ -25,8 +25,8 @@ const STEPS: Step[] = [
     anchor: "sites",
     legend: "event",
     ms: 0,
-    title: "Your site sends an event.",
-    body: "Every orange dot is one pageview leaving a visitor's browser. The 3 KB script sends the path, referrer and screen size, and sets no cookies.",
+    title: "A visitor opens your page.",
+    body: "Each orange pill is a pageview leaving the browser. The 3 KB script sends the path, referrer and screen size, and sets no cookies.",
   },
   {
     name: "Ingest",
@@ -34,30 +34,30 @@ const STEPS: Step[] = [
     legend: "reply",
     ms: 4.8,
     title: "Pulse answers right away.",
-    body: "The ring is the ingest API. It checks the event, puts it in a queue and replies 204. The blue sparks are those replies: the visitor is done after 4.8 ms.",
+    body: "The gate is the ingest API. It checks the event, drops it in the queue and replies 204. The blue pills flying back are those replies: the visitor is done after 4.8 ms.",
   },
   {
     name: "Queue",
     anchor: "queue",
     legend: "event",
     ms: 5.4,
-    title: "Events wait in a queue.",
-    body: "The spiral is a Redis queue. When a traffic spike hits, the queue fills up instead of flooding the database.",
+    title: "Events wait on the conveyor.",
+    body: "The belt is a Redis queue. A launch just hit: watch it fill up and the lights on the rail climb, while the database stays calm.",
   },
   {
     name: "Worker",
     anchor: "worker",
     legend: "batch",
     ms: 620,
-    title: "A worker packs them into batches.",
-    body: "It reads the browser, looks up the country and throws the IP away. Each glowing cube is 100 events, written to the database in one go.",
+    title: "The worker presses batches.",
+    body: "It reads the browser, looks up the country and throws the IP away. Each crate holds 100 events, written to the database in one go.",
   },
   {
     name: "Database",
     anchor: "chart",
     legend: "batch",
     ms: 660,
-    title: "Batches land in the database.",
+    title: "Crates land in the database.",
     body: "TimescaleDB stores each batch and keeps hourly totals up to date, so charts add up hundreds of rows instead of millions.",
   },
   {
@@ -66,17 +66,17 @@ const STEPS: Step[] = [
     legend: "event",
     ms: 900,
     title: "Your dashboard updates.",
-    body: "The bright bar is today. Less than a second after the click, the new pageview is on your chart.",
+    body: "The count ticks up and today's bar grows. Less than a second after the click, the pageview is on your chart.",
   },
 ];
 
 const TAGS: Record<LabelKey, string> = {
-  sites: "Your websites",
+  sites: "Visitor's browser",
   ingest: "Ingest API",
   queue: "Queue",
   worker: "Worker",
   chart: "Database",
-  now: "Today's bar",
+  now: "Dashboard",
 };
 
 const LEGEND: { key: Legend; label: string; swatch: string }[] = [
@@ -92,7 +92,7 @@ const LEGEND: { key: Legend; label: string; swatch: string }[] = [
   },
   {
     key: "batch",
-    label: "Batch of 100",
+    label: "Crate of 100",
     swatch: "size-2.5 rounded-[2px] bg-tangerine-soft",
   },
 ];
@@ -127,6 +127,7 @@ function formatMs(ms: number) {
 type Scene = {
   setProgress: (p: number) => void;
   resize: () => void;
+  spike: () => void;
   start: () => void;
   stop: () => void;
   dispose: () => void;
@@ -143,6 +144,7 @@ export function RoundTrip() {
   const [failed, setFailed] = useState(false);
   const [ready, setReady] = useState(false);
   const activeRef = useRef(0);
+  const sceneRef = useRef<Scene | null>(null);
 
   useEffect(() => {
     const root = section.current;
@@ -209,6 +211,7 @@ export function RoundTrip() {
               reduced,
               onLabels,
             });
+            sceneRef.current = scene;
             setReady(true);
             update();
             if (visible || reduced) scene.start();
@@ -238,6 +241,7 @@ export function RoundTrip() {
       window.removeEventListener("scroll", onScroll);
       window.removeEventListener("resize", onResize);
       scene?.dispose();
+      sceneRef.current = null;
     };
   }, [reduced]);
 
@@ -417,6 +421,14 @@ export function RoundTrip() {
                       ? "The trip starts when the page loads."
                       : "The visitor only waited 4.8 ms. The rest runs in the background."}
                   </p>
+                  <button
+                    type="button"
+                    onClick={() => sceneRef.current?.spike()}
+                    className="mt-4 hidden cursor-pointer items-center gap-1.5 rounded-full border border-ink/12 bg-charcoal/70 px-3.5 py-1.5 text-[13px] text-ink/75 backdrop-blur transition-colors hover:border-tangerine/50 hover:text-ink md:inline-flex"
+                  >
+                    <Zap size={13} className="text-tangerine" /> Launch a
+                    traffic spike
+                  </button>
                 </div>
               </div>
 
